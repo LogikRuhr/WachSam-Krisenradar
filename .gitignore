@@ -25,6 +25,10 @@ Thumbs.db
 .claude/
 .superpowers/
 .playwright-mcp/
+.agents/
+.stitch/
+_templates/
+.remember/
 
 # Logs and generated artifacts
 *.log
@@ -37,4 +41,3 @@ outputs/**/*.json
 outputs/**/*.csv
 outputs/**/*.sqlite
 outputs/**/*.db
-
