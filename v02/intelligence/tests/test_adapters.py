@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from src.adapters.destatis import DestatisAdapter
+from src.adapters.destatis import parse_vpi_table
 from src.adapters.bnetza import BNetzAAdapter
 from src.adapters.fao import FAOAdapter
 from src.adapters.eurostat import EurostatAdapter
@@ -30,6 +31,46 @@ def test_destatis_adapter():
     items = adapter.fetch_latest()
     _validate_items(items)
     assert any("destatis.de" in i.source_url for i in items)
+
+
+def test_parse_vpi_table_extracts_latest_yoy_value():
+    table = "\n".join(
+        [
+            "GENESIS-Tabelle: 61111-0002",
+            "Monate;Verbraucherpreisindex;Veränderung zum Vorjahresmonat;Veränderung zum Vormonat",
+            "2026-03;120,1;2,2;0,1",
+            "2026-04;120,7;2,1;0,4",
+        ]
+    )
+
+    result = parse_vpi_table(table)
+
+    assert result.current_value == 2.1
+    assert result.current_value_date == "2026-04"
+    assert result.previous_value == 2.2
+    assert result.previous_value_date == "2026-03"
+
+
+def test_destatis_adapter_maps_vpi_to_indicator_live_value(monkeypatch):
+    response = MagicMock()
+    response.status_code = 200
+    response.text = "\n".join(
+        [
+            "Monate;Verbraucherpreisindex;Veränderung zum Vorjahresmonat;Veränderung zum Vormonat",
+            "2026-03;120,1;2,2;0,1",
+            "2026-04;120,7;2,1;0,4",
+        ]
+    )
+
+    monkeypatch.setattr("src.adapters.destatis.requests.post", lambda *args, **kwargs: response)
+
+    item = DestatisAdapter().fetch_latest()[0]
+
+    assert item.indicator_id == "wi-inflation-vpi-de"
+    assert item.current_value == 2.1
+    assert item.current_value_date == "2026-04"
+    assert item.previous_value == 2.2
+    assert item.previous_value_date == "2026-03"
 
 
 def test_bnetza_adapter():
