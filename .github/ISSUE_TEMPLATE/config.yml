@@ -1,0 +1,6 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Workflow
+    url: https://github.com/LogikRuhr/WachSam-Krisenradar/blob/main/docs/workflow.md
+    about: Read the project workflow before opening broad issues.
+

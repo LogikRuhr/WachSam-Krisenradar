@@ -1,0 +1,40 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+.next/
+.turbo/
+.cache/
+coverage/
+
+# Local tooling
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.codex/
+.claude/
+.superpowers/
+.playwright-mcp/
+
+# Logs and generated artifacts
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+outputs/**/*.html
+outputs/**/*.json
+outputs/**/*.csv
+outputs/**/*.sqlite
+outputs/**/*.db
+
