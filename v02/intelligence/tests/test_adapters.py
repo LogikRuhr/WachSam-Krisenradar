@@ -144,6 +144,33 @@ def test_fao_adapter():
     _validate_items(items)
 
 
+def test_fao_adapter_maps_food_price_index_to_indicator_live_value(monkeypatch):
+    csv_text = "\n".join(
+        [
+            "FAO Food Price Index",
+            "2014-2016=100",
+            "Date,Food Price Index,Meat,Dairy,Cereals,Oils,Sugar",
+            "",
+            "2026-03,126.4,120.1,119.0,111.0,183.1,92.8",
+            "2026-04,127.2,121.0,118.0,111.3,193.9,88.5",
+        ]
+    )
+    response = MagicMock()
+    response.status_code = 200
+    response.text = csv_text
+    response.raise_for_status.return_value = None
+
+    monkeypatch.setattr("src.adapters.fao.requests.get", lambda *args, **kwargs: response)
+
+    item = FAOAdapter().fetch_latest()[0]
+
+    assert item.indicator_id == "wi-fao-food-price-index"
+    assert item.current_value == 127.2
+    assert item.current_value_date == "2026-04"
+    assert item.previous_value == 126.4
+    assert item.previous_value_date == "2026-03"
+
+
 def test_eurostat_adapter():
     adapter = EurostatAdapter()
     assert adapter.name == "Eurostat"
