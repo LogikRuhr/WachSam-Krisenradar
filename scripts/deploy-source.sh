@@ -34,7 +34,10 @@ if [ "$actual_sha" != "$EXPECTED_SHA" ]; then
   fail "checked out $actual_sha, expected $EXPECTED_SHA"
 fi
 
-bash "$TARGET_DIR/scripts/verify.sh"
+(
+  cd "$TARGET_DIR"
+  bash scripts/verify.sh
+)
 
 cat > "$TARGET_DIR/.deploy-state" <<EOF
 sha=$actual_sha
@@ -43,4 +46,3 @@ deployed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 EOF
 
 echo "deploy-source: PASS $actual_sha -> $TARGET_DIR"
-
