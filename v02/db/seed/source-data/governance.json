@@ -1,0 +1,202 @@
+{
+  "meta": {
+    "version": "v0.2",
+    "stand": "2026-05-21",
+    "count": 11,
+    "note": "11 Governance-Fälle. Professionell, nicht polemisch. Basis: docs/governance.md"
+  },
+  "items": [
+    {
+      "id": "gov-01",
+      "title": "Tankrabatt 2022",
+      "versprechen": "17 Cent Entlastung pro Liter",
+      "realitaet": "Energiesteuer-Senkung 14,04 Cent; Mineralölkonzerne gaben Rabatt nur teilweise weiter",
+      "haushaltswirkung": "Spürbare Entlastung lag unter kommunizierten Werten",
+      "confidence": "hoch",
+      "quellen": [
+        "Bundestag Energiesteuer-Senkung April 2022",
+        "ifo Institut via Zeit Mai 2022"
+      ],
+      "sources": [
+        {
+          "name": "Bundestag — Energiesteuer-Senkung",
+          "url": "https://www.bundestag.de/dokumente/textarchiv/2026/kw17-pa-finanzen-1166336",
+          "stand": "April 2026"
+        },
+        {
+          "name": "ifo Institut (via Zeit)",
+          "url": "https://www.zeit.de/mobilitaet/2026-05/tankrabatt-ifo-institut-diesel-benzin-adac-gxe",
+          "stand": "Mai 2026"
+        }
+      ],
+      "linked_cascade": "cascade-e"
+    },
+    {
+      "id": "gov-02",
+      "title": "Stromsteuer-Senkung",
+      "versprechen": "Breite Ankündigung einer Haushaltsentlastung",
+      "realitaet": "Umsetzung bleibt unsicher; Netzentgelte und weitere Abgaben nicht gesenkt",
+      "haushaltswirkung": "Keine gesicherte Entlastung ableitbar",
+      "confidence": "hoch",
+      "quellen": [
+        "Tagesschau Juli 2025",
+        "Handwerksblatt/ZDH 2025"
+      ],
+      "sources": [
+        {
+          "name": "Tagesschau — Koalitionsausschuss Stromsteuer",
+          "url": "https://www.tagesschau.de/inland/innenpolitik/koalitionsausschuss-stromsteuer-102.html",
+          "stand": "Juli 2025"
+        },
+        {
+          "name": "Handwerksblatt (ZDH)",
+          "url": "https://www.handwerksblatt.de/handwerkspolitik/stromsteuer-regierung-bricht-ihr-versprechen",
+          "stand": "2025"
+        }
+      ],
+      "linked_cascade": "cascade-e"
+    },
+    {
+      "id": "gov-03",
+      "title": "Gasspeicher-Pflicht & Versorgungssicherheit",
+      "versprechen": "Staatliche Eingriffe sollen Versorgungssicherheit gewährleisten",
+      "realitaet": "Gasspeicher-Füllstand 2026 unter Vorjahresniveau; Einspeicherung wetter- und marktabhängig",
+      "haushaltswirkung": "Heizkosten-Risiko für Winter 2026/27 bleibt offen",
+      "confidence": "mittel",
+      "quellen": [
+        "Bundesnetzagentur via AGSI/GIE 2026"
+      ],
+      "sources": [
+        {
+          "name": "Bundesnetzagentur (via AGSI/GIE)",
+          "url": "https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/Versorgungssicherheit/aktuelle_gasversorgung/start.html",
+          "stand": "2026"
+        }
+      ],
+      "linked_cascade": "cascade-h"
+    },
+    {
+      "id": "gov-04",
+      "title": "Schuldenbremse & Investitionspolitik",
+      "versprechen": "Investitionsprogramme für Infrastruktur, Klimaschutz, Digitalisierung",
+      "realitaet": "Schuldenbremse begrenzt Spielraum; Investitionslücke bleibt strukturell",
+      "haushaltswirkung": "Infrastrukturmängel wirken langfristig auf Versorgungsqualität",
+      "confidence": "mittel",
+      "quellen": [
+        "IW Köln 2025/26",
+        "Handelsblatt 2025"
+      ],
+      "sources": [
+        {
+          "name": "IW Köln",
+          "url": "https://www.iwkoeln.de/presse/pressemitteilungen/michael-groemling-bip-waechst-2026-um-knapp-ein-prozent.html",
+          "stand": "2026"
+        }
+      ],
+      "linked_cascade": "cascade-l"
+    },
+    {
+      "id": "gov-05",
+      "title": "Kindergrundsicherung",
+      "versprechen": "Vereinfachung und Stärkung der Familienförderung",
+      "realitaet": "Gesetz nicht verabschiedet; Kinder-Armutsrisiko unverändert",
+      "haushaltswirkung": "Familien mit Kindern erhalten keine angekündigte Entlastung",
+      "confidence": "hoch",
+      "quellen": [
+        "Finanztip 2024",
+        "Beatvest 2024"
+      ],
+      "linked_cascade": "cascade-j"
+    },
+    {
+      "id": "gov-06",
+      "title": "Bürgergeld-Reform",
+      "versprechen": "Bürgergeld als modernes Grundsicherungssystem",
+      "realitaet": "Sanktionsregelungen mehrfach geändert; Kaufkraft real gesunken",
+      "haushaltswirkung": "Haushalte im Bezug unter erhöhtem Kostendruck",
+      "confidence": "hoch",
+      "quellen": [
+        "Bundesagentur für Arbeit 2025",
+        "Tagesschau 2025"
+      ],
+      "linked_cascade": "cascade-j"
+    },
+    {
+      "id": "gov-07",
+      "title": "Kernkraft-Ausstieg & Energiewende-Tempo",
+      "versprechen": "Energiewende sichert günstige und sichere Versorgung",
+      "realitaet": "Netzstress durch volatile Erneuerbare ohne ausreichend Speicher; Strompreise erhöht",
+      "haushaltswirkung": "Stromkosten für Haushalte strukturell erhöht",
+      "confidence": "mittel",
+      "quellen": [
+        "FAZ 2023/2025",
+        "Stern 2023"
+      ],
+      "linked_cascade": "cascade-c"
+    },
+    {
+      "id": "gov-08",
+      "title": "Mütterrente & Rentenversprechen",
+      "versprechen": "Rentenstabilisierung und Mütterrenten-Ausweitung",
+      "realitaet": "Rentenpaket II politisch verzögert; Finanzierungslücke bleibt",
+      "haushaltswirkung": "Planungsunsicherheit für rentennahe Haushalte",
+      "confidence": "mittel",
+      "quellen": [
+        "Handelsblatt 2024",
+        "Tagesschau 2024"
+      ],
+      "linked_cascade": "cascade-j"
+    },
+    {
+      "id": "gov-09",
+      "title": "Wirtschaftsagenda & Standortsicherung",
+      "versprechen": "Wachstumschancengesetz und Standortpolitik sollen Wirtschaft beleben",
+      "realitaet": "Wachstumsprognose 2026 von 1,0 % auf 0,5 % halbiert; Investitionsklima schwach",
+      "haushaltswirkung": "Schwaches Wachstum hält Kaufkraftdruck und Jobrisiken aufrecht",
+      "confidence": "hoch",
+      "quellen": [
+        "IW Köln Mai 2026",
+        "Capital Mai 2026"
+      ],
+      "sources": [
+        {
+          "name": "IW Köln",
+          "url": "https://www.iwkoeln.de/presse/pressemitteilungen/michael-groemling-bip-waechst-2026-um-knapp-ein-prozent.html",
+          "stand": "Mai 2026"
+        },
+        {
+          "name": "Capital",
+          "url": "https://www.capital.de/wirtschaft-politik/wachstum-2026--regierung-halbiert-prognose-wegen-irankrieg-37333956.html",
+          "stand": "Mai 2026"
+        }
+      ],
+      "linked_cascade": "cascade-f"
+    },
+    {
+      "id": "gov-10",
+      "title": "Sondervermögen Bundeswehr/Infrastruktur",
+      "versprechen": "100-Mrd.-Sondervermögen Bundeswehr; Infrastruktur-Investitionen",
+      "realitaet": "Abruf schleppend; Vergabe-Bürokratie; Haushaltswirkung verzögert",
+      "haushaltswirkung": "Staatsfinanzierte Infrastrukturinvestitionen bleiben aus",
+      "confidence": "mittel",
+      "quellen": [
+        "Handelsblatt 2024/2025",
+        "Spiegel 2024"
+      ],
+      "linked_cascade": "cascade-l"
+    },
+    {
+      "id": "gov-11",
+      "title": "Klimaziele & CO2-Bepreisung",
+      "versprechen": "CO2-Preis als Lenkungsinstrument; Klimaziele 2030",
+      "realitaet": "CO2-Preis 2024/25 mehrfach politisch angepasst; Klimazielerreichung 2030 fraglich",
+      "haushaltswirkung": "CO2-Preis erhöht Energie- und Kraftstoffkosten direkt",
+      "confidence": "hoch",
+      "quellen": [
+        "Klimareporter 2024/2025",
+        "taz 2025"
+      ],
+      "linked_cascade": "cascade-d"
+    }
+  ]
+}

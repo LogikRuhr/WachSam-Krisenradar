@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: wachsam-v02-postgres
+    environment:
+      POSTGRES_USER: wachsam
+      POSTGRES_PASSWORD: wachsam_dev
+      POSTGRES_DB: wachsam
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wachsam -d wachsam"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wachsam-v02
+
+  # web:
+  #   # enabled in W1.7
+  #   build:
+  #     context: ../web
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - wachsam-v02
+
+  intelligence:
+    build:
+      context: ../intelligence
+    container_name: wachsam-intelligence
+    env_file:
+      - ../intelligence/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - wachsam-v02
+    command: python -m src.main
+    profiles:
+      - intelligence
+
+volumes:
+  postgres-data:
+
+networks:
+  wachsam-v02:

@@ -1,38 +1,51 @@
-# WachSam-Krisenradar
+# WachSam
 
-Sauberes RuhrLogik-Repo fuer strukturierte Produkt-, Tool- oder App-Arbeit.
-`main` ist die kanonische Quelle. GitHub Actions prueft jeden Push und Pull Request.
+**Deutschland-zentriertes Krisen- und Haushalts-Auswirkungsradar.**
 
-Der Startzustand enthaelt bewusst keinen App-Stack. Er definiert zuerst Ordnung:
-klare Doku-Orte, Issue-/PR-Templates, ADRs, Specs, Verify-Scripts und
-Security-Regeln. Frameworks, Datenbanken und externe Services werden erst nach
-einer akzeptierten Spec ergaenzt.
+WachSam übersetzt globale Krisen und Kaskaden in verständliche Auswirkungen auf Kosten, Versorgung und Stabilität deutscher Haushalte.
 
-## Struktur
+## Aktiver Stack — v0.3 (Bau seit 2026-05-22, Welle W0–W1.4)
 
-- `docs/` - Workflow, Security, Verification, Repo-Struktur und ADRs
-- `specs/` - freigegebene Aufgaben- und Feature-Vertraege
-- `templates/` - wiederverwendbare Issue-, PR-, ADR- und Session-Vorlagen
-- `scripts/` - lokale Verify- und Hygiene-Checks
-- `outputs/` - explizite Markdown-Reports, keine PII oder Rohdaten
-- `.github/` - GitHub Templates und CI
+Backend-Webapp unter `v02/`. Stack-Pin: **Next.js 15** (App Router, TypeScript strict) + **Postgres 16** + **Drizzle ORM** + **Auth.js v5** (Magic-Link via **Resend**) + **Docker-Compose auf IONOS-VPS**. Live-Ingestion in Python + Scrapy folgt ab Welle W2.
 
-## Deploy
+Details: `v02/README.md`. Bindende ADRs: `docs/adr/034-backend-pivot.md` (Pivot), `docs/adr/037-cutover-strategy.md` (v01→v02 Cutover).
 
-`deploy-source` legt den aktuellen `main`-Stand auf dem VPS unter `/opt/wachsam/source`
-ab. Der Workflow ist manuell und startet keine produktiven Container neu.
+## Static-Reference — v0.1 (frozen post-W0, läuft produktiv bis Cutover W1.7)
 
-Details: `docs/deploy.md`.
+Statische Homepage unter `v01/`. Stack: Vite, React 19, TypeScript strict, Tailwind v4. Eingefroren als Static-Reference seit Welle W0 (2026-05-22). Keine weitere Feature-Entwicklung — aktive Arbeit findet in `v02/` statt.
 
-## Start
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/verify.ps1
-```
+Details: `v01/FROZEN.md`. Bindende ADR: `docs/adr/037-cutover-strategy.md`.
 
 ```bash
-bash scripts/verify.sh
+cd v01
+npm install
+npm run dev
 ```
 
-Vor Code gilt: Plan schreiben, File-Scope freigeben lassen, klein committen,
-Verify ausfuehren, dann Review.
+Öffnet [http://localhost:5173](http://localhost:5173).
+
+Qualitätsgates für v0.1: `npm run typecheck`, `npm run build`, `npm test`. CI: `.github/workflows/v01-ci.yml`.
+
+## Doku
+
+- `repo-structure.md` — aktive Repo-Struktur und lokale Artefakt-Regeln
+- `product.md` — Produktidentität
+- `methodology.md` — WachSam-Logik (Signal → Relevanz → Systeme → Haushalt)
+- `brand.md` — Farben, Typografie, Stilregeln
+- `ui-standard.md` — Component-Patterns
+- `agent-workflow.md`, `session-handoff.md`, `verification.md`, `testing.md` — Arbeitsregeln
+- `git-hygiene.md` — Operative Git/GitHub-Workflow-Regeln (post-Cutover-Lessons)
+- `issue-hygiene.md` — GitHub-Issue-Cleanup-Regeln nach v0.1-Cutover
+- `deploy.md` — IONOS Static Deploy
+
+## Repo-Struktur
+
+- `v01/` — aktiver Produktcode.
+- `docs/`, `specs/`, `rules/`, `references/` — Produkt-, Architektur- und Agentenwissen.
+- `scripts/`, `.github/`, `infra/ionos/` — Verify, CI und Static Deploy.
+- `ops/hermes-lite/` — lokale Operations-Lesesicht, nicht öffentliches Produkt.
+- `outputs/` — Markdown-Reports und Plan-Artefakte; HTML-Mockups bleiben lokal/gitignored.
+
+## Status
+
+Aktiver Branch: `main`. Repo ist bewusst minimal: `v01/`, aktive Doku, Verify-Skripte, CI, IONOS-Static-Deploy-Artefakte und RuhrLogik-Referenz unter `infra/`.

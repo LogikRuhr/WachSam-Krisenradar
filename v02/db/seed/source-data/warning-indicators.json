@@ -1,0 +1,201 @@
+{
+  "meta": {
+    "version": "v0.2",
+    "stand": "2026-05-21",
+    "count": 8,
+    "note": "8 Frühwarnindikatoren. Basis: docs/warning-indicators.md"
+  },
+  "indicators": [
+    {
+      "id": "wi-gasspeicher-fuellstand",
+      "label": "Gasspeicher-Füllstand Deutschland",
+      "threshold_warn": 40,
+      "threshold_critical": 30,
+      "unit": "Prozent",
+      "system": "energie",
+      "severity_trigger": "kritisch",
+      "quelle": "Bundesnetzagentur via AGSI/GIE",
+      "sources": [
+        {
+          "name": "Bundesnetzagentur (via AGSI/GIE)",
+          "url": "https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/Versorgungssicherheit/aktuelle_gasversorgung/start.html",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "Direkte Versorgungsrelevanz für Haushalt-Heizung und Industrie",
+      "linked_cascade": "cascade-h",
+      "scale_direction": "lower_is_worse",
+      "zone_text_uncritical": "Der Gasspeicher-Füllstand liegt oberhalb der Warnschwelle. Die Versorgungslage ist stabil.",
+      "zone_text_elevated": "Der Füllstand nähert sich der Warnschwelle. Eine angespannte Lage ist möglich, aber nicht akut.",
+      "zone_text_critical": "Der Füllstand liegt unterhalb der kritischen Schwelle. Die Versorgungslage ist ernst.",
+      "target_value": 80,
+      "target_deadline": "2026-10-01T00:00:00Z",
+      "target_label": "80 % bis 1. Oktober (gesetzliche Vorgabe)"
+    },
+    {
+      "id": "wi-fao-food-price-index",
+      "label": "FAO Food Price Index",
+      "threshold_warn": 120,
+      "threshold_critical": 135,
+      "unit": "Indexpunkte",
+      "system": "lebensmittel",
+      "severity_trigger": "erhoeht",
+      "quelle": "FAO Food Price Index (monatlich)",
+      "sources": [
+        {
+          "name": "FAO Food Price Index",
+          "url": "https://www.fao.org/worldfoodsituation/foodpricesindex",
+          "stand": "März 2026"
+        }
+      ],
+      "germany_relevance": "Preisdruck auf deutschen Einzelhandel 4–8 Wochen verzögert",
+      "linked_cascade": "cascade-a",
+      "scale_direction": "higher_is_worse"
+    },
+    {
+      "id": "wi-arbeitslosigkeit-de",
+      "label": "Registrierte Arbeitslose Deutschland",
+      "threshold_warn": 3,
+      "threshold_critical": 3.5,
+      "unit": "Millionen Personen",
+      "system": "arbeit",
+      "severity_trigger": "erhoeht",
+      "quelle": "Bundesagentur für Arbeit (monatlich)",
+      "sources": [
+        {
+          "name": "Bundesagentur für Arbeit — Statistik",
+          "url": "https://statistik.arbeitsagentur.de/",
+          "stand": "2026"
+        },
+        {
+          "name": "Tagesschau — Konjunktur 2026",
+          "url": "https://www.tagesschau.de/wirtschaft/konjunktur/konjunkturprognose-2026-100.html",
+          "stand": "April 2026"
+        }
+      ],
+      "germany_relevance": "Direkte Kaufkraftwirkung; 3,1 Mio. Januar 2026",
+      "linked_cascade": "cascade-f",
+      "scale_direction": "higher_is_worse"
+    },
+    {
+      "id": "wi-inflation-vpi-de",
+      "label": "Verbraucherpreisindex Deutschland (VPI)",
+      "threshold_warn": 3,
+      "threshold_critical": 5,
+      "unit": "Prozent YoY",
+      "system": "finanzen",
+      "severity_trigger": "erhoeht",
+      "quelle": "Destatis (monatlich)",
+      "sources": [
+        {
+          "name": "Destatis — Verbraucherpreisindex",
+          "url": "https://www.destatis.de/DE/Themen/Wirtschaft/Preise/Verbraucherpreisindex/_inhalt.html",
+          "stand": "2026"
+        },
+        {
+          "name": "IW Köln — Inflationsprognose",
+          "url": "https://www.iwkoeln.de/presse/pressemitteilungen/michael-groemling-bip-waechst-2026-um-knapp-ein-prozent.html",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "Direkte Haushaltsbelastung; IW-Prognose ~3 % für 2026",
+      "linked_cascade": "cascade-j",
+      "scale_direction": "higher_is_worse"
+    },
+    {
+      "id": "wi-oel-brent",
+      "label": "Brent Rohölpreis",
+      "threshold_warn": 90,
+      "threshold_critical": 110,
+      "unit": "USD/Barrel",
+      "system": "energie",
+      "severity_trigger": "erhoeht",
+      "quelle": "IEA / Marktdaten",
+      "sources": [
+        {
+          "name": "IEA — Oil Market Report",
+          "url": "https://www.iea.org/topics/oil-market-report",
+          "stand": "2026"
+        },
+        {
+          "name": "Destatis — Verbraucherpreise Kraftstoffe",
+          "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/05/PD26_161_611.html",
+          "stand": "12. Mai 2026 / April 2026"
+        }
+      ],
+      "germany_relevance": "Kraftstoffpreise folgen ~2 Wochen verzögert",
+      "linked_cascade": "cascade-d",
+      "scale_direction": "higher_is_worse"
+    },
+    {
+      "id": "wi-bsi-cyberbedrohung",
+      "label": "BSI Cyberbedrohungslage Kritische Infrastruktur",
+      "threshold_warn": 3,
+      "threshold_critical": 4,
+      "unit": "BSI-Lagebericht-Stufe (1-4)",
+      "system": "infrastruktur",
+      "severity_trigger": "erhoeht",
+      "quelle": "BSI Lagebericht",
+      "sources": [
+        {
+          "name": "BSI — Lagebericht zur IT-Sicherheit",
+          "url": "https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Publikationen/Lageberichte/Lagebericht2025_Achtseiter.html",
+          "stand": "November 2025"
+        }
+      ],
+      "germany_relevance": "Kritische Infrastruktur direkt betroffen",
+      "linked_cascade": "cascade-c",
+      "scale_direction": "higher_is_worse"
+    },
+    {
+      "id": "wi-vertrauen-politik",
+      "label": "Vertrauen in politische Steuerung",
+      "threshold_warn": 25,
+      "threshold_critical": 15,
+      "unit": "Prozent Bevölkerung mit Vertrauen",
+      "system": "gesellschaft",
+      "severity_trigger": "erhoeht",
+      "quelle": "Stiftung für Zukunftsfragen; Weizenbaum-Institut",
+      "sources": [
+        {
+          "name": "Stiftung für Zukunftsfragen",
+          "url": "https://www.stiftungfuerzukunftsfragen.de/wie-blicken-die-buerger-auf-das-jahr-2026/",
+          "stand": "2026"
+        },
+        {
+          "name": "Weizenbaum-Institut",
+          "url": "https://www.weizenbaum-institut.de/news/detail/sorge-um-das-politische-klima-in-deutschland/",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "Krisenresilienz und Maßnahmenakzeptanz direkt abhängig",
+      "linked_cascade": "cascade-e",
+      "scale_direction": "lower_is_worse"
+    },
+    {
+      "id": "wi-duengemittel-preis",
+      "label": "FAO Fertilizer Price Index",
+      "threshold_warn": 130,
+      "threshold_critical": 160,
+      "unit": "Indexpunkte",
+      "system": "lebensmittel",
+      "severity_trigger": "beobachten",
+      "quelle": "FAO Fertilizer Markets; World Bank Commodity Markets Outlook",
+      "sources": [
+        {
+          "name": "FAO — Fertilizer markets",
+          "url": "https://www.fao.org/in-focus/fertilizer/en",
+          "stand": "2026"
+        },
+        {
+          "name": "World Bank — Commodity Markets Outlook",
+          "url": "https://thedocs.worldbank.org/en/doc/f3138644a1e8e2bb631399ae11d6c408-0050012026/original/CMO-April-2026.pdf",
+          "stand": "April 2026"
+        }
+      ],
+      "germany_relevance": "Erzeugerpreise folgen in 3–6 Monaten; Lebensmittelpreise in 6–9 Monaten",
+      "linked_cascade": "cascade-g",
+      "scale_direction": "higher_is_worse"
+    }
+  ]
+}

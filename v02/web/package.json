@@ -1,0 +1,44 @@
+{
+  "name": "@wachsam/web",
+  "version": "0.0.0-w1.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "db:push": "cd ../db && drizzle-kit push",
+    "db:generate": "cd ../db && drizzle-kit generate",
+    "db:migrate": "cd ../db && drizzle-kit migrate"
+  },
+  "dependencies": {
+    "@auth/core": "0.34.3",
+    "@auth/drizzle-adapter": "1.11.2",
+    "drizzle-orm": "0.45.2",
+    "next": "15.5.18",
+    "next-auth": "5.0.0-beta.31",
+    "postgres": "3.4.9",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "resend": "6.12.3",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.0",
+    "@eslint/js": "^9.39.0",
+    "@types/node": "25.9.1",
+    "@types/react": "19.2.15",
+    "@types/react-dom": "19.2.3",
+    "drizzle-kit": "0.31.10",
+    "eslint": "9.39.4",
+    "eslint-config-next": "15.5.18",
+    "tsx": "4.22.3",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.59.0"
+  },
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

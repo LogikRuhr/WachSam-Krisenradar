@@ -1,0 +1,37 @@
+# dependencies
+node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+
+# next.js build output
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# environment files
+.env
+.env.local
+.env.*.local
+
+# drizzle
+drizzle/
+.drizzle/
+
+# test + coverage
+coverage/
+.vitest/
+*.lcov
+
+# editor + os
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# logs
+*.log
+logs/
+
+# postgres local volume
+infra/postgres-data/

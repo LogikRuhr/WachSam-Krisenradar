@@ -1,0 +1,222 @@
+[
+  {
+    "id": "energie-oel-hormus",
+    "bereich": "energie",
+    "titel": "Energie- und Ölmarkt unter geopolitischem Druck",
+    "beschreibung": "Die anhaltenden Spannungen am Persischen Golf belasten den Ölpreis und über die Verflechtung mit Gas auch den europäischen Energiemarkt. Für deutsche Haushalte heißt das: höhere Spritpreise, höhere Heizkosten im kommenden Winter.",
+    "severity": "kritisch",
+    "trend": "steigend",
+    "primaerindikator": "Wachstumsprognose 2026 von 1,0 % auf 0,5 % halbiert",
+    "confidence": "hoch",
+    "retrieved_at": "2026-05-13",
+    "sources": [
+      {
+        "name": "Capital",
+        "url": "https://www.capital.de/wirtschaft-politik/wachstum-2026--regierung-halbiert-prognose-wegen-irankrieg-37333956.html",
+        "stand": "Mai 2026"
+      },
+      {
+        "name": "IW Köln",
+        "url": "https://www.iwkoeln.de/presse/pressemitteilungen/michael-groemling-bip-waechst-2026-um-knapp-ein-prozent.html",
+        "stand": "Mai 2026"
+      }
+    ]
+  },
+  {
+    "id": "lebensmittel-preisdruck",
+    "bereich": "lebensmittel",
+    "titel": "Lebensmittelpreise mit globalem Aufwärtsdruck",
+    "beschreibung": "Der FAO-Preisindex zog im März 2026 erneut an. Hintergrund sind Exportbeschränkungen für Düngemittel und höhere Energie- und Transportkosten. Wirkung auf den Wocheneinkauf: zeitverzögert, aber wahrscheinlich.",
+    "severity": "erhoeht",
+    "trend": "steigend",
+    "primaerindikator": "FAO Food Price Index +2,4 % (März 2026); Zucker +7,2 %",
+    "confidence": "hoch",
+    "retrieved_at": "2026-05-14",
+    "sources": [
+      {
+        "name": "FAO Food Price Index",
+        "url": "https://www.fao.org/worldfoodsituation/foodpricesindex",
+        "stand": "März 2026"
+      },
+      {
+        "name": "Destatis",
+        "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/04/PD26_127_611.html",
+        "stand": "April 2026"
+      }
+    ]
+  },
+  {
+    "id": "infrastruktur-stromnetz",
+    "bereich": "infrastruktur",
+    "titel": "Stromnetz und kritische Infrastruktur unter Stress",
+    "beschreibung": "Hoher Anteil volatiler Erneuerbarer ohne ausreichend Speicher führt zu wiederkehrenden Negativpreis-Phasen und strukturellem Netzstress. Parallel nehmen Cyberangriffe auf Stadtwerke zu. Beides erhöht das Risiko regionaler Versorgungsstörungen.",
+    "severity": "erhoeht",
+    "trend": "steigend",
+    "primaerindikator": "Cyberangriffe betreffen laut Branchenberichten rund 97 % der Stadtwerke",
+    "confidence": "mittel",
+    "retrieved_at": "2026-05-14",
+    "sources": [
+      {
+        "name": "BSI",
+        "url": "https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Publikationen/Lageberichte/Lagebericht2025_Achtseiter.html",
+        "stand": "November 2025"
+      },
+      {
+        "name": "ENISA",
+        "url": "https://www.enisa.europa.eu/publications/enisa-threat-landscape-2025",
+        "stand": "Oktober 2025"
+      }
+    ]
+  },
+  {
+    "id": "industrie-arbeit",
+    "bereich": "industrie",
+    "titel": "Industrie und Arbeitsmarkt unter strukturellem Druck",
+    "beschreibung": "Schwächer als erwartete Konjunktur, US-Zölle und hohe Energiekosten treffen die Industrie. Die Arbeitslosenzahl erreichte zu Jahresbeginn ein Mehrjahreshoch — mit Folgewirkung auf Kaufkraft und Kommunalfinanzen.",
+    "severity": "kritisch",
+    "trend": "eskalierend",
+    "primaerindikator": "3,1 Mio. Arbeitslose im Januar 2026 — Höchststand seit über einem Jahrzehnt",
+    "confidence": "hoch",
+    "retrieved_at": "2026-05-13",
+    "sources": [
+      {
+        "name": "Tagesschau",
+        "url": "https://www.tagesschau.de/wirtschaft/konjunktur/konjunkturprognose-2026-100.html",
+        "stand": "April 2026"
+      },
+      {
+        "name": "Handelsblatt",
+        "url": "https://www.handelsblatt.com/politik/international/handel-trumps-neue-zollplaene-treffen-vor-allem-deutschland/100221891.html",
+        "stand": "Mai 2026"
+      }
+    ]
+  },
+  {
+    "id": "gesellschaft-vertrauen",
+    "bereich": "gesellschaft",
+    "titel": "Vertrauen in politische Steuerung sinkt",
+    "beschreibung": "Studien zeigen breite Sorge um das politische Klima und einen erwarteten weiteren Vertrauensverlust. Das ist kein direkter Mehrkosten-Effekt, aber ein Stabilitätsfaktor: Krisenkooperation und Akzeptanz für Maßnahmen sinken.",
+    "severity": "erhoeht",
+    "trend": "steigend",
+    "primaerindikator": "Stiftung für Zukunftsfragen: rund 89 % erwarten weiteren Vertrauensverlust",
+    "confidence": "mittel",
+    "retrieved_at": "2026-05-13",
+    "sources": [
+      {
+        "name": "Stiftung für Zukunftsfragen",
+        "url": "https://www.stiftungfuerzukunftsfragen.de/wie-blicken-die-buerger-auf-das-jahr-2026/",
+        "stand": "2026"
+      },
+      {
+        "name": "Weizenbaum-Institut",
+        "url": "https://www.weizenbaum-institut.de/news/detail/sorge-um-das-politische-klima-in-deutschland/",
+        "stand": "2026"
+      }
+    ]
+  },
+  {
+    "id": "mobilitaetskosten-kraftstoffe",
+    "bereich": "mobilitaet",
+    "titel": "Mobilitätskosten durch Kraftstoffe deutlich erhöht",
+    "beschreibung": "Die Verbraucherpreise für Kraftstoffe lagen im April 2026 deutlich über dem Vorjahresmonat. Für Haushalte mit Auto erhöht das die laufenden Mobilitätskosten; auch Wartung und Fahrzeugunterhalt bleiben kostenrelevant.",
+    "severity": "erhoeht",
+    "trend": "steigend",
+    "primaerindikator": "Destatis: Kraftstoffe im April 2026 deutlich teurer als im Vorjahresmonat",
+    "confidence": "hoch",
+    "retrieved_at": "2026-05-19",
+    "sources": [
+      {
+        "name": "Destatis",
+        "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/05/PD26_161_611.html",
+        "stand": "12. Mai 2026 / April 2026"
+      }
+    ]
+  },
+  {
+    "id": "arbeit-arbeitsmarkt-druck",
+    "bereich": "arbeit",
+    "titel": "Arbeitsmarkt unter strukturellem Druck",
+    "beschreibung": "Schwache Konjunktur, gedämpfte Industriedynamik und gestiegene Energiekosten halten den Arbeitsmarkt unter Druck. Die Arbeitslosenzahl erreichte zu Jahresbeginn ein Mehrjahreshoch und ist Schlüsselindikator für Kaufkraft und Kommunalfinanzen.",
+    "severity": "kritisch",
+    "trend": "steigend",
+    "primaerindikator": "3,1 Mio. Arbeitslose Januar 2026; Wachstumsprognose 2026 auf 0,5 % halbiert",
+    "confidence": "hoch",
+    "retrieved_at": "2026-05-21",
+    "sources": [
+      {
+        "name": "Tagesschau",
+        "url": "https://www.tagesschau.de/wirtschaft/konjunktur/konjunkturprognose-2026-100.html",
+        "stand": "April 2026"
+      },
+      {
+        "name": "IW Köln",
+        "url": "https://www.iwkoeln.de/presse/pressemitteilungen/michael-groemling-bip-waechst-2026-um-knapp-ein-prozent.html",
+        "stand": "Mai 2026"
+      }
+    ]
+  },
+  {
+    "id": "finanzen-inflation-kaufkraft",
+    "bereich": "finanzen",
+    "titel": "Inflation belastet Kaufkraft anhaltend",
+    "beschreibung": "Verbraucherpreise verharren auf erhöhtem Niveau; das IW erwartet für 2026 rund 3 Prozent Inflation. Realeinkommen entwickeln sich negativ, Konsumneigung sinkt. Direkter Einfluss auf Haushaltsbudget, Vorsorge und Liquidität.",
+    "severity": "erhoeht",
+    "trend": "gleichbleibend",
+    "primaerindikator": "IW Köln Prognose 2026: Jahresinflation rund 3 %; Reallohnentwicklung negativ",
+    "confidence": "hoch",
+    "retrieved_at": "2026-05-21",
+    "sources": [
+      {
+        "name": "IW Köln",
+        "url": "https://www.iwkoeln.de/presse/pressemitteilungen/michael-groemling-bip-waechst-2026-um-knapp-ein-prozent.html",
+        "stand": "Mai 2026"
+      }
+    ]
+  },
+  {
+    "id": "gesundheit-arzneimittelversorgung",
+    "bereich": "gesundheit",
+    "titel": "Arzneimittelversorgung mit anhaltenden Engpässen",
+    "beschreibung": "Das BfArM dokumentiert fortlaufende Lieferengpässe bei Wirkstoffgruppen. Apotheken melden Verfügbarkeitsprobleme, Ersatzpräparate müssen medizinisch abgestimmt werden. Haushalte mit Dauermedikation stehen unter erhöhtem Planungsrisiko.",
+    "severity": "erhoeht",
+    "trend": "steigend",
+    "primaerindikator": "BfArM-Lieferengpassliste 2026 weiterhin aktiv; mehrere Wirkstoffgruppen betroffen",
+    "confidence": "mittel",
+    "retrieved_at": "2026-05-21",
+    "sources": [
+      {
+        "name": "BfArM",
+        "url": "https://www.bfarm.de/DE/Arzneimittel/Arzneimittelinformationen/Lieferengpaesse/_verteilerseite.html?nn=471282",
+        "stand": "2026"
+      },
+      {
+        "name": "BfArM FAQ Lieferengpässe",
+        "url": "https://www.bfarm.de/DE/Aktuelles/Presse/FAQ/Lieferengpaesse/faq-liste.html",
+        "stand": "2026"
+      }
+    ]
+  },
+  {
+    "id": "logistik-post-qualitaet",
+    "bereich": "logistik",
+    "titel": "Post- und Paketzustellung mit Qualitätsauffälligkeiten",
+    "beschreibung": "Die Bundesnetzagentur dokumentiert anhaltend erhöhtes Schlichtungsaufkommen bei Post- und Paketzustellung. Lieferzeiten verlängern sich, kleine Unternehmen mit Lieferabhängigkeit und Haushalte mit zeitkritischen Sendungen sind besonders betroffen.",
+    "severity": "beobachten",
+    "trend": "steigend",
+    "primaerindikator": "Bundesnetzagentur 2026: erhöhtes Schlichtungsaufkommen Post",
+    "confidence": "mittel",
+    "retrieved_at": "2026-05-21",
+    "sources": [
+      {
+        "name": "Bundesnetzagentur — Schlichtung Post",
+        "url": "https://www.bundesnetzagentur.de/SharedDocs/Pressemitteilungen/DE/2026/20260202_Schlichtung_TK_Post.html",
+        "stand": "Februar 2026"
+      },
+      {
+        "name": "Bundesnetzagentur — Datenportal Post",
+        "url": "https://www.bundesnetzagentur.de/DE/Fachthemen/Datenportal/3_Post/start.html",
+        "stand": "April 2026"
+      }
+    ]
+  }
+]

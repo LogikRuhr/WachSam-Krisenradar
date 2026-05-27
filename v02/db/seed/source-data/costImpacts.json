@@ -1,0 +1,175 @@
+[
+  {
+    "id": "tanken-rabatt-diskrepanz",
+    "bereich": "mobilitaet",
+    "titel": "Tankrabatt entlastet weniger als kommuniziert",
+    "beschreibung": "Die als „17 Cent pro Liter\" beworbene Entlastung beruht im Gesetzentwurf auf einer Energiesteuer-Senkung von 14,04 Cent — der Rest ergibt sich aus der Umsatzsteuer. Untersuchungen zeigen, dass die Mineralölkonzerne den Rabatt nur teilweise an Verbraucher weitergeben. Die spürbare Entlastung an der Zapfsäule liegt unter den kommunizierten Werten.",
+    "zeithorizont": "wochen",
+    "confidence": "hoch",
+    "unsicherheit": "Wie vollständig der Rabatt weitergegeben wird, hängt von Marktverhalten und Druck der Regierung auf die Konzerne ab.",
+    "retrieved_at": "2026-05-19",
+    "causalLinks": [
+      {
+        "id": "cl-cost-tanken-rabatt-to-action-finanzielle-reserve",
+        "targetType": "citizenAction",
+        "targetId": "finanzielle-reserve",
+        "relation": "mitigates"
+      }
+    ],
+    "sources": [
+      {
+        "name": "Bundestag — Energiesteuer-Senkung",
+        "url": "https://www.bundestag.de/dokumente/textarchiv/2026/kw17-pa-finanzen-1166336",
+        "stand": "April 2026"
+      },
+      {
+        "name": "ifo Institut (via Zeit)",
+        "url": "https://www.zeit.de/mobilitaet/2026-05/tankrabatt-ifo-institut-diesel-benzin-adac-gxe",
+        "stand": "Mai 2026"
+      },
+      {
+        "name": "BR24 — 12-Uhr-Regel",
+        "url": "https://www.br.de/nachrichten/wirtschaft/spritpreise-mineraloelkonzerne-profitieren-von-12-uhr-regel,VHtx52J",
+        "stand": "April 2026"
+      }
+    ]
+  },
+  {
+    "id": "stromsteuer-fuer-haushalte",
+    "bereich": "energie",
+    "titel": "Stromsteuer-Senkung für Haushalte bleibt unsicher",
+    "beschreibung": "Die zitierten Berichte zeigen: Die breit angekündigte Stromsteuer-Senkung sollte nicht verlässlich als Haushaltsentlastung eingeplant werden. Der Strompreis für Haushalte hängt zudem von Vertrag, Verbrauch, Netzentgelten und weiteren Preisbestandteilen ab.",
+    "zeithorizont": "monate",
+    "confidence": "hoch",
+    "unsicherheit": "Politische Änderungen sind möglich, aus den vorliegenden Quellen lässt sich aber keine gesicherte Entlastung für Haushalte ableiten.",
+    "retrieved_at": "2026-05-19",
+    "causalLinks": [
+      {
+        "id": "cl-cost-stromsteuer-haushalte-to-action-energievertrag-pruefen",
+        "targetType": "citizenAction",
+        "targetId": "energievertrag-pruefen",
+        "relation": "mitigates"
+      }
+    ],
+    "sources": [
+      {
+        "name": "Tagesschau",
+        "url": "https://www.tagesschau.de/inland/innenpolitik/koalitionsausschuss-stromsteuer-102.html",
+        "stand": "Juli 2025"
+      },
+      {
+        "name": "Handwerksblatt — ZDH",
+        "url": "https://www.handwerksblatt.de/handwerkspolitik/stromsteuer-regierung-bricht-ihr-versprechen",
+        "stand": "2025"
+      }
+    ]
+  },
+  {
+    "id": "heizkosten-winter",
+    "bereich": "energie",
+    "titel": "Heizkosten mit Aufwärtsrisiko für Winter 2026/27",
+    "beschreibung": "Die Gasspeicher sind nur ein Baustein der deutschen Gasversorgung; entscheidend sind außerdem Importe, Verbrauch, Wetter und Großhandelspreise. Für Haushalte bleibt ein Aufwärtsrisiko bei Heizkosten, wenn Speicherlage, Nachfrage und globale LNG-Preise ungünstig zusammenwirken.",
+    "zeithorizont": "monate",
+    "confidence": "mittel",
+    "unsicherheit": "Stark abhängig von Importlage, Verbrauch, Witterung, Einspeicher-Geschwindigkeit und globaler LNG-Preisentwicklung.",
+    "retrieved_at": "2026-05-19",
+    "causalLinks": [
+      {
+        "id": "cl-cost-heizkosten-winter-to-supply-gasspeicher-winter",
+        "targetType": "supplyRisk",
+        "targetId": "gasspeicher-winter",
+        "relation": "context"
+      },
+      {
+        "id": "cl-cost-heizkosten-winter-to-action-energievertrag-pruefen",
+        "targetType": "citizenAction",
+        "targetId": "energievertrag-pruefen",
+        "relation": "mitigates"
+      }
+    ],
+    "sources": [
+      {
+        "name": "Bundesnetzagentur (via AGSI/GIE)",
+        "url": "https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/Versorgungssicherheit/aktuelle_gasversorgung/start.html",
+        "stand": "2026"
+      }
+    ]
+  },
+  {
+    "id": "lebensmittel-warenkorb",
+    "bereich": "lebensmittel",
+    "titel": "Wocheneinkauf mit anhaltendem Preisdruck",
+    "beschreibung": "Höhere Düngemittel- und Energiepreise wirken über mehrere Stufen auf Brot, Öle, Zucker und Verarbeitungserzeugnisse. Die FAO-Indizes signalisieren internationalen Preisdruck, der je nach Warengruppe, Beschaffung und Wettbewerb in deutschen Einzelhandelspreisen ankommen kann oder auch nicht.",
+    "zeithorizont": "wochen",
+    "confidence": "mittel",
+    "unsicherheit": "Wie schnell Großhandelspreise an Endkunden weitergegeben werden, variiert nach Warengruppe und Handelskette.",
+    "retrieved_at": "2026-05-19",
+    "causalLinks": [
+      {
+        "id": "cl-cost-lebensmittel-warenkorb-to-action-vorraete-bbk",
+        "targetType": "citizenAction",
+        "targetId": "vorraete-bbk",
+        "relation": "mitigates"
+      }
+    ],
+    "sources": [
+      {
+        "name": "FAO Food Price Index",
+        "url": "https://www.fao.org/worldfoodsituation/foodpricesindex",
+        "stand": "März 2026"
+      },
+      {
+        "name": "Euronews",
+        "url": "https://de.euronews.com/business/2026/02/10/mehrheit-der-europaer-erwartet-2026-starker-steigende-lebensmittelpreise",
+        "stand": "Februar 2026"
+      }
+    ]
+  },
+  {
+    "id": "gesamtinflation-2026",
+    "bereich": "finanzen",
+    "titel": "Inflation 2026 voraussichtlich rund 3 Prozent",
+    "beschreibung": "Das IW Köln rechnet für 2026 mit einer Jahresinflation von etwa 3 Prozent. Für Haushalte bedeutet das eine spürbare Belastung des Realeinkommens, insbesondere bei Energie, Lebensmitteln und Versicherungen.",
+    "zeithorizont": "monate",
+    "confidence": "hoch",
+    "unsicherheit": "Ein abruptes Ende der geopolitischen Spannungen oder ein Energiepreis-Einbruch könnte den Wert nach unten korrigieren.",
+    "retrieved_at": "2026-05-19",
+    "causalLinks": [
+      {
+        "id": "cl-cost-gesamtinflation-2026-to-action-finanzielle-reserve",
+        "targetType": "citizenAction",
+        "targetId": "finanzielle-reserve",
+        "relation": "mitigates"
+      }
+    ],
+    "sources": [
+      {
+        "name": "IW Köln",
+        "url": "https://www.iwkoeln.de/presse/pressemitteilungen/michael-groemling-bip-waechst-2026-um-knapp-ein-prozent.html",
+        "stand": "2026"
+      },
+      {
+        "name": "Spiegel",
+        "url": "https://www.spiegel.de/wirtschaft/wirtschaft-in-deutschland-iw-senkt-konjunkturprognose-fuer-2026",
+        "stand": "2026"
+      }
+    ]
+  },
+  {
+    "id": "mobilitaetsbudget-kraftstoffe-wartung",
+    "bereich": "mobilitaet",
+    "titel": "Mobilitätsbudget unter Druck durch Kraftstoffe und Fahrzeugwartung",
+    "beschreibung": "Höhere Kraftstoffpreise belasten Pendeln, Familienfahrten und betriebliche Wege kleiner Unternehmen direkt. Parallel erhöhen Preissteigerungen bei Wartung und Reparatur den laufenden Fahrzeugunterhalt, sodass Mobilitätsausgaben auch ohne Anschaffung eines neuen Fahrzeugs steigen können.",
+    "zeithorizont": "wochen",
+    "confidence": "hoch",
+    "unsicherheit": "Die konkrete Haushaltswirkung hängt von Fahrleistung, Fahrzeugtyp, Vertragsbindung, Werkstattpreisen und der Entwicklung der Kraftstoffpreise ab.",
+    "retrieved_at": "2026-05-19",
+    "sources": [
+      {
+        "name": "Destatis",
+        "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/05/PD26_161_611.html",
+        "stand": "12. Mai 2026 / April 2026"
+      }
+    ]
+  }
+]

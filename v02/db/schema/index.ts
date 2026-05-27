@@ -1,0 +1,379 @@
+import { relations, sql } from "drizzle-orm";
+import { boolean, integer, jsonb, numeric, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+
+export const householdModusEnum = pgEnum("household_modus", ["single", "familie", "selbststaendig", "rentner"]);
+export const confidenceEnum = pgEnum("confidence", ["niedrig", "mittel", "hoch"]);
+export const severityEnum = pgEnum("severity", ["stabil", "beobachten", "erhoeht", "kritisch", "eskalierend"]);
+export const zeithorizontEnum = pgEnum("zeithorizont", ["kurzfristig", "wochen", "monate", "langfristig"]);
+export const methodologyTagEnum = pgEnum("methodology_tag", ["steep", "rca", "bia", "fmea", "scenario"]);
+export const aufwandEnum = pgEnum("aufwand", ["niedrig", "mittel", "hoch"]);
+export const itemSourceTypeEnum = pgEnum("item_source_type", [
+  "lagebild",
+  "cost",
+  "supply",
+  "cascade",
+  "governance",
+  "indicator",
+  "action",
+]);
+export const editorialStatusEnum = pgEnum("editorial_status", ["draft", "approved", "rejected", "published"]);
+export const userRoleEnum = pgEnum("user_role", ["viewer", "editor", "admin"]);
+export const editorialActionEnum = pgEnum("editorial_action", [
+  "create",
+  "update",
+  "approve",
+  "reject",
+  "publish",
+  "unpublish",
+  "ingest_value",
+]);
+
+const createdAt = timestamp("created_at", { withTimezone: true }).defaultNow().notNull();
+const updatedAt = timestamp("updated_at", { withTimezone: true }).defaultNow().notNull();
+const retrievedAt = timestamp("retrieved_at", { withTimezone: true });
+const editorialReviewedAt = timestamp("editorial_reviewed_at", { withTimezone: true });
+const publishedAt = timestamp("published_at", { withTimezone: true });
+const editorialStatus = editorialStatusEnum("editorial_status").notNull().default("published");
+const editorialReviewedBy = text("editorial_reviewed_by");
+
+export const users = pgTable(
+  "users",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    emailVerified: timestamp("email_verified", { withTimezone: true }),
+    name: text("name"),
+    image: text("image"),
+    role: userRoleEnum("role").notNull().default("viewer"),
+    createdAt,
+    updatedAt,
+  },
+  (table) => [uniqueIndex("users_email_unique").on(table.email)],
+);
+
+export const accounts = pgTable(
+  "accounts",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    provider: text("provider").notNull(),
+    providerAccountId: text("provider_account_id").notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
+    id_token: text("id_token"),
+    session_state: text("session_state"),
+  },
+  (account) => [primaryKey({ columns: [account.provider, account.providerAccountId] })],
+);
+
+export const sessions = pgTable("sessions", {
+  sessionToken: text("session_token").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expires: timestamp("expires", { withTimezone: true }).notNull(),
+});
+
+export const verificationTokens = pgTable(
+  "verification_tokens",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: timestamp("expires", { withTimezone: true }).notNull(),
+  },
+  (verificationToken) => [primaryKey({ columns: [verificationToken.identifier, verificationToken.token] })],
+);
+
+export const authenticators = pgTable(
+  "authenticators",
+  {
+    credentialID: text("credential_id").notNull().unique(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    providerAccountId: text("provider_account_id").notNull(),
+    credentialPublicKey: text("credential_public_key").notNull(),
+    counter: integer("counter").notNull(),
+    credentialDeviceType: text("credential_device_type").notNull(),
+    credentialBackedUp: boolean("credential_backed_up").notNull(),
+    transports: text("transports"),
+  },
+  (authenticator) => [primaryKey({ columns: [authenticator.userId, authenticator.credentialID] })],
+);
+
+export const households = pgTable("households", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  modus: householdModusEnum("modus").notNull(),
+  plz: text("plz").notNull(),
+  createdAt,
+  updatedAt,
+});
+
+export const facts = pgTable("facts", {
+  id: text("id").primaryKey(),
+  category: text("category").notNull(),
+  valueLabel: text("value_label").notNull(),
+  valueNumeric: numeric("value_numeric"),
+  unit: text("unit"),
+  period: text("period"),
+  sourceName: text("source_name").notNull(),
+  sourceUrl: text("source_url").notNull(),
+  sourceStand: text("source_stand").notNull(),
+  retrievedAt,
+  editorialStatus,
+  editorialReviewedAt,
+  editorialReviewedBy,
+  publishedAt,
+  createdAt,
+  updatedAt,
+});
+
+export const cascades = pgTable("cascades", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  trigger: text("trigger").notNull(),
+  confidence: confidenceEnum("confidence").notNull(),
+  severity: severityEnum("severity").notNull(),
+  zeithorizont: zeithorizontEnum("zeithorizont").notNull(),
+  methodologyTag: methodologyTagEnum("methodology_tag").notNull(),
+  germanyRelevance: jsonb("germany_relevance").$type<Record<string, unknown>>().notNull(),
+  steps: jsonb("steps").$type<Array<Record<string, unknown>>>().notNull(),
+  haushaltswirkung: text("haushaltswirkung").notNull(),
+  retrievedAt,
+  editorialStatus,
+  editorialReviewedAt,
+  editorialReviewedBy,
+  publishedAt,
+  createdAt,
+  updatedAt,
+});
+
+export const governance = pgTable("governance", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  versprechen: text("versprechen").notNull(),
+  realitaet: text("realitaet").notNull(),
+  haushaltswirkung: text("haushaltswirkung").notNull(),
+  confidence: confidenceEnum("confidence").notNull(),
+  linkedCascade: text("linked_cascade").references(() => cascades.id, { onDelete: "set null" }),
+  retrievedAt,
+  editorialStatus,
+  editorialReviewedAt,
+  editorialReviewedBy,
+  publishedAt,
+  createdAt,
+  updatedAt,
+});
+
+export const indicators = pgTable("indicators", {
+  id: text("id").primaryKey(),
+  label: text("label").notNull(),
+  thresholdWarn: numeric("threshold_warn"),
+  thresholdCritical: numeric("threshold_critical"),
+  unit: text("unit"),
+  system: text("system").notNull(),
+  severityTrigger: severityEnum("severity_trigger").notNull(),
+  quelle: text("quelle").notNull(),
+  germanyRelevance: jsonb("germany_relevance").$type<Record<string, unknown>>().notNull(),
+  linkedCascade: text("linked_cascade").references(() => cascades.id, { onDelete: "set null" }),
+
+  // Live-Wert-Felder (Ingestion)
+  currentValue: numeric("current_value"),
+  currentValueDate: timestamp("current_value_date", { withTimezone: true }),
+  previousValue: numeric("previous_value"),
+  previousValueDate: timestamp("previous_value_date", { withTimezone: true }),
+  lastIngestedAt: timestamp("last_ingested_at", { withTimezone: true }),
+
+  // Skalen-Konfiguration
+  scaleDirection: text("scale_direction").notNull().default("higher_is_worse"),
+
+  // Redaktionelle Zonen-Texte
+  zoneTextUncritical: text("zone_text_uncritical"),
+  zoneTextElevated: text("zone_text_elevated"),
+  zoneTextCritical: text("zone_text_critical"),
+
+  // Einspeisungsperiode (z.B. Gasspeicher-Füllvorgabe)
+  targetValue: numeric("target_value"),
+  targetDeadline: timestamp("target_deadline", { withTimezone: true }),
+  targetLabel: text("target_label"),
+
+  retrievedAt,
+  editorialStatus,
+  editorialReviewedAt,
+  editorialReviewedBy,
+  publishedAt,
+  createdAt,
+  updatedAt,
+});
+
+export const costImpacts = pgTable("cost_impacts", {
+  id: text("id").primaryKey(),
+  bereich: text("bereich").notNull(),
+  titel: text("titel").notNull(),
+  beschreibung: text("beschreibung").notNull(),
+  zeithorizont: zeithorizontEnum("zeithorizont").notNull(),
+  confidence: confidenceEnum("confidence").notNull(),
+  unsicherheit: text("unsicherheit").notNull(),
+  causalLinks: jsonb("causal_links").$type<Array<Record<string, unknown>>>().notNull(),
+  retrievedAt,
+  editorialStatus,
+  editorialReviewedAt,
+  editorialReviewedBy,
+  publishedAt,
+  createdAt,
+  updatedAt,
+});
+
+export const lagebildItems = pgTable("lagebild_items", {
+  id: text("id").primaryKey(),
+  bereich: text("bereich").notNull(),
+  titel: text("titel").notNull(),
+  beschreibung: text("beschreibung").notNull(),
+  severity: severityEnum("severity").notNull(),
+  trend: text("trend").notNull(),
+  primaerindikator: text("primaerindikator").notNull(),
+  confidence: confidenceEnum("confidence").notNull(),
+  factIds: jsonb("fact_ids").$type<string[]>().notNull(),
+  retrievedAt,
+  editorialStatus,
+  editorialReviewedAt,
+  editorialReviewedBy,
+  publishedAt,
+  createdAt,
+  updatedAt,
+});
+
+export const supplyRisks = pgTable("supply_risks", {
+  id: text("id").primaryKey(),
+  bereich: text("bereich").notNull(),
+  titel: text("titel").notNull(),
+  beschreibung: text("beschreibung").notNull(),
+  severity: severityEnum("severity").notNull(),
+  zeithorizont: zeithorizontEnum("zeithorizont").notNull(),
+  confidence: confidenceEnum("confidence").notNull(),
+  unsicherheit: text("unsicherheit"),
+  causalLinks: jsonb("causal_links")
+    .$type<Array<Record<string, unknown>>>()
+    .notNull()
+    .default(sql`'[]'::jsonb`),
+  retrievedAt,
+  editorialStatus,
+  editorialReviewedAt,
+  editorialReviewedBy,
+  publishedAt,
+  createdAt,
+  updatedAt,
+});
+
+export const citizenActions = pgTable("citizen_actions", {
+  id: text("id").primaryKey(),
+  bereich: text("bereich").notNull(),
+  titel: text("titel").notNull(),
+  beschreibung: text("beschreibung").notNull(),
+  aufwand: aufwandEnum("aufwand").notNull(),
+  bezugZuBereich: jsonb("bezug_zu_bereich").$type<string[]>().notNull(),
+  causalLinks: jsonb("causal_links")
+    .$type<Array<Record<string, unknown>>>()
+    .notNull()
+    .default(sql`'[]'::jsonb`),
+  retrievedAt,
+  editorialStatus,
+  editorialReviewedAt,
+  editorialReviewedBy,
+  publishedAt,
+  createdAt,
+  updatedAt,
+});
+
+export const itemSources = pgTable("item_sources", {
+  id: text("id").primaryKey(),
+  itemType: itemSourceTypeEnum("item_type").notNull(),
+  itemId: text("item_id").notNull(),
+  sourceName: text("source_name").notNull(),
+  sourceUrl: text("source_url").notNull(),
+  sourceStand: text("source_stand").notNull(),
+  orderIdx: integer("order_idx").notNull().default(0),
+  createdAt,
+  updatedAt,
+});
+
+export const sources = pgTable(
+  "sources",
+  {
+    id: text("id").primaryKey(),
+    sourceName: text("source_name").notNull(),
+    sourceUrl: text("source_url").notNull(),
+    sourceStand: text("source_stand").notNull(),
+    createdAt,
+    updatedAt,
+  },
+  (table) => [uniqueIndex("sources_source_url_unique").on(table.sourceUrl)],
+);
+
+export const factRefs = pgTable("fact_refs", {
+  id: text("id").primaryKey(),
+  itemType: itemSourceTypeEnum("item_type").notNull(),
+  itemId: text("item_id").notNull(),
+  factId: text("fact_id")
+    .notNull()
+    .references(() => facts.id, { onDelete: "cascade" }),
+  orderIdx: integer("order_idx").notNull().default(0),
+  createdAt,
+  updatedAt,
+});
+
+export const seedMeta = pgTable("seed_meta", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt,
+});
+
+export const editorialAuditLog = pgTable("editorial_audit_log", {
+  id: text("id").primaryKey(),
+  itemType: text("item_type").notNull(),
+  itemId: text("item_id").notNull(),
+  action: editorialActionEnum("action").notNull(),
+  actorId: text("actor_id").references(() => users.id, { onDelete: "set null" }),
+  fromStatus: editorialStatusEnum("from_status"),
+  toStatus: editorialStatusEnum("to_status"),
+  reason: text("reason"),
+  createdAt,
+});
+
+export const usersRelations = relations(users, ({ many }) => ({
+  households: many(households),
+}));
+
+export const householdsRelations = relations(households, ({ one }) => ({
+  user: one(users, {
+    fields: [households.userId],
+    references: [users.id],
+  }),
+}));
+
+export const cascadesRelations = relations(cascades, ({ many }) => ({
+  governanceItems: many(governance),
+  indicators: many(indicators),
+}));
+
+export const governanceRelations = relations(governance, ({ one }) => ({
+  cascade: one(cascades, {
+    fields: [governance.linkedCascade],
+    references: [cascades.id],
+  }),
+}));
+
+export const indicatorsRelations = relations(indicators, ({ one }) => ({
+  cascade: one(cascades, {
+    fields: [indicators.linkedCascade],
+    references: [cascades.id],
+  }),
+}));

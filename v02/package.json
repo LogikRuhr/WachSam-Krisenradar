@@ -1,0 +1,40 @@
+{
+  "name": "@wachsam/v02",
+  "version": "0.0.0-w1.1",
+  "private": true,
+  "description": "WachSam Backend-App (v0.3) — Next.js 15 + Postgres + Drizzle. Löst v01/ nach Cutover-Welle W1.7 ab.",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "cd web && next dev",
+    "build": "cd web && next build",
+    "start": "cd web && next start",
+    "lint": "cd web && eslint . --max-warnings 0",
+    "test:audit": "tsx scripts/audit-invariants.test.ts",
+    "verify": "cd web && tsc --noEmit && eslint . --max-warnings 0 && next build && cd ../db && drizzle-kit generate && tsx scripts/seed.ts --dry-run && cd .. && tsx scripts/audit-invariants.test.ts",
+    "typecheck": "cd web && tsc --noEmit",
+    "db:push": "cd db && drizzle-kit push",
+    "db:generate": "cd db && drizzle-kit generate",
+    "db:migrate": "cd db && drizzle-kit migrate",
+    "db:migrate:check": "cd db && drizzle-kit check",
+    "db:studio": "cd db && drizzle-kit studio",
+    "db:seed": "cd db && tsx scripts/seed.ts",
+    "db:seed:dry": "cd db && tsx scripts/seed.ts --dry-run"
+  },
+  "devDependencies": {
+    "drizzle-kit": "0.31.10",
+    "eslint": "9.39.4",
+    "next": "15.5.18",
+    "typescript": "5.9.3",
+    "tsx": "4.22.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss": "8.5.15",
+      "cookie": "1.1.1"
+    }
+  }
+}

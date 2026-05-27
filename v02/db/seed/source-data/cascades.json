@@ -1,0 +1,853 @@
+{
+  "meta": {
+    "version": "v0.2",
+    "stand": "2026-05-21",
+    "count": 12,
+    "retrieved_at": "2026-05-21T10:00:00Z",
+    "note": "12 vollständige Kaskaden A–L. Kontrollierter Datensatz."
+  },
+  "cascades": [
+    {
+      "id": "cascade-a",
+      "title": "Energie- und Düngemittel-Verteuerung kann Lebensmittelpreise belasten",
+      "trigger": "Energie-, Transport- und Agrarvorleistungskosten steigen",
+      "confidence": "hoch",
+      "severity": "kritisch",
+      "zeithorizont": "wochen",
+      "methodology_tag": "steep",
+      "germany_relevance": {
+        "direct": true,
+        "systems_affected": [
+          "energie",
+          "lebensmittel",
+          "mobilitaet",
+          "logistik",
+          "finanzen"
+        ],
+        "time_to_impact": "wochen",
+        "description": "Deutschland importiert ~70 % seines Energiebedarfs; Preisweitergabe 4–8 Wochen typisch"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "description": "Energie- und Kraftstoffkosten bleiben relevanter Kostenfaktor",
+          "systems": [
+            "energie"
+          ]
+        },
+        {
+          "step": 2,
+          "description": "Transport- und Logistikkosten geraten unter Druck",
+          "systems": [
+            "mobilitaet",
+            "logistik"
+          ]
+        },
+        {
+          "step": 3,
+          "description": "Düngemittel- und Agrarvorleistungen verteuern sich",
+          "systems": [
+            "lebensmittel",
+            "industrie"
+          ]
+        },
+        {
+          "step": 4,
+          "description": "Höhere Vorleistungskosten kommen verzögert im Einzelhandel an",
+          "systems": [
+            "lebensmittel",
+            "finanzen"
+          ]
+        }
+      ],
+      "haushaltswirkung": "Mögliche Mehrbelastung bei Sprit, Heizen und Lebensmitteln",
+      "quellen": [
+        "FAO Food Price Index März 2026",
+        "IW Köln 2026"
+      ],
+      "sources": [
+        {
+          "name": "FAO Food Price Index",
+          "url": "https://www.fao.org/worldfoodsituation/foodpricesindex",
+          "stand": "März 2026"
+        },
+        {
+          "name": "IW Köln",
+          "url": "https://www.iwkoeln.de/presse/pressemitteilungen/michael-groemling-bip-waechst-2026-um-knapp-ein-prozent.html",
+          "stand": "Mai 2026"
+        }
+      ],
+      "linked_items": [
+        "cost-lebensmittel-warenkorb",
+        "cost-gesamtinflation-2026",
+        "supply-duengemittel-ernte"
+      ]
+    },
+    {
+      "id": "cascade-b",
+      "title": "Rohstoffrestriktionen können Industrieproduktion und Lieferzeiten belasten",
+      "trigger": "China-Exportbeschränkungen für strategische Rohstoffe",
+      "confidence": "hoch",
+      "severity": "erhoeht",
+      "zeithorizont": "monate",
+      "methodology_tag": "bia",
+      "germany_relevance": {
+        "direct": true,
+        "systems_affected": [
+          "industrie",
+          "logistik",
+          "gesundheit",
+          "finanzen"
+        ],
+        "time_to_impact": "monate",
+        "description": "DE/EU zu ~90 % von China bei Seltenen Erden abhängig"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "description": "Strategische Rohstoffe werden als Versorgungsrisiken beobachtet",
+          "systems": [
+            "industrie",
+            "logistik"
+          ]
+        },
+        {
+          "step": 2,
+          "description": "Halbleiter- und Medizintechnik können längere Beschaffungszeiten sehen",
+          "systems": [
+            "industrie",
+            "gesundheit"
+          ]
+        },
+        {
+          "step": 3,
+          "description": "Produktionsverzögerungen verlängern Lieferzeiten",
+          "systems": [
+            "industrie",
+            "finanzen"
+          ]
+        }
+      ],
+      "haushaltswirkung": "Längere Lieferzeiten bei Elektronik, Fahrzeugen, medizinischen Geräten",
+      "quellen": [
+        "GTAI 2026",
+        "BAKS 2026"
+      ],
+      "sources": [
+        {
+          "name": "GTAI",
+          "url": "https://www.gtai.de/de/trade/china/specials/so-abhaengig-ist-deutschland-von-china-1775964",
+          "stand": "2026"
+        },
+        {
+          "name": "BAKS",
+          "url": "https://www.baks.bund.de/de/arbeitspapiere/2026/angriff-auf-chinas-rohstoffmonopol-wie-europa-bei-seltenen-erden-co",
+          "stand": "2026"
+        }
+      ],
+      "linked_items": [
+        "supply-rohstoffe-china",
+        "supply-arzneimittel-engpass"
+      ]
+    },
+    {
+      "id": "cascade-c",
+      "title": "Netzvolatilität und Cyberangriffe können regionale Versorgungsrisiken erhöhen",
+      "trigger": "Volatile Erneuerbare-Einspeisung plus Cyberangriffe",
+      "confidence": "mittel",
+      "severity": "erhoeht",
+      "zeithorizont": "wochen",
+      "methodology_tag": "fmea",
+      "germany_relevance": {
+        "direct": true,
+        "systems_affected": [
+          "energie",
+          "infrastruktur",
+          "logistik",
+          "gesundheit"
+        ],
+        "time_to_impact": "wochen",
+        "description": "97 % der Stadtwerke laut BSI von Cyberangriffen betroffen"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "description": "Netzschwankungen setzen Übertragungs- und Verteilnetze unter Stress",
+          "systems": [
+            "energie",
+            "infrastruktur"
+          ]
+        },
+        {
+          "step": 2,
+          "description": "Cyberangriffe auf kritische Infrastruktur",
+          "systems": [
+            "infrastruktur",
+            "gesellschaft"
+          ]
+        },
+        {
+          "step": 3,
+          "description": "Kurze regionale Versorgungsstörungen möglich",
+          "systems": [
+            "logistik",
+            "gesundheit"
+          ]
+        }
+      ],
+      "haushaltswirkung": "Erhöhtes Risiko kurzer regional begrenzter Unterbrechungen",
+      "quellen": [
+        "BSI Cybersicherheit Mai 2025",
+        "Bundesnetzagentur Netzreserve 2025"
+      ],
+      "sources": [
+        {
+          "name": "BSI — Cybersicherheit im Energiesektor",
+          "url": "https://www.bsi.bund.de/DE/Service-Navi/Presse/Pressemitteilungen/Presse2025/250521_Cybersicherheit_Energieversorgung.html",
+          "stand": "Mai 2025"
+        },
+        {
+          "name": "Bundesnetzagentur — Netzreserve",
+          "url": "https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/Versorgungssicherheit/Netzreserve/artikel.html",
+          "stand": "2025"
+        }
+      ],
+      "linked_items": [
+        "supply-stromnetz-cyber",
+        "action-dokumente-sichern"
+      ]
+    },
+    {
+      "id": "cascade-d",
+      "title": "Energie- und Vorleistungspreise können Mobilitätskosten erhöhen",
+      "trigger": "Geopolitische Spannungen erhöhen Ölpreisvolatilität",
+      "confidence": "hoch",
+      "severity": "erhoeht",
+      "zeithorizont": "wochen",
+      "methodology_tag": "steep",
+      "germany_relevance": {
+        "direct": true,
+        "systems_affected": [
+          "energie",
+          "mobilitaet",
+          "industrie",
+          "finanzen"
+        ],
+        "time_to_impact": "wochen",
+        "description": "Destatis April 2026: Kraftstoffe deutlich teurer als Vorjahr"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "description": "Höhere Kraftstoffpreise wirken auf Pendel- und Betriebsfahrten",
+          "systems": [
+            "energie",
+            "mobilitaet"
+          ]
+        },
+        {
+          "step": 2,
+          "description": "Gestiegene Großhandelspreise markieren Vorleistungsdruck",
+          "systems": [
+            "industrie",
+            "mobilitaet"
+          ]
+        },
+        {
+          "step": 3,
+          "description": "Werkstatt- und Händlerpreise können reagieren",
+          "systems": [
+            "mobilitaet",
+            "finanzen"
+          ]
+        }
+      ],
+      "haushaltswirkung": "Mobilitätsbudget unter Druck; Pendler und Familien mit Auto direkt betroffen",
+      "quellen": [
+        "Destatis Kraftstoffe April 2026"
+      ],
+      "sources": [
+        {
+          "name": "Destatis — Verbraucherpreise Kraftstoffe",
+          "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/05/PD26_161_611.html",
+          "stand": "12. Mai 2026 / April 2026"
+        },
+        {
+          "name": "Destatis — Großhandelspreise",
+          "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/05/PD26_164_61281.html",
+          "stand": "13. Mai 2026 / April 2026"
+        }
+      ],
+      "linked_items": [
+        "cost-mobilitaet-kraftstoffe",
+        "lagebild-mobilitaet"
+      ]
+    },
+    {
+      "id": "cascade-e",
+      "title": "Governance-Diskrepanz kann Vertrauen und Krisenresilienz belasten",
+      "trigger": "Wiederkehrende Diskrepanz zwischen politischen Ankündigungen und Umsetzung",
+      "confidence": "mittel",
+      "severity": "erhoeht",
+      "zeithorizont": "langfristig",
+      "methodology_tag": "rca",
+      "germany_relevance": {
+        "direct": true,
+        "systems_affected": [
+          "gesellschaft",
+          "finanzen",
+          "arbeit"
+        ],
+        "time_to_impact": "langfristig",
+        "description": "89 % erwarten weiteren Vertrauensverlust (Stiftung Zukunftsfragen 2026)"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "description": "Politische Versprechen werden nicht oder abgeschwächt umgesetzt",
+          "systems": [
+            "gesellschaft",
+            "finanzen"
+          ]
+        },
+        {
+          "step": 2,
+          "description": "Vertrauen in politische Steuerung sinkt strukturell",
+          "systems": [
+            "gesellschaft"
+          ]
+        },
+        {
+          "step": 3,
+          "description": "Krisenkooperation und Maßnahmenakzeptanz sinken",
+          "systems": [
+            "gesellschaft",
+            "arbeit"
+          ]
+        },
+        {
+          "step": 4,
+          "description": "Gesellschaftliche Krisenresilienz nimmt strukturell ab",
+          "systems": [
+            "gesellschaft"
+          ]
+        }
+      ],
+      "haushaltswirkung": "Weniger Planungssicherheit; Haushaltsentlastungen kommen nicht an",
+      "quellen": [
+        "Stiftung für Zukunftsfragen 2026",
+        "Weizenbaum-Institut 2026"
+      ],
+      "sources": [
+        {
+          "name": "Stiftung für Zukunftsfragen",
+          "url": "https://www.stiftungfuerzukunftsfragen.de/wie-blicken-die-buerger-auf-das-jahr-2026/",
+          "stand": "2026"
+        },
+        {
+          "name": "Weizenbaum-Institut",
+          "url": "https://www.weizenbaum-institut.de/news/detail/sorge-um-das-politische-klima-in-deutschland/",
+          "stand": "2026"
+        }
+      ],
+      "linked_items": [
+        "governance-tankrabatt",
+        "lagebild-gesellschaft"
+      ]
+    },
+    {
+      "id": "cascade-f",
+      "title": "Handelskrieg und Exportrückgang belasten Industrie und Arbeitsmarkt",
+      "trigger": "US-Zölle und globale Handelskonflikte treffen deutsche Exportindustrie",
+      "confidence": "hoch",
+      "severity": "kritisch",
+      "zeithorizont": "monate",
+      "methodology_tag": "bia",
+      "germany_relevance": {
+        "direct": true,
+        "systems_affected": [
+          "industrie",
+          "arbeit",
+          "finanzen",
+          "gesellschaft"
+        ],
+        "time_to_impact": "monate",
+        "description": "3,1 Mio. Arbeitslose Januar 2026; Wachstumsprognose 0,5 %"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "description": "US-Zölle erhöhen Kosten für deutsche Exporte",
+          "systems": [
+            "industrie",
+            "finanzen"
+          ]
+        },
+        {
+          "step": 2,
+          "description": "Exportrückgang trifft Automobil, Maschinenbau, Chemie",
+          "systems": [
+            "industrie"
+          ]
+        },
+        {
+          "step": 3,
+          "description": "Produktionsdrosselung und Kurzarbeit nehmen zu",
+          "systems": [
+            "arbeit",
+            "industrie"
+          ]
+        },
+        {
+          "step": 4,
+          "description": "Kaufkraftverlust und Kommunalfinanzstress",
+          "systems": [
+            "finanzen",
+            "gesellschaft"
+          ]
+        }
+      ],
+      "haushaltswirkung": "Arbeitsplatzrisiken in Exportbranchen; Kaufkraft unter Druck",
+      "quellen": [
+        "Tagesschau April 2026",
+        "Handelsblatt Mai 2026",
+        "IW Köln Mai 2026"
+      ],
+      "sources": [
+        {
+          "name": "Tagesschau",
+          "url": "https://www.tagesschau.de/wirtschaft/konjunktur/konjunkturprognose-2026-100.html",
+          "stand": "April 2026"
+        },
+        {
+          "name": "Handelsblatt",
+          "url": "https://www.handelsblatt.com/politik/international/handel-trumps-neue-zollplaene-treffen-vor-allem-deutschland/100221891.html",
+          "stand": "Mai 2026"
+        },
+        {
+          "name": "IW Köln",
+          "url": "https://www.iwkoeln.de/presse/pressemitteilungen/michael-groemling-bip-waechst-2026-um-knapp-ein-prozent.html",
+          "stand": "Mai 2026"
+        }
+      ],
+      "linked_items": [
+        "lagebild-industrie",
+        "lagebild-arbeit"
+      ]
+    },
+    {
+      "id": "cascade-g",
+      "title": "Düngemittelpreisdruck kann Ernteerträge und Lebensmittelpreise beeinflussen",
+      "trigger": "Exportbeschränkungen für Düngemittel; hohe Energiepreise",
+      "confidence": "mittel",
+      "severity": "beobachten",
+      "zeithorizont": "monate",
+      "methodology_tag": "steep",
+      "germany_relevance": {
+        "direct": true,
+        "systems_affected": [
+          "lebensmittel",
+          "industrie",
+          "finanzen"
+        ],
+        "time_to_impact": "monate",
+        "description": "FAO +2,4 % März 2026; Zucker +7,2 %"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "description": "Düngemittelpreise steigen durch Exportbeschränkungen und Energiekosten",
+          "systems": [
+            "lebensmittel"
+          ]
+        },
+        {
+          "step": 2,
+          "description": "Produktionskosten für Landwirte erhöhen sich",
+          "systems": [
+            "lebensmittel",
+            "industrie"
+          ]
+        },
+        {
+          "step": 3,
+          "description": "Erzeugerpreise steigen; Erträge witterungsabhängig",
+          "systems": [
+            "lebensmittel"
+          ]
+        },
+        {
+          "step": 4,
+          "description": "Lebensmittelpreise ziehen mit Verzögerung an",
+          "systems": [
+            "lebensmittel",
+            "finanzen"
+          ]
+        }
+      ],
+      "haushaltswirkung": "Wocheneinkauf mit Preisdruck; besonders Brot, Öle, Zucker",
+      "quellen": [
+        "FAO Fertilizer markets 2026",
+        "World Bank Commodity Markets Outlook April 2026"
+      ],
+      "sources": [
+        {
+          "name": "FAO — Fertilizer markets",
+          "url": "https://www.fao.org/in-focus/fertilizer/en",
+          "stand": "2026"
+        },
+        {
+          "name": "World Bank — Commodity Markets Outlook",
+          "url": "https://thedocs.worldbank.org/en/doc/f3138644a1e8e2bb631399ae11d6c408-0050012026/original/CMO-April-2026.pdf",
+          "stand": "April 2026"
+        }
+      ],
+      "linked_items": [
+        "supply-duengemittel-ernte",
+        "cost-lebensmittel-warenkorb"
+      ]
+    },
+    {
+      "id": "cascade-h",
+      "title": "Gasversorgungsrisiko kann Heizkosten und Haushaltsliquidität belasten",
+      "trigger": "Niedrige Gasspeicherstände und unsichere LNG-Importlage vor Winter 2026/27",
+      "confidence": "mittel",
+      "severity": "beobachten",
+      "zeithorizont": "monate",
+      "methodology_tag": "scenario",
+      "germany_relevance": {
+        "direct": true,
+        "systems_affected": [
+          "energie",
+          "finanzen"
+        ],
+        "time_to_impact": "monate",
+        "description": "Bundesnetzagentur 2026: Speicherlage beobachtenswert"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "description": "Gasspeicher unter Durchschnitt; Einspeicherung verzögert",
+          "systems": [
+            "energie"
+          ]
+        },
+        {
+          "step": 2,
+          "description": "LNG-Großhandelspreise volatil; Importabhängigkeit hoch",
+          "systems": [
+            "energie",
+            "finanzen"
+          ]
+        },
+        {
+          "step": 3,
+          "description": "Heizkosten steigen im Winter 2026/27",
+          "systems": [
+            "energie",
+            "finanzen"
+          ]
+        },
+        {
+          "step": 4,
+          "description": "Haushaltsliquidität sinkt; Nachzahlungsrisiko steigt",
+          "systems": [
+            "finanzen",
+            "gesellschaft"
+          ]
+        }
+      ],
+      "haushaltswirkung": "Heizkosten mit Aufwärtsrisiko; Haushalte ohne Festpreis besonders betroffen",
+      "quellen": [
+        "Bundesnetzagentur via AGSI/GIE 2026"
+      ],
+      "sources": [
+        {
+          "name": "Bundesnetzagentur (via AGSI/GIE)",
+          "url": "https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/Versorgungssicherheit/aktuelle_gasversorgung/start.html",
+          "stand": "2026"
+        }
+      ],
+      "linked_items": [
+        "supply-gasspeicher-winter",
+        "cost-heizkosten-winter"
+      ]
+    },
+    {
+      "id": "cascade-i",
+      "title": "Arzneimittelengpässe können Gesundheitsversorgung belasten",
+      "trigger": "Globale Lieferkettenprobleme bei Humanarzneimitteln",
+      "confidence": "mittel",
+      "severity": "erhoeht",
+      "zeithorizont": "wochen",
+      "methodology_tag": "bia",
+      "germany_relevance": {
+        "direct": true,
+        "systems_affected": [
+          "gesundheit",
+          "logistik"
+        ],
+        "time_to_impact": "wochen",
+        "description": "BfArM dokumentiert fortlaufende Lieferengpässe 2026"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "description": "Lieferengpässe bei Wirkstoffgruppen laut BfArM-Liste",
+          "systems": [
+            "gesundheit"
+          ]
+        },
+        {
+          "step": 2,
+          "description": "Apotheken melden Verfügbarkeitsprobleme",
+          "systems": [
+            "gesundheit",
+            "logistik"
+          ]
+        },
+        {
+          "step": 3,
+          "description": "Ersatzpräparate müssen medizinisch abgestimmt werden",
+          "systems": [
+            "gesundheit"
+          ]
+        },
+        {
+          "step": 4,
+          "description": "Haushalte mit Dauermedikation unter Planungsrisiko",
+          "systems": [
+            "gesundheit",
+            "gesellschaft"
+          ]
+        }
+      ],
+      "haushaltswirkung": "Besonders Haushalte mit chronischen Erkrankungen betroffen",
+      "quellen": [
+        "BfArM Lieferengpässe 2026"
+      ],
+      "sources": [
+        {
+          "name": "BfArM — Lieferengpässe Humanarzneimittel",
+          "url": "https://www.bfarm.de/DE/Arzneimittel/Arzneimittelinformationen/Lieferengpaesse/_verteilerseite.html?nn=471282",
+          "stand": "2026"
+        }
+      ],
+      "linked_items": [
+        "supply-arzneimittel-engpass",
+        "action-medikamente-vorrat"
+      ]
+    },
+    {
+      "id": "cascade-j",
+      "title": "Inflation kann Kaufkraft und gesellschaftlichen Zusammenhalt belasten",
+      "trigger": "Anhaltende Inflation ~3 % 2026 trifft Realeinkommen",
+      "confidence": "hoch",
+      "severity": "erhoeht",
+      "zeithorizont": "monate",
+      "methodology_tag": "steep",
+      "germany_relevance": {
+        "direct": true,
+        "systems_affected": [
+          "finanzen",
+          "arbeit",
+          "gesellschaft"
+        ],
+        "time_to_impact": "monate",
+        "description": "IW Köln Prognose 2026: Jahresinflation ~3 %; Reallohnentwicklung negativ"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "description": "Verbraucherpreise steigen bei Energie, Lebensmitteln, Versicherungen",
+          "systems": [
+            "finanzen"
+          ]
+        },
+        {
+          "step": 2,
+          "description": "Realeinkommen sinken",
+          "systems": [
+            "arbeit",
+            "finanzen"
+          ]
+        },
+        {
+          "step": 3,
+          "description": "Kaufkraft und Konsumneigung sinken",
+          "systems": [
+            "finanzen",
+            "gesellschaft"
+          ]
+        },
+        {
+          "step": 4,
+          "description": "Gesellschaftlicher Druck und Verteilungskonflikte steigen",
+          "systems": [
+            "gesellschaft"
+          ]
+        }
+      ],
+      "haushaltswirkung": "Direkte Haushaltsbelastung; Planungsunsicherheit",
+      "quellen": [
+        "IW Köln 2026",
+        "Spiegel 2026"
+      ],
+      "sources": [
+        {
+          "name": "IW Köln",
+          "url": "https://www.iwkoeln.de/presse/pressemitteilungen/michael-groemling-bip-waechst-2026-um-knapp-ein-prozent.html",
+          "stand": "2026"
+        },
+        {
+          "name": "Spiegel",
+          "url": "https://www.spiegel.de/wirtschaft/wirtschaft-in-deutschland-iw-senkt-konjunkturprognose-fuer-2026",
+          "stand": "2026"
+        }
+      ],
+      "linked_items": [
+        "cost-inflation-2026",
+        "lagebild-gesellschaft"
+      ]
+    },
+    {
+      "id": "cascade-k",
+      "title": "Post- und Logistikqualitätsverlust kann Versorgungszuverlässigkeit belasten",
+      "trigger": "Qualitätsauffälligkeiten in Post- und Paketzustellung",
+      "confidence": "mittel",
+      "severity": "beobachten",
+      "zeithorizont": "wochen",
+      "methodology_tag": "fmea",
+      "germany_relevance": {
+        "direct": true,
+        "systems_affected": [
+          "logistik",
+          "gesundheit"
+        ],
+        "time_to_impact": "wochen",
+        "description": "Bundesnetzagentur 2026: Schlichtungsaufkommen Post erhöht"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "description": "Zustellungsauffälligkeiten nehmen zu",
+          "systems": [
+            "logistik"
+          ]
+        },
+        {
+          "step": 2,
+          "description": "Lieferzeiten für Pakete, Medikamente, Ersatzteile verlängern sich",
+          "systems": [
+            "logistik",
+            "gesundheit"
+          ]
+        },
+        {
+          "step": 3,
+          "description": "Kleine Unternehmen mit Lieferabhängigkeit betroffen",
+          "systems": [
+            "industrie",
+            "arbeit"
+          ]
+        }
+      ],
+      "haushaltswirkung": "Risiko verspäteter oder unzuverlässiger Zustellung",
+      "quellen": [
+        "Bundesnetzagentur Post 2026"
+      ],
+      "sources": [
+        {
+          "name": "Bundesnetzagentur — Schlichtung Post",
+          "url": "https://www.bundesnetzagentur.de/SharedDocs/Pressemitteilungen/DE/2026/20260202_Schlichtung_TK_Post.html",
+          "stand": "Februar 2026"
+        },
+        {
+          "name": "Bundesnetzagentur — Datenportal Post",
+          "url": "https://www.bundesnetzagentur.de/DE/Fachthemen/Datenportal/3_Post/start.html",
+          "stand": "April 2026"
+        }
+      ],
+      "linked_items": [
+        "supply-post-pakete"
+      ]
+    },
+    {
+      "id": "cascade-l",
+      "title": "Strukturelle Deindustrialisierung kann langfristig Wohlstand belasten",
+      "trigger": "Kombination aus hohen Energiekosten, Exportrückgang, Fachkräftemangel, Investitionsrückgang",
+      "confidence": "mittel",
+      "severity": "eskalierend",
+      "zeithorizont": "langfristig",
+      "methodology_tag": "scenario",
+      "germany_relevance": {
+        "direct": true,
+        "systems_affected": [
+          "industrie",
+          "arbeit",
+          "finanzen",
+          "gesellschaft"
+        ],
+        "time_to_impact": "langfristig",
+        "description": "VW-Werksschließungen 2025/26; Chemieindustrie unter dauerhaftem Kostendruck"
+      },
+      "steps": [
+        {
+          "step": 1,
+          "description": "Energieintensive Industrien verlagern Produktion",
+          "systems": [
+            "industrie",
+            "energie"
+          ]
+        },
+        {
+          "step": 2,
+          "description": "Investitionsrückgang und Standortabwanderung beschleunigen sich",
+          "systems": [
+            "industrie",
+            "finanzen"
+          ]
+        },
+        {
+          "step": 3,
+          "description": "Steuereinnahmen und Kommunalfinanzen unter strukturellem Druck",
+          "systems": [
+            "finanzen",
+            "gesellschaft"
+          ]
+        },
+        {
+          "step": 4,
+          "description": "Struktureller Wohlstandsverlust und gesellschaftliche Polarisierung",
+          "systems": [
+            "arbeit",
+            "gesellschaft"
+          ]
+        }
+      ],
+      "haushaltswirkung": "Langfristig sinkende Kaufkraft; staatliche Leistungsfähigkeit unter Druck",
+      "quellen": [
+        "IW Köln 2026",
+        "Capital Mai 2026",
+        "Handelsblatt 2025"
+      ],
+      "sources": [
+        {
+          "name": "IW Köln",
+          "url": "https://www.iwkoeln.de/presse/pressemitteilungen/michael-groemling-bip-waechst-2026-um-knapp-ein-prozent.html",
+          "stand": "2026"
+        },
+        {
+          "name": "Capital",
+          "url": "https://www.capital.de/wirtschaft-politik/wachstum-2026--regierung-halbiert-prognose-wegen-irankrieg-37333956.html",
+          "stand": "Mai 2026"
+        }
+      ],
+      "linked_items": [
+        "lagebild-industrie",
+        "lagebild-arbeit",
+        "cascade-f"
+      ]
+    }
+  ]
+}
