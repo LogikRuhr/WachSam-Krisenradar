@@ -2,8 +2,8 @@
   "meta": {
     "version": "v0.2",
     "stand": "2026-05-21",
-    "count": 8,
-    "note": "8 Frühwarnindikatoren. Basis: docs/warning-indicators.md"
+    "count": 10,
+    "note": "10 Frühwarnindikatoren. Basis: docs/warning-indicators.md"
   },
   "indicators": [
     {
@@ -126,6 +126,102 @@
       "germany_relevance": "Kraftstoffpreise folgen ~2 Wochen verzögert",
       "linked_cascade": "cascade-d",
       "scale_direction": "higher_is_worse"
+    },
+    {
+      "id": "wi-kraftstoffpreis-super-e10",
+      "label": "Kraftstoffpreis Super E10 Deutschland",
+      "threshold_warn": 1.63,
+      "threshold_critical": 1.86,
+      "unit": "Euro/Liter",
+      "system": "mobilitaet",
+      "severity_trigger": "erhoeht",
+      "quelle": "ADAC Jahresmittel 2019/2022; Tankerkönig Live-Werte vorbereitet",
+      "sources": [
+        {
+          "name": "ADAC — Spritpreise 2020 rund 15 Cent unter Vorjahresniveau",
+          "url": "https://presse.adac.de/meldungen/adac-ev/verkehr/spritpreise-2020-rund-15-cent-unter-vorjahresniveau.html",
+          "stand": "30. Dezember 2020"
+        },
+        {
+          "name": "ADAC — 2022 teuerstes Tankjahr aller Zeiten",
+          "url": "https://presse.adac.de/meldungen/adac-ev/verkehr/2022-teuerstes-tankjahr-aller-zeiten.html",
+          "stand": "30. Dezember 2022"
+        },
+        {
+          "name": "ADAC — Tankjahr 2023",
+          "url": "https://presse.adac.de/meldungen/adac-ev/verkehr/tankjahr-2023-teuer-aber-nicht-so-teuer-wie-2022.html",
+          "stand": "2. Januar 2024"
+        },
+        {
+          "name": "ADAC — 2024 war drittteuerstes Tankjahr",
+          "url": "https://presse.adac.de/meldungen/adac-ev/verkehr/2024-war-drittteuerstes-tankjahr.html",
+          "stand": "2. Januar 2025"
+        }
+      ],
+      "germany_relevance": "Direkte Haushaltsbelastung für Pendeln, Versorgung und regionale Mobilität; Live-Preis später über Tankerkönig",
+      "linked_cascade": "cascade-d",
+      "scale_direction": "higher_is_worse",
+      "baseline_value": 1.405,
+      "baseline_period": "2019",
+      "baseline_source_name": "ADAC Jahresmittel Super E10 2019",
+      "baseline_source_url": "https://presse.adac.de/meldungen/adac-ev/verkehr/spritpreise-2020-rund-15-cent-unter-vorjahresniveau.html",
+      "crisis_reference_value": 1.86,
+      "crisis_reference_period": "2022",
+      "crisis_reference_source_name": "ADAC Jahresmittel Super E10 2022",
+      "crisis_reference_source_url": "https://presse.adac.de/meldungen/adac-ev/verkehr/2022-teuerstes-tankjahr-aller-zeiten.html",
+      "recent_reference_value": 1.765,
+      "recent_reference_period": "2023-2024",
+      "recent_reference_source_name": "ADAC Jahresmittel Super E10 2023 und 2024",
+      "recent_reference_source_url": "https://presse.adac.de/meldungen/adac-ev/verkehr/2024-war-drittteuerstes-tankjahr.html",
+      "threshold_method": "warn = baseline + 50% of 2019-to-2022 uplift; critical = 2022 crisis annual average. 2025/2026 excluded until an official completed ADAC annual average is available."
+    },
+    {
+      "id": "wi-kraftstoffpreis-diesel",
+      "label": "Kraftstoffpreis Diesel Deutschland",
+      "threshold_warn": 1.6,
+      "threshold_critical": 1.95,
+      "unit": "Euro/Liter",
+      "system": "mobilitaet",
+      "severity_trigger": "erhoeht",
+      "quelle": "ADAC Jahresmittel 2019/2022; Tankerkönig Live-Werte vorbereitet",
+      "sources": [
+        {
+          "name": "ADAC — Spritpreise 2020 rund 15 Cent unter Vorjahresniveau",
+          "url": "https://presse.adac.de/meldungen/adac-ev/verkehr/spritpreise-2020-rund-15-cent-unter-vorjahresniveau.html",
+          "stand": "30. Dezember 2020"
+        },
+        {
+          "name": "ADAC — 2022 teuerstes Tankjahr aller Zeiten",
+          "url": "https://presse.adac.de/meldungen/adac-ev/verkehr/2022-teuerstes-tankjahr-aller-zeiten.html",
+          "stand": "30. Dezember 2022"
+        },
+        {
+          "name": "ADAC — Tankjahr 2023",
+          "url": "https://presse.adac.de/meldungen/adac-ev/verkehr/tankjahr-2023-teuer-aber-nicht-so-teuer-wie-2022.html",
+          "stand": "2. Januar 2024"
+        },
+        {
+          "name": "ADAC — 2024 war drittteuerstes Tankjahr",
+          "url": "https://presse.adac.de/meldungen/adac-ev/verkehr/2024-war-drittteuerstes-tankjahr.html",
+          "stand": "2. Januar 2025"
+        }
+      ],
+      "germany_relevance": "Direkte Kostenwirkung für Pendeln, Logistik und Lieferpreise; Live-Preis später über Tankerkönig",
+      "linked_cascade": "cascade-d",
+      "scale_direction": "higher_is_worse",
+      "baseline_value": 1.262,
+      "baseline_period": "2019",
+      "baseline_source_name": "ADAC Jahresmittel Diesel 2019",
+      "baseline_source_url": "https://presse.adac.de/meldungen/adac-ev/verkehr/spritpreise-2020-rund-15-cent-unter-vorjahresniveau.html",
+      "crisis_reference_value": 1.946,
+      "crisis_reference_period": "2022",
+      "crisis_reference_source_name": "ADAC Jahresmittel Diesel 2022",
+      "crisis_reference_source_url": "https://presse.adac.de/meldungen/adac-ev/verkehr/2022-teuerstes-tankjahr-aller-zeiten.html",
+      "recent_reference_value": 1.686,
+      "recent_reference_period": "2023-2024",
+      "recent_reference_source_name": "ADAC Jahresmittel Diesel 2023 und 2024",
+      "recent_reference_source_url": "https://presse.adac.de/meldungen/adac-ev/verkehr/2024-war-drittteuerstes-tankjahr.html",
+      "threshold_method": "warn = baseline + 50% of 2019-to-2022 uplift; critical = 2022 crisis annual average. 2025/2026 excluded until an official completed ADAC annual average is available."
     },
     {
       "id": "wi-bsi-cyberbedrohung",

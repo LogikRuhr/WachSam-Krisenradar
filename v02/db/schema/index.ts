@@ -205,6 +205,21 @@ export const indicators = pgTable("indicators", {
   targetDeadline: timestamp("target_deadline", { withTimezone: true }),
   targetLabel: text("target_label"),
 
+  // Schwellen-Herleitung / Referenzwerte
+  baselineValue: numeric("baseline_value"),
+  baselinePeriod: text("baseline_period"),
+  baselineSourceName: text("baseline_source_name"),
+  baselineSourceUrl: text("baseline_source_url"),
+  crisisReferenceValue: numeric("crisis_reference_value"),
+  crisisReferencePeriod: text("crisis_reference_period"),
+  crisisReferenceSourceName: text("crisis_reference_source_name"),
+  crisisReferenceSourceUrl: text("crisis_reference_source_url"),
+  recentReferenceValue: numeric("recent_reference_value"),
+  recentReferencePeriod: text("recent_reference_period"),
+  recentReferenceSourceName: text("recent_reference_source_name"),
+  recentReferenceSourceUrl: text("recent_reference_source_url"),
+  thresholdMethod: text("threshold_method"),
+
   retrievedAt,
   editorialStatus,
   editorialReviewedAt,

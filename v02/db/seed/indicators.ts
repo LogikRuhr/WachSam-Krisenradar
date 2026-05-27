@@ -14,6 +14,19 @@ type RawIndicator = (typeof indicatorData.indicators)[number] & {
   target_value?: number;
   target_deadline?: string;
   target_label?: string;
+  baseline_value?: number;
+  baseline_period?: string;
+  baseline_source_name?: string;
+  baseline_source_url?: string;
+  crisis_reference_value?: number;
+  crisis_reference_period?: string;
+  crisis_reference_source_name?: string;
+  crisis_reference_source_url?: string;
+  recent_reference_value?: number;
+  recent_reference_period?: string;
+  recent_reference_source_name?: string;
+  recent_reference_source_url?: string;
+  threshold_method?: string;
 };
 
 export const INDICATORS: NewIndicator[] = indicatorData.indicators.map((_item) => {
@@ -36,5 +49,18 @@ export const INDICATORS: NewIndicator[] = indicatorData.indicators.map((_item) =
     targetValue: item.target_value != null ? String(item.target_value) : null,
     targetDeadline: item.target_deadline ? new Date(item.target_deadline) : null,
     targetLabel: item.target_label ?? null,
+    baselineValue: item.baseline_value != null ? String(item.baseline_value) : null,
+    baselinePeriod: item.baseline_period ?? null,
+    baselineSourceName: item.baseline_source_name ?? null,
+    baselineSourceUrl: item.baseline_source_url ?? null,
+    crisisReferenceValue: item.crisis_reference_value != null ? String(item.crisis_reference_value) : null,
+    crisisReferencePeriod: item.crisis_reference_period ?? null,
+    crisisReferenceSourceName: item.crisis_reference_source_name ?? null,
+    crisisReferenceSourceUrl: item.crisis_reference_source_url ?? null,
+    recentReferenceValue: item.recent_reference_value != null ? String(item.recent_reference_value) : null,
+    recentReferencePeriod: item.recent_reference_period ?? null,
+    recentReferenceSourceName: item.recent_reference_source_name ?? null,
+    recentReferenceSourceUrl: item.recent_reference_source_url ?? null,
+    thresholdMethod: item.threshold_method ?? null,
   };
 });

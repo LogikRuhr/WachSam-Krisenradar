@@ -80,6 +80,35 @@ const destatisFuel = FACTS.find((fact) => fact.id === "fact-destatis-kraftstoffe
 assert.ok(destatisFuel, "Destatis fuel fact must exist");
 assert.equal(destatisFuel.valueNumeric, "26.2", "Destatis fuel fact must use the concrete April 2026 fuel value");
 
+const expectedFuelIndicators = [
+  {
+    id: "wi-kraftstoffpreis-super-e10",
+    baselineValue: "1.405",
+    crisisReferenceValue: "1.86",
+    thresholdWarn: "1.63",
+    thresholdCritical: "1.86",
+  },
+  {
+    id: "wi-kraftstoffpreis-diesel",
+    baselineValue: "1.262",
+    crisisReferenceValue: "1.946",
+    thresholdWarn: "1.6",
+    thresholdCritical: "1.95",
+  },
+];
+
+for (const expected of expectedFuelIndicators) {
+  const indicator = seedData.indicators.find((item) => item.id === expected.id);
+  assert.ok(indicator, `${expected.id} must exist`);
+  assert.equal(indicator.baselineValue, expected.baselineValue, `${expected.id} must use ADAC 2019 as baseline`);
+  assert.equal(indicator.baselinePeriod, "2019", `${expected.id} baseline period must be explicit`);
+  assert.equal(indicator.crisisReferenceValue, expected.crisisReferenceValue, `${expected.id} must use ADAC 2022 as crisis reference`);
+  assert.equal(indicator.crisisReferencePeriod, "2022", `${expected.id} crisis period must be explicit`);
+  assert.equal(indicator.thresholdWarn, expected.thresholdWarn, `${expected.id} warn threshold must be midpoint between baseline and crisis`);
+  assert.equal(indicator.thresholdCritical, expected.thresholdCritical, `${expected.id} critical threshold must equal crisis reference`);
+  assert.match(indicator.thresholdMethod ?? "", /baseline \+ 50%/, `${expected.id} must document threshold derivation`);
+}
+
 const factRefs = (seedData as typeof seedData & { factRefs?: Array<{ factId: string }> }).factRefs ?? [];
 const referencedFactIds = new Set(factRefs.map((ref) => ref.factId));
 for (const fact of FACTS) {
