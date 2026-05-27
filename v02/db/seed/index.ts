@@ -182,7 +182,11 @@ export const seedDatabase = async (db: Db): Promise<SeedStats> => {
   for (const row of SOURCES) {
     await db.insert(schema.sources).values(row).onConflictDoUpdate({
       target: schema.sources.sourceUrl,
-      set: { ...row, updatedAt: now },
+      set: {
+        sourceName: row.sourceName,
+        sourceStand: row.sourceStand,
+        updatedAt: now,
+      },
     });
   }
 

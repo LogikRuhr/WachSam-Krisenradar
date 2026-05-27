@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 import { FACTS } from "../db/seed/facts";
 import { seedData } from "../db/seed";
 
@@ -119,5 +120,9 @@ const sourceRows = (seedData as typeof seedData & { sources?: Array<{ sourceUrl:
 const uniqueSourceUrls = new Set(sourceRows.map((source) => source.sourceUrl));
 assert.equal(sourceRows.length, uniqueSourceUrls.size, "normalized source catalog must contain each URL once");
 assert.equal(sourceRows.length < seedData.itemSources.length, true, "source catalog must deduplicate item source references");
+for (const source of sourceRows) {
+  const stableId = `source-${createHash("sha256").update(source.sourceUrl).digest("hex").slice(0, 12)}`;
+  assert.equal(source.id, stableId, `source ${source.sourceUrl} must use a stable URL-derived id`);
+}
 
 console.log("audit invariants ok");
