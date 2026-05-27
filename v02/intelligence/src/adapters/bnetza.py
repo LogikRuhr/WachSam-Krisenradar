@@ -24,7 +24,8 @@ class BNetzAAdapter(BaseAdapter):
             )
 
             if response.status_code == 200:
-                data = response.json()
+                payload = response.json()
+                data = payload.get("data") if isinstance(payload, dict) else payload
                 if data and isinstance(data, list) and len(data) > 0:
                     latest = data[0]
                     fill_pct = latest.get("full")

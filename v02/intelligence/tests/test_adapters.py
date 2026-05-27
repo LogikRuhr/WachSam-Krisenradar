@@ -1,4 +1,6 @@
 import pytest
+from unittest.mock import MagicMock
+
 from src.adapters.destatis import DestatisAdapter
 from src.adapters.bnetza import BNetzAAdapter
 from src.adapters.fao import FAOAdapter
@@ -36,6 +38,28 @@ def test_bnetza_adapter():
     items = adapter.fetch_latest()
     _validate_items(items)
     assert any("energie" in i.affected_systems for i in items)
+
+
+def test_bnetza_adapter_parses_gie_data_envelope(monkeypatch):
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = {
+        "data": [
+            {"full": "72.5", "gasDayStart": "2026-05-27"},
+            {"full": "71.9", "gasDayStart": "2026-05-26"},
+        ],
+        "total": 2,
+    }
+
+    monkeypatch.setattr("src.adapters.bnetza.requests.get", lambda *args, **kwargs: response)
+
+    item = BNetzAAdapter().fetch_latest()[0]
+
+    assert item.indicator_id == "wi-gasspeicher-fuellstand"
+    assert item.current_value == 72.5
+    assert item.current_value_date == "2026-05-27"
+    assert item.previous_value == 71.9
+    assert item.previous_value_date == "2026-05-26"
 
 
 def test_fao_adapter():

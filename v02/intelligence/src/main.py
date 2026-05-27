@@ -18,11 +18,21 @@ from .db import insert_draft
 
 ADAPTER_TYPE_MAP = {
     "Destatis": "facts",
-    "BNetzA": "lagebild_items",
+    "BNetzA": "indicators",
     "FAO": "facts",
     "Eurostat": "facts",
     "WarningIndicators": "facts",
 }
+
+
+def resolve_item_type(item):
+    if item.indicator_id:
+        return "indicators"
+
+    item_type = ADAPTER_TYPE_MAP.get(item.source_class, "lagebild_items")
+    if item.source_class in ("behoerde", "wirtschaftsinstitut", "qualitaetsmedien"):
+        return "lagebild_items"
+    return item_type
 
 
 async def run_ingestion():
@@ -64,9 +74,7 @@ async def run_ingestion():
 
     saved = 0
     for item in items:
-        item_type = ADAPTER_TYPE_MAP.get(item.source_class, "lagebild_items")
-        if item.source_class in ("behoerde", "wirtschaftsinstitut", "qualitaetsmedien"):
-            item_type = "lagebild_items"
+        item_type = resolve_item_type(item)
         draft_id = insert_draft(item, item_type)
         if draft_id:
             saved += 1
