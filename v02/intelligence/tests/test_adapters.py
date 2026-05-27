@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 from src.adapters.destatis import DestatisAdapter
 from src.adapters.destatis import parse_vpi_table
 from src.adapters.bnetza import BNetzAAdapter
+from src.adapters.eia import EIAAdapter
 from src.adapters.fao import FAOAdapter
 from src.adapters.eurostat import EurostatAdapter
 from src.adapters.warning_indicators import WarningIndicatorsAdapter
@@ -101,6 +102,39 @@ def test_bnetza_adapter_parses_gie_data_envelope(monkeypatch):
     assert item.current_value_date == "2026-05-27"
     assert item.previous_value == 71.9
     assert item.previous_value_date == "2026-05-26"
+
+
+def test_eia_adapter_maps_brent_to_indicator_live_value(monkeypatch):
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = {
+        "response": {
+            "data": [
+                {
+                    "period": "2026-05-24",
+                    "value": "82.45",
+                    "series": "RBRTE",
+                    "units": "Dollars per Barrel",
+                },
+                {
+                    "period": "2026-05-23",
+                    "value": 81.9,
+                    "series": "RBRTE",
+                    "units": "Dollars per Barrel",
+                },
+            ]
+        }
+    }
+
+    monkeypatch.setattr("src.adapters.eia.requests.get", lambda *args, **kwargs: response)
+
+    item = EIAAdapter().fetch_latest()[0]
+
+    assert item.indicator_id == "wi-oel-brent"
+    assert item.current_value == 82.45
+    assert item.current_value_date == "2026-05-24"
+    assert item.previous_value == 81.9
+    assert item.previous_value_date == "2026-05-23"
 
 
 def test_fao_adapter():
