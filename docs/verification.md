@@ -33,3 +33,18 @@ Eine Aufgabe ist erst fertig, wenn:
 - Security-Check keine Secrets findet
 - `git status --short` verstanden ist
 
+## Deploy-Verify
+
+Vor Deploy:
+
+```bash
+bash scripts/verify.sh
+```
+
+Nach Deploy:
+
+```bash
+ssh -i ~/.ssh/wachsam_deploy root@85.215.213.110 'cd /opt/wachsam/source && git rev-parse --short HEAD && bash scripts/verify.sh'
+```
+
+Der Source-Deploy darf keine produktiven Container neu starten.

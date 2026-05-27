@@ -17,6 +17,13 @@ einer akzeptierten Spec ergaenzt.
 - `outputs/` - explizite Markdown-Reports, keine PII oder Rohdaten
 - `.github/` - GitHub Templates und CI
 
+## Deploy
+
+`deploy-source` legt den aktuellen `main`-Stand auf dem VPS unter `/opt/wachsam/source`
+ab. Der Workflow ist manuell und startet keine produktiven Container neu.
+
+Details: `docs/deploy.md`.
+
 ## Start
 
 ```powershell
