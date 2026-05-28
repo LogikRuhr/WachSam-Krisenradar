@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 from unittest.mock import MagicMock
 
@@ -8,6 +10,11 @@ from src.adapters.eia import EIAAdapter
 from src.adapters.fao import FAOAdapter
 from src.adapters.eurostat import EurostatAdapter
 from src.adapters.warning_indicators import WarningIndicatorsAdapter
+from src.adapters.tankerkoenig import (
+    TankerkoenigAdapter,
+    PLZ_BASKET,
+    average_fuel_prices,
+)
 
 
 def _validate_items(items):
@@ -183,3 +190,76 @@ def test_warning_indicators_adapter():
     assert adapter.name == "WarningIndicators"
     items = adapter.fetch_latest()
     assert isinstance(items, list)
+
+
+def test_tankerkoenig_basket_has_one_point_per_bundesland():
+    adapter = TankerkoenigAdapter()
+    assert adapter.name == "Tankerkoenig"
+    assert len(PLZ_BASKET) == 16
+    assert len({p.land for p in PLZ_BASKET}) == 16
+
+
+def test_average_fuel_prices_filters_closed_and_invalid():
+    stations = [
+        {"isOpen": True, "e10": 1.759, "diesel": 1.659},
+        {"isOpen": True, "e10": 1.779, "diesel": 1.679},
+        {"isOpen": False, "e10": 1.700, "diesel": 1.600},  # geschlossen → ignoriert
+        {"isOpen": True, "e10": False, "diesel": 1.689},    # e10 ungueltig → nur diesel
+    ]
+
+    result = average_fuel_prices(stations)
+
+    assert result["e10"] == 1.769
+    assert result["diesel"] == 1.676
+    assert result["station_count"] == 3
+
+
+def test_average_fuel_prices_empty_when_all_closed():
+    stations = [{"isOpen": False, "e10": 1.7, "diesel": 1.6}]
+    result = average_fuel_prices(stations)
+    assert result["e10"] is None
+    assert result["diesel"] is None
+    assert result["station_count"] == 0
+
+
+def _mock_tankerkoenig(monkeypatch, payload):
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = payload
+    monkeypatch.setattr("src.adapters.tankerkoenig.settings.TANKERKOENIG_API_KEY", "test-key")
+    monkeypatch.setattr("time.sleep", lambda *args, **kwargs: None)
+    monkeypatch.setattr("src.adapters.tankerkoenig.requests.get", lambda *args, **kwargs: response)
+
+
+def test_tankerkoenig_maps_to_indicator_live_values(monkeypatch):
+    _mock_tankerkoenig(monkeypatch, {
+        "ok": True,
+        "stations": [
+            {"isOpen": True, "e10": 1.759, "diesel": 1.659},
+            {"isOpen": True, "e10": 1.779, "diesel": 1.679},
+            {"isOpen": True, "e10": False, "diesel": 1.689},
+        ],
+    })
+
+    items = TankerkoenigAdapter().fetch_latest()
+    by_id = {item.indicator_id: item for item in items}
+
+    assert set(by_id) == {"wi-kraftstoffpreis-super-e10", "wi-kraftstoffpreis-diesel"}
+
+    e10 = by_id["wi-kraftstoffpreis-super-e10"]
+    diesel = by_id["wi-kraftstoffpreis-diesel"]
+    assert e10.current_value == 1.769
+    assert diesel.current_value == 1.676
+    assert e10.current_value_date == date.today().isoformat()
+    assert e10.previous_value is None
+    _validate_items(items)
+
+
+def test_tankerkoenig_returns_empty_on_api_error(monkeypatch):
+    _mock_tankerkoenig(monkeypatch, {"ok": False, "message": "apikey not valid"})
+    assert TankerkoenigAdapter().fetch_latest() == []
+
+
+def test_tankerkoenig_returns_empty_without_api_key(monkeypatch):
+    monkeypatch.setattr("src.adapters.tankerkoenig.settings.TANKERKOENIG_API_KEY", "")
+    assert TankerkoenigAdapter().fetch_latest() == []

@@ -10,6 +10,7 @@ from .adapters.destatis import DestatisAdapter
 from .adapters.bnetza import BNetzAAdapter
 from .adapters.eia import EIAAdapter
 from .adapters.fao import FAOAdapter
+from .adapters.tankerkoenig import TankerkoenigAdapter
 from .adapters.eurostat import EurostatAdapter
 from .adapters.warning_indicators import WarningIndicatorsAdapter
 from .crawler.rss_crawler import RSSCrawler
@@ -45,6 +46,7 @@ async def run_ingestion():
         BNetzAAdapter(),
         EIAAdapter(),
         FAOAdapter(),
+        TankerkoenigAdapter(),
         EurostatAdapter(),
         WarningIndicatorsAdapter(),
     ]
