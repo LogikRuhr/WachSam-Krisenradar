@@ -25,17 +25,26 @@ if ($blockedOutputFiles.Count -gt 0) {
 }
 
 $secretPattern = "(?i)(api[_-]?key|secret|token|password|passwd|private[_-]?key)\s*[:=]\s*['""]?[A-Za-z0-9_\-]{16,}"
-$textFiles = Get-ChildItem -Recurse -File |
-  Where-Object {
-    $_.FullName -notmatch "\\.git\\" -and
-    $_.FullName -notmatch "\\node_modules\\" -and
-    $_.Extension -in ".md", ".txt", ".yml", ".yaml", ".json", ".ps1", ".sh", ".env", ".example"
-  }
+$secretPathspecs = @(
+  "*.md",
+  "*.txt",
+  "*.yml",
+  "*.yaml",
+  "*.json",
+  "*.ps1",
+  "*.sh",
+  ".env*",
+  ":(glob)**/.env*"
+)
+$textFiles = & git ls-files -co --exclude-standard -- $secretPathspecs
+if ($LASTEXITCODE -ne 0) {
+  Fail "git ls-files failed."
+}
 
 foreach ($file in $textFiles) {
-  $content = Get-Content -LiteralPath $file.FullName -Raw -ErrorAction SilentlyContinue
+  $content = Get-Content -LiteralPath $file -Raw -ErrorAction SilentlyContinue
   if ($content -match $secretPattern) {
-    Fail "Possible secret pattern in $($file.FullName)"
+    Fail "Possible secret pattern in $file"
   }
 }
 
@@ -45,4 +54,3 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "verify: PASS"
-

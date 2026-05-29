@@ -17,22 +17,24 @@ if find outputs -type f \( -name '*.html' -o -name '*.json' -o -name '*.csv' -o 
 fi
 
 secret_pattern='(api[_-]?key|secret|token|password|passwd|private[_-]?key)[[:space:]]*[:=][[:space:]]*["'\'']?[A-Za-z0-9_-]{16,}'
+secret_pathspecs=(
+  '*.md'
+  '*.txt'
+  '*.yml'
+  '*.yaml'
+  '*.json'
+  '*.ps1'
+  '*.sh'
+  '.env*'
+  ':(glob)**/.env*'
+)
 
-while IFS= read -r file; do
+while IFS= read -r -d '' file; do
   if grep -Eiq "$secret_pattern" "$file"; then
     fail "possible secret pattern in $file"
   fi
-done < <(
-  find . \
-    -path ./.git -prune -o \
-    -path ./node_modules -prune -o \
-    -type f \( \
-      -name '*.md' -o -name '*.txt' -o -name '*.yml' -o -name '*.yaml' -o \
-      -name '*.json' -o -name '*.ps1' -o -name '*.sh' -o -name '.env*' \
-    \) -print
-)
+done < <(git ls-files -z -co --exclude-standard -- "${secret_pathspecs[@]}")
 
 git diff --check
 
 echo "verify: PASS"
-
