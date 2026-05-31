@@ -43,6 +43,10 @@ v02 wurde auf Release-Readiness gebracht: CI prüft jetzt den echten Produktstan
 
 AUTH_SECRET fail-fast (`assertAuthRuntimeReady`), Strich-Marker `aria-hidden`, kanonisches Label „Aktueller Wert"/„Stand des Werts", Nullish-Check statt Truthiness bei numerischen Live-Werten, EffectPath „Systemstress" → „Systembereich", Logo „RUHRLOGIK" → „WachSam", Datenschutz-Verantwortlicher mit echter Anschrift.
 
+### Zusätzlich im Browser-Smoke gefunden + behoben
+
+- **Mobile-Horizontal-Overflow (375px):** Der off-canvas `WerkzeugeDrawer` (`position: fixed; translateX(100%)`) erzeugte echten Dokument-Scroll (scrollWidth 683 > 375), den nur `html { overflow-x: hidden }` geklippt hätte — was aber die `sticky` Top-Nav bricht (verifiziert: navTop −400). Stattdessen Backdrop + Drawer in einen `position: fixed; inset: 0; overflow: hidden`-Wrapper (`.drawer-root`) gehüllt, Drawer auf `position: absolute` → Wrapper klippt den off-canvas Drawer, `html`/`body` unangetastet. Verifiziert: kein Overflow (zu/offen), sticky Nav intakt (navTop 0), Drawer öffnet sichtbar (left 37, right 360) und schließt korrekt.
+
 ### Minor — bewusst verschoben (dokumentiert, kein Blocker)
 
 | Befund | Datei | Warum verschoben |
@@ -61,7 +65,7 @@ AUTH_SECRET fail-fast (`assertAuthRuntimeReady`), Strich-Marker `aria-hidden`, k
 | Checkpunkt | Status | Anmerkung |
 |---|---|---|
 | CI grün | ✅ | verify.yml erweitert; lokal grün |
-| UI Desktop/Mobile geprüft | ⚠️ teilweise | Build + statisches Audit grün; Browser-Smoke gegen Live-DB steht aus (kein lokaler DB-Zugriff) |
+| UI Desktop/Mobile geprüft | ✅ Layout / ⚠️ Daten | Browser-Smoke (Production-Build) bei 1440px + 375px: Routen rendern, Konsole sauber (nur erwartbarer Auth-500 ohne Prod-Env + favicon-404), sticky Nav intakt, Drawer öffnet/schließt korrekt, kein Horizontal-Overflow. Daten-getriebene UI gegen Live-DB steht aus (kein lokaler DB-Zugriff) |
 | Live-Daten-Spur sichtbar & nicht alarmistisch | ✅ | „Live"-Wording entfernt; kanonische Labels; nicht-alarmistisch verifiziert |
 | Editorial-Gate dokumentiert | ✅ | `docs/editorial-gate.md` (Draft→Approve→Publish, Authz, Audit-Log, kein Auto-Publish) |
 | DSGVO- & Security-Review (Auth/Profil/Notifications) | ✅ | Audit durchgeführt; Blocker behoben; Magic-Link/Resend dokumentiert |
@@ -80,3 +84,4 @@ AUTH_SECRET fail-fast (`assertAuthRuntimeReady`), Strich-Marker `aria-hidden`, k
 - `cd v02 && pnpm run verify` → PASS (tsc, eslint, next build 28 Routen, drizzle generate „no schema changes", seed dry-run „Validierung erfolgreich", audit invariants ok).
 - `cd v02/intelligence && python -m pytest tests/` → 33 passed, 5 skipped (Postgres-Integrationstests sauber übersprungen).
 - `bash scripts/verify.sh` → PASS (Secret-/Artefakt-Gate).
+- Browser-Smoke (`next start`, Playwright) bei 1440px + 375px: Startseite rendert, sticky Nav (navTop 0), kein Horizontal-Overflow (scrollWidth 360 ≤ 375), Drawer öffnet (left 37/right 360) + schließt; Konsole nur erwartbarer `/api/auth/session` 500 (ohne Prod-Env) + favicon-404.

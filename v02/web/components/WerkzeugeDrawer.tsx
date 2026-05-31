@@ -41,15 +41,16 @@ export function WerkzeugeDrawer() {
       >
         Werkzeuge
       </button>
-      <div className={open ? "drawer-backdrop open" : "drawer-backdrop"} onClick={() => setOpen(false)} />
-      <aside
-        aria-hidden={!open}
-        aria-labelledby="werkzeuge-title"
-        aria-modal={open}
-        className={open ? "werkzeuge-drawer open" : "werkzeuge-drawer"}
-        id="werkzeuge-drawer"
-        role="dialog"
-      >
+      <div className="drawer-root">
+        <div className={open ? "drawer-backdrop open" : "drawer-backdrop"} onClick={() => setOpen(false)} />
+        <aside
+          aria-hidden={!open}
+          aria-labelledby="werkzeuge-title"
+          aria-modal={open}
+          className={open ? "werkzeuge-drawer open" : "werkzeuge-drawer"}
+          id="werkzeuge-drawer"
+          role="dialog"
+        >
         <button
           ref={closeButtonRef}
           className="drawer-close"
@@ -68,7 +69,8 @@ export function WerkzeugeDrawer() {
             </Link>
           ))}
         </nav>
-      </aside>
+        </aside>
+      </div>
     </>
   );
 }
