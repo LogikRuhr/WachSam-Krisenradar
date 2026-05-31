@@ -11,11 +11,58 @@ permissions:
   contents: read
 
 jobs:
-  verify:
+  source-gate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Verify
+      - name: Source gate
         run: bash scripts/verify.sh
+
+  app-verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v02
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: v02/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify app
+        run: pnpm run verify
+
+  intelligence-verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v02/intelligence
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: v02/intelligence/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pipeline tests
+        run: python -m pytest tests/ -q

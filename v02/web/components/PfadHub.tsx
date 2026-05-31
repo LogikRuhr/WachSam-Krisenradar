@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 const pfade = [
-  { href: "/kosten", label: "Was teurer wird", text: "Mehrkosten nach Bereichen und Zeitfenstern einordnen." },
-  { href: "/versorgung", label: "Was knapp werden kann", text: "Bereiche, in denen Engpässe oder Verzögerungen entstehen können." },
-  { href: "/massnahmen", label: "Was ich tun kann", text: "Ruhige, praktische Maßnahmen ohne Alarmismus." },
-  { href: "/indikatoren", label: "Was als Nächstes kommt", text: "Frühwarnindikatoren und Schwellen beobachten." },
+  { href: "/lagebild", label: "Was gerade läuft", text: "Die Lage Deutschlands über zehn Systembereiche." },
+  { href: "/kosten", label: "Was es kostet", text: "Mehrkosten für Haushalte nach Bereichen und Zeitfenstern." },
+  { href: "/kaskaden", label: "Warum das zusammenhängt", text: "Wirkungsketten von Signal bis Haushaltswirkung." },
+  { href: "/massnahmen", label: "Was ich tun kann", text: "Ruhige, praktische Prüfschritte ohne Alarmismus." },
 ];
 
 export function PfadHub() {

@@ -6,8 +6,15 @@ export type SourceLike = {
 
 export function SourcePill({ source }: { source: SourceLike }) {
   return (
-    <a className="source-pill hover-rost" href={source.sourceUrl} target="_blank" rel="noopener noreferrer">
-      {source.sourceName} · Stand {source.sourceStand}
+    <a
+      className="source-pill hover-rost"
+      href={source.sourceUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={`Quelle: ${source.sourceName} — Stand: ${source.sourceStand} (öffnet in neuem Tab)`}
+    >
+      Quelle: {source.sourceName} · Stand: {source.sourceStand}
+      <span aria-hidden="true"> ↗</span>
     </a>
   );
 }

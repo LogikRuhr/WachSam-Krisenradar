@@ -135,7 +135,7 @@
       "unit": "Euro/Liter",
       "system": "mobilitaet",
       "severity_trigger": "erhoeht",
-      "quelle": "ADAC Jahresmittel 2019/2022; Tankerkönig Live-Werte vorbereitet",
+      "quelle": "ADAC Jahresmittel 2019/2022; Tankerkönig-Anbindung vorbereitet",
       "sources": [
         {
           "name": "ADAC — Spritpreise 2020 rund 15 Cent unter Vorjahresniveau",
@@ -158,7 +158,7 @@
           "stand": "2. Januar 2025"
         }
       ],
-      "germany_relevance": "Direkte Haushaltsbelastung für Pendeln, Versorgung und regionale Mobilität; Live-Preis später über Tankerkönig",
+      "germany_relevance": "Direkte Haushaltsbelastung für Pendeln, Versorgung und regionale Mobilität; Tankstellenpreis später über Tankerkönig",
       "linked_cascade": "cascade-d",
       "scale_direction": "higher_is_worse",
       "baseline_value": 1.405,
@@ -183,7 +183,7 @@
       "unit": "Euro/Liter",
       "system": "mobilitaet",
       "severity_trigger": "erhoeht",
-      "quelle": "ADAC Jahresmittel 2019/2022; Tankerkönig Live-Werte vorbereitet",
+      "quelle": "ADAC Jahresmittel 2019/2022; Tankerkönig-Anbindung vorbereitet",
       "sources": [
         {
           "name": "ADAC — Spritpreise 2020 rund 15 Cent unter Vorjahresniveau",
@@ -206,7 +206,7 @@
           "stand": "2. Januar 2025"
         }
       ],
-      "germany_relevance": "Direkte Kostenwirkung für Pendeln, Logistik und Lieferpreise; Live-Preis später über Tankerkönig",
+      "germany_relevance": "Direkte Kostenwirkung für Pendeln, Logistik und Lieferpreise; Tankstellenpreis später über Tankerkönig",
       "linked_cascade": "cascade-d",
       "scale_direction": "higher_is_worse",
       "baseline_value": 1.262,

@@ -10,20 +10,34 @@ export default function ImpressumPage() {
         <h1 className="font-display text-4xl tracking-wide">Impressum</h1>
 
         <section className="mt-8 space-y-4 text-sm leading-relaxed text-[var(--on-surface-variant)]">
-          <h2 className="font-semibold text-[var(--on-surface)]">Angaben gemäß § 5 TMG / § 18 MStV</h2>
+          <h2 className="font-semibold text-[var(--on-surface)]">Angaben gemäß § 5 DDG (ehem. § 5 TMG) / § 18 Abs. 2 MStV</h2>
           <p>
             Jean Schütz<br />
             RuhrLogik<br />
-            {/* Postanschrift wird manuell auf dem Server ergänzt */}
+            Kantstraße 27<br />
+            46240 Bottrop
           </p>
 
           <h2 className="font-semibold text-[var(--on-surface)]">Kontakt</h2>
           <p>
-            E-Mail: kontakt [at] ruhrlogik.de
+            Telefon: 015228657354<br />
+            E-Mail: info@ruhrlogik.de
           </p>
 
-          <h2 className="font-semibold text-[var(--on-surface)]">Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
-          <p>Jean Schütz (Anschrift wie oben)</p>
+          <h2 className="font-semibold text-[var(--on-surface)]">Redaktionell verantwortlich (§ 18 Abs. 2 MStV)</h2>
+          <p>
+            Jean Schütz<br />
+            Kantstraße 27<br />
+            46240 Bottrop
+          </p>
+
+          <h2 className="font-semibold text-[var(--on-surface)]">Verbraucherstreitbeilegung / Universalschlichtungsstelle</h2>
+          <p>
+            Wir nehmen an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teil.
+            Zuständig ist die Universalschlichtungsstelle des Zentrums für Schlichtung e.V.,
+            Straßburger Straße 8, 77694 Kehl am Rhein
+            (<a href="https://www.verbraucher-schlichter.de" target="_blank" rel="noopener noreferrer">www.verbraucher-schlichter.de</a>).
+          </p>
 
           <h2 className="font-semibold text-[var(--on-surface)]">Haftungsausschluss</h2>
           <p>

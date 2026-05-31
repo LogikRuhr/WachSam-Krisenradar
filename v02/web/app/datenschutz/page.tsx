@@ -15,7 +15,9 @@ export default function DatenschutzPage() {
             <h2 className="font-semibold text-[var(--on-surface)]">1. Verantwortlicher</h2>
             <p className="mt-2">
               Jean Schütz, RuhrLogik<br />
-              E-Mail: kontakt [at] ruhrlogik.de
+              Kantstraße 27, 46240 Bottrop<br />
+              Telefon: 015228657354<br />
+              E-Mail: datenschutz@ruhrlogik.de
             </p>
           </div>
 
@@ -56,11 +58,24 @@ export default function DatenschutzPage() {
           </div>
 
           <div>
-            <h2 className="font-semibold text-[var(--on-surface)]">6. Hosting</h2>
+            <h2 className="font-semibold text-[var(--on-surface)]">6. Hosting und Auftragsverarbeitung</h2>
             <p className="mt-2">
-              WachSam wird auf einem IONOS-VPS in Deutschland gehostet.
-              Es findet keine Datenübermittlung in Drittländer statt.
-              E-Mails für Magic-Links werden über Resend (resend.com) versendet.
+              WachSam wird auf einem IONOS-VPS in Deutschland gehostet; das Hosting findet
+              innerhalb der EU statt.
+            </p>
+            <p className="mt-2">
+              Für den Versand der Magic-Link-E-Mails setzen wir Resend (Resend Inc.) als
+              Auftragsverarbeiter im Sinne von Art. 28 DSGVO ein. Dabei wird Ihre E-Mail-Adresse
+              an Resend übermittelt, um den Anmelde-Link zuzustellen. Mit Resend besteht ein
+              Auftragsverarbeitungsvertrag. Soweit dabei eine Verarbeitung in einem Drittland
+              (USA) erfolgt, stützt sie sich auf das EU-US Data Privacy Framework bzw. auf
+              Standardvertragsklauseln der EU-Kommission (Art. 46 DSGVO).
+            </p>
+            <p className="mt-2">
+              Für die KI-gestützte Erstellung von Lage-Einordnungen und Handlungshinweisen
+              setzen wir Vertex AI (Gemini, Google Cloud, Region europe-west3) ein. Die Texte
+              werden aus öffentlichen Quellen generiert; dabei werden keine personenbezogenen
+              Daten der Nutzerinnen und Nutzer an Vertex AI übermittelt.
             </p>
           </div>
 
@@ -81,7 +96,7 @@ export default function DatenschutzPage() {
           <div>
             <h2 className="font-semibold text-[var(--on-surface)]">8. Kontakt für Datenschutzanfragen</h2>
             <p className="mt-2">
-              E-Mail: kontakt [at] ruhrlogik.de
+              E-Mail: datenschutz@ruhrlogik.de
             </p>
           </div>
 

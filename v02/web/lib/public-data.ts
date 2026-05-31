@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { db, schema } from "./db";
 
 const PUBLISHED = "published" as const;
@@ -57,6 +58,42 @@ async function attachSources<T extends { id: string }>(itemType: SourceRow["item
     ...row,
     sources: sources.filter((source) => source.itemType === itemType && source.itemId === row.id),
   }));
+}
+
+type ParentTable = PgTable & { id: AnyPgColumn; editorialStatus: AnyPgColumn };
+
+// item_sources zeigt polymorph (itemType:itemId) auf das Parent-Item und trägt selbst
+// keinen editorial_status. Quellen dürfen nur sichtbar werden, wenn das Parent-Item
+// veröffentlicht ist — sonst leaken Quellen unpublizierter Drafts über /quellen & Detailrouten.
+const ITEM_SOURCE_PARENTS: Record<ItemSourceType, ParentTable> = {
+  lagebild: schema.lagebildItems as unknown as ParentTable,
+  cost: schema.costImpacts as unknown as ParentTable,
+  supply: schema.supplyRisks as unknown as ParentTable,
+  cascade: schema.cascades as unknown as ParentTable,
+  governance: schema.governance as unknown as ParentTable,
+  indicator: schema.indicators as unknown as ParentTable,
+  action: schema.citizenActions as unknown as ParentTable,
+};
+
+async function keepPublishedSources(rows: SourceRow[]): Promise<SourceRow[]> {
+  const activeDb = database();
+  if (!activeDb || rows.length === 0) return rows;
+  const idsByType = new Map<ItemSourceType, string[]>();
+  for (const row of rows) {
+    const list = idsByType.get(row.itemType) ?? [];
+    list.push(row.itemId);
+    idsByType.set(row.itemType, list);
+  }
+  const published = new Set<string>();
+  for (const [itemType, ids] of idsByType) {
+    const cols = ITEM_SOURCE_PARENTS[itemType];
+    const found = await activeDb
+      .select({ id: cols.id })
+      .from(cols)
+      .where(and(inArray(cols.id, ids), eq(cols.editorialStatus, PUBLISHED)));
+    for (const row of found) published.add(`${itemType}:${String(row.id)}`);
+  }
+  return rows.filter((row) => published.has(`${row.itemType}:${row.itemId}`));
 }
 
 export async function getLagebildItems() {
@@ -173,7 +210,8 @@ export async function getItemSources(itemType: ItemSourceType, itemId: string): 
       .orderBy(asc(schema.itemSources.orderIdx)),
   );
   if (!state.connected) return { data: null, connected: false, error: state.error };
-  return { data: state.rows.filter((source) => source.itemType === itemType), connected: true };
+  const typed = state.rows.filter((source) => source.itemType === itemType);
+  return { data: await keepPublishedSources(typed), connected: true };
 }
 
 export async function getCitizenActions() {
@@ -211,8 +249,9 @@ export async function getIndicators() {
 
 export async function getSourceTrustLayer() {
   const state = await safe(() => database()!.select().from(schema.itemSources).orderBy(asc(schema.itemSources.sourceName)));
+  const visible = await keepPublishedSources(state.rows);
   const byUrl = new Map<string, SourceRow & { citedItems: string[] }>();
-  for (const source of state.rows) {
+  for (const source of visible) {
     const key = source.sourceUrl;
     const existing = byUrl.get(key);
     if (existing) {

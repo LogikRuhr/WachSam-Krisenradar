@@ -35,4 +35,7 @@ export function assertAuthRuntimeReady() {
   if (!process.env.RESEND_API_KEY) {
     throw new Error("RESEND_API_KEY ist für Magic-Link-Versand erforderlich.");
   }
+  if (!process.env.AUTH_SECRET && !process.env.NEXTAUTH_SECRET) {
+    throw new Error("AUTH_SECRET ist für die Session-Verschlüsselung erforderlich.");
+  }
 }

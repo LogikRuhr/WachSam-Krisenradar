@@ -22,9 +22,9 @@ export default async function IndikatorenPage() {
       {!state.connected ? <DbNotice error={state.error} /> : null}
       <section className="card-grid">
         {state.rows.map((item, index) => {
-          const currentVal = item.currentValue ? Number(item.currentValue) : null;
-          const warnVal = item.thresholdWarn ? Number(item.thresholdWarn) : null;
-          const critVal = item.thresholdCritical ? Number(item.thresholdCritical) : null;
+          const currentVal = item.currentValue != null ? Number(item.currentValue) : null;
+          const warnVal = item.thresholdWarn != null ? Number(item.thresholdWarn) : null;
+          const critVal = item.thresholdCritical != null ? Number(item.thresholdCritical) : null;
           const zoneResult = computeZone(
             currentVal,
             warnVal,
@@ -41,7 +41,7 @@ export default async function IndikatorenPage() {
                 <div className="indicator-live-value">
                   <span className={`zone-dot zone-dot-${zoneResult.zone}`} />
                   <span className="mono-meta">
-                    Aktuell: {currentVal} {item.unit ?? ""} — Stand{" "}
+                    Aktueller Wert: {currentVal} {item.unit ?? ""} — Stand des Werts{" "}
                     {item.currentValueDate ? DATE_FMT.format(item.currentValueDate) : "unbekannt"}
                   </span>
                 </div>

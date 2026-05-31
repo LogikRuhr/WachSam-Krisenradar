@@ -21,9 +21,9 @@ function DeutscheConfidenceBadge({ value }: { value?: string | null }) {
 export function EffectPath({ signal, germanyRelevance, systemstress, haushalt, evidenz }: EffectPathProps) {
   const steps = [
     { phase: "Signal", body: signal ?? fallback },
-    { phase: "DE-Relevanz", body: germanyRelevance ?? fallback },
-    { phase: "Systemstress", body: systemstress ?? fallback },
-    { phase: "Haushalt", body: haushalt ?? fallback },
+    { phase: "Deutschland-Relevanz", body: germanyRelevance ?? fallback },
+    { phase: "Systembereich", body: systemstress ?? fallback },
+    { phase: "Haushaltsauswirkung", body: haushalt ?? fallback },
   ];
 
   return (

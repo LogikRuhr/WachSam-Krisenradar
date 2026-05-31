@@ -21,6 +21,22 @@ jobs:
       - name: Verify source
         run: bash scripts/verify.sh
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: v02/pnpm-lock.yaml
+
+      - name: Verify app build
+        working-directory: v02
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run verify
+
       - name: Validate deploy secrets
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
+import { ModusSwitcher } from "./ModusSwitcher";
 import { WerkzeugeDrawer } from "./WerkzeugeDrawer";
 
 const tabs = [
@@ -28,7 +29,7 @@ export async function TopNav() {
   return (
     <header className="top-nav">
       <Link href="/" className="logo" aria-label="WachSam Startseite">
-        RUHR<span>LOGIK</span>
+        Wach<span>Sam</span>
       </Link>
       <nav className="path-tabs" aria-label="Vier WachSam Pfade">
         {tabs.map(([href, label]) => (
@@ -38,6 +39,7 @@ export async function TopNav() {
         ))}
       </nav>
       <div className="nav-tools">
+        <ModusSwitcher />
         <WerkzeugeDrawer />
         {email ? (
           <div className="auth-chip">

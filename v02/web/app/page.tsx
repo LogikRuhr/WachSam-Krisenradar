@@ -30,7 +30,7 @@ export default async function HomePage() {
 
   return (
     <main className="page-shell" aria-labelledby="page-title">
-      <SectionHeader label="Heute im Fokus" title="WachSam Krisenradar">
+      <SectionHeader label="Heute im Fokus" title={linkedCascade?.title ?? "Die Lage für deutsche Haushalte"}>
         <p>Ruhige Einordnung globaler Signale in mögliche Auswirkungen auf deutsche Haushalte.</p>
       </SectionHeader>
 
