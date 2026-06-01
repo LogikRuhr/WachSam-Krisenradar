@@ -9,14 +9,17 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 const modusValues = ["single", "familie", "selbststaendig", "rentner"] as const;
+const heizartValues = ["gas", "oel", "fernwaerme", "waermepumpe", "strom", "unbekannt"] as const;
 const profileSchema = z.object({
   modus: z.enum(modusValues, { message: "Bitte wähle einen gültigen Modus." }),
   plz: z.string().trim().regex(/^\d{5}$/, "Bitte gib eine gültige fünfstellige PLZ ein."),
+  heizart: z.enum(heizartValues, { message: "Bitte wähle eine gültige Heizart." }),
 });
 const modusSchema = z.enum(modusValues, { message: "Bitte wähle einen gültigen Modus." });
 
 export type Household = typeof households.$inferSelect;
 export type HouseholdModus = (typeof modusValues)[number];
+export type HouseholdHeizart = (typeof heizartValues)[number];
 export type ProfileActionState = { ok: boolean; message: string | null };
 export type UpdateHouseholdModusResult =
   | { ok: true; modus: HouseholdModus }
@@ -54,6 +57,7 @@ export async function upsertHouseholdAction(
   const parsed = profileSchema.safeParse({
     modus: formData.get("modus"),
     plz: String(formData.get("plz") ?? "").trim(),
+    heizart: formData.get("heizart") ?? "unbekannt",
   });
 
   if (!parsed.success) {
@@ -66,7 +70,7 @@ export async function upsertHouseholdAction(
   if (existing) {
     await db
       .update(households)
-      .set({ modus: parsed.data.modus, plz: parsed.data.plz, updatedAt: now })
+      .set({ modus: parsed.data.modus, plz: parsed.data.plz, heizart: parsed.data.heizart, updatedAt: now })
       .where(eq(households.id, existing.id));
   } else {
     await db.insert(households).values({
@@ -74,6 +78,7 @@ export async function upsertHouseholdAction(
       userId,
       modus: parsed.data.modus,
       plz: parsed.data.plz,
+      heizart: parsed.data.heizart,
       createdAt: now,
       updatedAt: now,
     });

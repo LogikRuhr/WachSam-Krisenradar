@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { db, schema } from "./db";
+import { aufwandRank, confidenceRank, isRising } from "./personalization";
 
 const PUBLISHED = "published" as const;
 
@@ -266,6 +267,108 @@ export async function getSourceTrustLayer() {
 export async function getHeroLagebild() {
   const lagebild = await getLagebildItems();
   return { ...lagebild, rows: lagebild.rows.slice(0, 1) };
+}
+
+export type LagebildRow = WithSources<typeof schema.lagebildItems.$inferSelect>;
+
+export type FrontDoorImpact = {
+  kind: "cost" | "supply";
+  id: string;
+  bereich: string;
+  titel: string;
+  beschreibung: string;
+  confidence: string;
+  zeithorizont: string;
+};
+
+export type FrontDoorAction = {
+  id: string;
+  titel: string;
+  beschreibung: string;
+  aufwand: string;
+};
+
+export type SignalChain = {
+  signal: LagebildRow;
+  impact: FrontDoorImpact | null;
+  action: FrontDoorAction | null;
+};
+
+/**
+ * Verkettet Lagebild-Signale je zu Auswirkung (Kosten/Versorgung im selben Bereich)
+ * und Maßnahme (Bürgeraktion mit Bereichsbezug). Join läuft über `bereich`, keine
+ * neue Tabelle. Fehlt Auswirkung/Maßnahme, bleibt das Feld null (graceful degrade).
+ * Sortiert nach Severity, dann steigender Trend zuerst. Ohne `limit`: alle Signale.
+ */
+export async function getSignalChains(limit?: number): Promise<DbState<SignalChain>> {
+  const [lagebild, costs, supplies, actions] = await Promise.all([
+    getLagebildItems(),
+    getCostImpacts(),
+    getSupplyRisks(),
+    getCitizenActions(),
+  ]);
+
+  if (!lagebild.connected) {
+    return { rows: [], connected: false, error: lagebild.error };
+  }
+
+  const sorted = [...lagebild.rows].sort(
+    (a, b) =>
+      severityValue(b.severity) - severityValue(a.severity) ||
+      Number(isRising(b.trend)) - Number(isRising(a.trend)),
+  );
+  const signals = limit != null ? sorted.slice(0, limit) : sorted;
+
+  const rows: SignalChain[] = signals.map((signal) => {
+    const cost = costs.rows
+      .filter((row) => row.bereich === signal.bereich)
+      .sort((a, b) => confidenceRank(b.confidence) - confidenceRank(a.confidence))[0];
+    const supply = supplies.rows
+      .filter((row) => row.bereich === signal.bereich)
+      .sort((a, b) => severityValue(b.severity) - severityValue(a.severity))[0];
+
+    let impact: FrontDoorImpact | null = null;
+    if (cost) {
+      impact = {
+        kind: "cost",
+        id: cost.id,
+        bereich: cost.bereich,
+        titel: cost.titel,
+        beschreibung: cost.beschreibung,
+        confidence: cost.confidence,
+        zeithorizont: cost.zeithorizont,
+      };
+    } else if (supply) {
+      impact = {
+        kind: "supply",
+        id: supply.id,
+        bereich: supply.bereich,
+        titel: supply.titel,
+        beschreibung: supply.beschreibung,
+        confidence: supply.confidence,
+        zeithorizont: supply.zeithorizont,
+      };
+    }
+
+    const action = actions.rows
+      .filter((row) => Array.isArray(row.bezugZuBereich) && row.bezugZuBereich.includes(signal.bereich))
+      .sort((a, b) => aufwandRank(a.aufwand) - aufwandRank(b.aufwand))[0];
+
+    return {
+      signal,
+      impact,
+      action: action
+        ? { id: action.id, titel: action.titel, beschreibung: action.beschreibung, aufwand: action.aufwand }
+        : null,
+    };
+  });
+
+  return { rows, connected: true };
+}
+
+/** Eingangstür: nur die Top-3-Signale, verkettet. */
+export function getFrontDoorSignals(limit = 3): Promise<DbState<SignalChain>> {
+  return getSignalChains(limit);
 }
 
 export function describeLinks(links: Array<Record<string, unknown>> | null | undefined) {

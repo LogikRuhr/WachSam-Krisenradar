@@ -2,6 +2,7 @@ import { relations, sql } from "drizzle-orm";
 import { boolean, integer, jsonb, numeric, pgEnum, pgTable, primaryKey, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const householdModusEnum = pgEnum("household_modus", ["single", "familie", "selbststaendig", "rentner"]);
+export const heizartEnum = pgEnum("heizart", ["gas", "oel", "fernwaerme", "waermepumpe", "strom", "unbekannt"]);
 export const confidenceEnum = pgEnum("confidence", ["niedrig", "mittel", "hoch"]);
 export const severityEnum = pgEnum("severity", ["stabil", "beobachten", "erhoeht", "kritisch", "eskalierend"]);
 export const zeithorizontEnum = pgEnum("zeithorizont", ["kurzfristig", "wochen", "monate", "langfristig"]);
@@ -113,6 +114,7 @@ export const households = pgTable("households", {
     .references(() => users.id, { onDelete: "cascade" }),
   modus: householdModusEnum("modus").notNull(),
   plz: text("plz").notNull(),
+  heizart: heizartEnum("heizart").notNull().default("unbekannt"),
   createdAt,
   updatedAt,
 });
