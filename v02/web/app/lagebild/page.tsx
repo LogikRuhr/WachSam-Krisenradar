@@ -1,36 +1,57 @@
-import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { DbNotice } from "@/components/DbNotice";
-import { PainCard } from "@/components/PainCard";
 import { SectionHeader } from "@/components/SectionHeader";
-import { SeverityBadge } from "@/components/SeverityBadge";
-import { SourcePills } from "@/components/SourcePill";
-import { formatIndex, getLagebildItems } from "@/lib/public-data";
+import { SignalChain } from "@/components/SignalChain";
+import { Verdict } from "@/components/Verdict";
+import { computeVerdict, personalNote } from "@/lib/personalization";
+import { getSignalChains } from "@/lib/public-data";
+import { getCurrentUserProfile } from "@/lib/use-user-modus";
 
 export const dynamic = "force-dynamic";
 
+const DATE_FMT = new Intl.DateTimeFormat("de-DE", { day: "numeric", month: "long", year: "numeric" });
+
+function formatStand(value: Date | string | null | undefined): string | null {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : DATE_FMT.format(date);
+}
+
 export default async function LagebildPage() {
-  const state = await getLagebildItems();
+  const profile = await getCurrentUserProfile();
+  const state = await getSignalChains();
+  const verdict = computeVerdict(state.rows.map((chain) => chain.signal));
+
+  const latestStand = state.rows
+    .map((chain) => chain.signal.publishedAt ?? chain.signal.retrievedAt)
+    .filter((value): value is Date => value instanceof Date)
+    .sort((a, b) => b.getTime() - a.getTime())[0];
+
   return (
-    <main className="page-shell">
+    <main className="page-shell" aria-labelledby="page-title">
       <SectionHeader label="Lagebild" title="Deutschland in zehn Bereichen">
-        <p>Aktuelle Einschätzung der Lage in den wichtigsten Bereichen für deutsche Haushalte — mit Einstufung, Trend und Quellenangabe.</p>
+        <p>Jeder Bereich: was sich bewegt, was es für deinen Haushalt bedeutet, was du tun kannst.</p>
       </SectionHeader>
+
       {!state.connected ? <DbNotice error={state.error} /> : null}
-      <section className="card-grid">
-        {state.rows.map((item, index) => (
-          <PainCard
-            key={item.id}
-            number={formatIndex(index)}
-            title={item.titel}
-            meta={<><SeverityBadge value={item.severity} /><ConfidenceBadge value={item.confidence} /></>}
-            footer={<SourcePills sources={item.sources} />}
-          >
-            <p>{item.beschreibung}</p>
-            <p><strong>Bereich:</strong> {item.bereich} · <strong>Trend:</strong> {item.trend}</p>
-            <p><strong>Primärindikator:</strong> {item.primaerindikator}</p>
-          </PainCard>
-        ))}
-      </section>
+
+      {state.connected ? <Verdict verdict={verdict} stand={formatStand(latestStand)} /> : null}
+
+      {state.rows.length > 0 ? (
+        <section className="signals-grid" aria-label="Lage in den Bereichen">
+          {state.rows.map((chain) => (
+            <SignalChain
+              key={chain.signal.id}
+              chain={chain}
+              note={personalNote(chain.signal.bereich, profile)}
+              stand={formatStand(chain.signal.publishedAt ?? chain.signal.retrievedAt)}
+            />
+          ))}
+        </section>
+      ) : state.connected ? (
+        <section className="hero-card">
+          <p className="lead">Aktuell liegen keine veröffentlichten Lagebild-Signale vor.</p>
+        </section>
+      ) : null}
     </main>
   );
 }

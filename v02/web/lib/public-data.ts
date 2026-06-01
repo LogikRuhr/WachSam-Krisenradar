@@ -295,11 +295,12 @@ export type SignalChain = {
 };
 
 /**
- * Eingangstür: Top-Signale, je verkettet zu Auswirkung (Kosten/Versorgung im selben
- * Bereich) und Maßnahme (Bürgeraktion mit Bereichsbezug). Join läuft über `bereich`,
- * keine neue Tabelle. Fehlt Auswirkung/Maßnahme, bleibt das Feld null (graceful degrade).
+ * Verkettet Lagebild-Signale je zu Auswirkung (Kosten/Versorgung im selben Bereich)
+ * und Maßnahme (Bürgeraktion mit Bereichsbezug). Join läuft über `bereich`, keine
+ * neue Tabelle. Fehlt Auswirkung/Maßnahme, bleibt das Feld null (graceful degrade).
+ * Sortiert nach Severity, dann steigender Trend zuerst. Ohne `limit`: alle Signale.
  */
-export async function getFrontDoorSignals(limit = 3): Promise<DbState<SignalChain>> {
+export async function getSignalChains(limit?: number): Promise<DbState<SignalChain>> {
   const [lagebild, costs, supplies, actions] = await Promise.all([
     getLagebildItems(),
     getCostImpacts(),
@@ -311,13 +312,12 @@ export async function getFrontDoorSignals(limit = 3): Promise<DbState<SignalChai
     return { rows: [], connected: false, error: lagebild.error };
   }
 
-  const signals = [...lagebild.rows]
-    .sort(
-      (a, b) =>
-        severityValue(b.severity) - severityValue(a.severity) ||
-        Number(isRising(b.trend)) - Number(isRising(a.trend)),
-    )
-    .slice(0, limit);
+  const sorted = [...lagebild.rows].sort(
+    (a, b) =>
+      severityValue(b.severity) - severityValue(a.severity) ||
+      Number(isRising(b.trend)) - Number(isRising(a.trend)),
+  );
+  const signals = limit != null ? sorted.slice(0, limit) : sorted;
 
   const rows: SignalChain[] = signals.map((signal) => {
     const cost = costs.rows
@@ -364,6 +364,11 @@ export async function getFrontDoorSignals(limit = 3): Promise<DbState<SignalChai
   });
 
   return { rows, connected: true };
+}
+
+/** Eingangstür: nur die Top-3-Signale, verkettet. */
+export function getFrontDoorSignals(limit = 3): Promise<DbState<SignalChain>> {
+  return getSignalChains(limit);
 }
 
 export function describeLinks(links: Array<Record<string, unknown>> | null | undefined) {
