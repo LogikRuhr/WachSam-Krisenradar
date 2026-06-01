@@ -1,0 +1,2 @@
+CREATE TYPE "public"."heizart" AS ENUM('gas', 'oel', 'fernwaerme', 'waermepumpe', 'strom', 'unbekannt');--> statement-breakpoint
+ALTER TABLE "households" ADD COLUMN "heizart" "heizart" DEFAULT 'unbekannt' NOT NULL;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import type { HouseholdModus, ProfileActionState } from "@/lib/profile";
+import type { HouseholdHeizart, HouseholdModus, ProfileActionState } from "@/lib/profile";
 
 const modi: Array<{ value: HouseholdModus; label: string }> = [
   { value: "single", label: "Single" },
@@ -10,13 +10,23 @@ const modi: Array<{ value: HouseholdModus; label: string }> = [
   { value: "rentner", label: "Rentner" },
 ];
 
+const heizarten: Array<{ value: HouseholdHeizart; label: string }> = [
+  { value: "gas", label: "Gas" },
+  { value: "oel", label: "Öl" },
+  { value: "fernwaerme", label: "Fernwärme" },
+  { value: "waermepumpe", label: "Wärmepumpe" },
+  { value: "strom", label: "Strom (direkt)" },
+  { value: "unbekannt", label: "Weiß ich nicht" },
+];
+
 type ProfileFormProps = {
   action: (previousState: ProfileActionState, formData: FormData) => Promise<ProfileActionState>;
   defaultModus: HouseholdModus;
   defaultPlz: string;
+  defaultHeizart: HouseholdHeizart;
 };
 
-export function ProfileForm({ action, defaultModus, defaultPlz }: ProfileFormProps) {
+export function ProfileForm({ action, defaultModus, defaultPlz, defaultHeizart }: ProfileFormProps) {
   const [state, formAction, isPending] = useActionState(action, { ok: false, message: null });
 
   return (
@@ -60,6 +70,17 @@ export function ProfileForm({ action, defaultModus, defaultPlz }: ProfileFormPro
         required
       />
 
+      <label className="auth-label" htmlFor="heizart">
+        Heizart
+      </label>
+      <select className="input-mono" id="heizart" name="heizart" defaultValue={defaultHeizart}>
+        {heizarten.map((item) => (
+          <option key={item.value} value={item.value}>
+            {item.label}
+          </option>
+        ))}
+      </select>
+
       {state.message ? (
         <p className="mono-label" role="status" aria-live="polite">
           {state.message}
@@ -70,7 +91,7 @@ export function ProfileForm({ action, defaultModus, defaultPlz }: ProfileFormPro
         {isPending ? "Speichert..." : "Profil speichern"}
       </button>
 
-      <div className="dsgvo-hinweis">Nur Modus + PLZ gespeichert. Keine Verknüpfung mit Tracking oder Werbung.</div>
+      <div className="dsgvo-hinweis">Nur Modus, PLZ und Heizart gespeichert. Keine Verknüpfung mit Tracking oder Werbung.</div>
     </form>
   );
 }

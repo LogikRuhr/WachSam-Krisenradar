@@ -57,6 +57,13 @@
       "when": 1779922537779,
       "tag": "0007_lush_komodo",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1780330122109,
+      "tag": "0008_famous_giant_man",
+      "breakpoints": true
     }
   ]
 }

@@ -27,7 +27,12 @@ export default async function ProfilPage() {
         </h1>
         <p className="lead">Lege fest, aus welcher Haushaltsperspektive WachSam Hinweise einordnet.</p>
 
-        <ProfileForm action={upsertHouseholdAction} defaultModus={household?.modus ?? "familie"} defaultPlz={household?.plz ?? ""} />
+        <ProfileForm
+          action={upsertHouseholdAction}
+          defaultModus={household?.modus ?? "familie"}
+          defaultPlz={household?.plz ?? ""}
+          defaultHeizart={household?.heizart ?? "unbekannt"}
+        />
       </section>
     </main>
   );
