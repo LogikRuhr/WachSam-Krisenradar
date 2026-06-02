@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
-import { ModusSwitcher } from "./ModusSwitcher";
 import { WerkzeugeDrawer } from "./WerkzeugeDrawer";
 
 const tabs = [
@@ -10,16 +9,9 @@ const tabs = [
   ["/massnahmen", "Maßnahmen"],
 ];
 
-function shortenEmail(email: string) {
-  const [local, domain] = email.split("@");
-  if (!domain) return email;
-  const shortLocal = local.length > 12 ? `${local.slice(0, 10)}…` : local;
-  return `${shortLocal}@${domain}`;
-}
-
 export async function TopNav() {
   const session = await auth();
-  const email = session?.user?.email ?? null;
+  const isSignedIn = !!session?.user;
 
   async function logoutAction() {
     "use server";
@@ -39,11 +31,10 @@ export async function TopNav() {
         ))}
       </nav>
       <div className="nav-tools">
-        <ModusSwitcher />
         <WerkzeugeDrawer />
-        {email ? (
+        {isSignedIn ? (
           <div className="auth-chip">
-            <span>{shortenEmail(email)}</span>
+            <Link href="/profil">Mein Bereich</Link>
             <form action={logoutAction}>
               <button type="submit">Abmelden</button>
             </form>

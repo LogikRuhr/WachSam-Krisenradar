@@ -11,22 +11,11 @@ const modi: Array<{ value: HouseholdModus; label: string }> = [
   { value: "rentner", label: "Rentner" },
 ];
 
-function isHouseholdModus(value: string | null): value is HouseholdModus {
-  return modi.some((item) => item.value === value);
-}
-
 function ModusSwitcherInner() {
   const { data: session, status } = useSession();
   const [modus, setModus] = useState<HouseholdModus>("familie");
   const [isPending, startTransition] = useTransition();
   const isSignedIn = status === "authenticated" && !!session?.user;
-
-  useEffect(() => {
-    if (status !== "unauthenticated") return;
-
-    const stored = window.localStorage.getItem("wachsam-modus");
-    if (isHouseholdModus(stored)) setModus(stored);
-  }, [status]);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -47,12 +36,8 @@ function ModusSwitcherInner() {
   }, [isSignedIn]);
 
   function choose(value: HouseholdModus) {
+    if (!isSignedIn) return;
     setModus(value);
-
-    if (!isSignedIn) {
-      window.localStorage.setItem("wachsam-modus", value);
-      return;
-    }
 
     startTransition(async () => {
       try {
@@ -62,6 +47,8 @@ function ModusSwitcherInner() {
       }
     });
   }
+
+  if (status !== "authenticated") return null;
 
   return (
     <div className="modus-switcher" aria-label="Haushaltsmodus" aria-busy={isPending}>

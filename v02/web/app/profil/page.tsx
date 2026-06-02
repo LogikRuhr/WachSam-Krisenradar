@@ -25,7 +25,12 @@ export default async function ProfilPage() {
         <h1 id="profil-title" className="bebas-title auth-title">
           Profil
         </h1>
-        <p className="lead">Lege fest, aus welcher Haushaltsperspektive WachSam Hinweise einordnet.</p>
+        <p className="lead">Lege im Member-Bereich fest, aus welcher Haushaltsperspektive WachSam Hinweise einordnet.</p>
+        <div className="profile-scope-note">
+          <p>
+            Diese Angaben bleiben aus der öffentlichen Navigation heraus. Sie steuern nur, wie Lage, Kosten, Versorgung und Maßnahmen für deinen Alltag sortiert werden.
+          </p>
+        </div>
 
         <ProfileForm
           action={upsertHouseholdAction}
