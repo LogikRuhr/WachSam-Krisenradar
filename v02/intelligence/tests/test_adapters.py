@@ -272,15 +272,22 @@ def test_tankerkoenig_returns_empty_without_api_key(monkeypatch):
 
 def _mock_fred(monkeypatch, payload):
     """Hilfsfunktion: mockt requests.get für den FRED-Adapter."""
-    response = MagicMock()
-    response.status_code = 200
-    response.json.return_value = payload
-    monkeypatch.setattr("src.adapters.fred.requests.get", lambda *args, **kwargs: response)
+    called = {}
+
+    def fake_get(url, *args, **kwargs):
+        called["url"] = url
+        response = MagicMock()
+        response.status_code = 200
+        response.json.return_value = payload
+        return response
+
+    monkeypatch.setattr("src.adapters.fred.requests.get", fake_get)
+    return called
 
 
 def test_fred_adapter_parses_two_observations(monkeypatch):
     """Zwei gültige Beobachtungen → IngestionItem mit current + previous."""
-    _mock_fred(monkeypatch, {
+    called = _mock_fred(monkeypatch, {
         "observations": [
             {"date": "2026-04-01", "value": "12.34"},
             {"date": "2026-03-01", "value": "11.50"},
@@ -288,6 +295,8 @@ def test_fred_adapter_parses_two_observations(monkeypatch):
     })
 
     items = FREDAdapter().fetch_latest()
+
+    assert called["url"].startswith("https://api.stlouisfed.org/")
     assert len(items) == 1
     item = items[0]
 

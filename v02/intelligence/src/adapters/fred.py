@@ -10,7 +10,7 @@ from ..models import GermanyRelevance, IngestionItem
 class FREDAdapter(BaseAdapter):
     """FRED (St. Louis Fed) — Europäischer Erdgaspreis, monatlich (PNGASEUUSDM)."""
 
-    SERIES_URL = "https://api.fred.stlouisfed.org/fred/series/observations"
+    SERIES_URL = "https://api.stlouisfed.org/fred/series/observations"
     SERIES_ID = "PNGASEUUSDM"
 
     def __init__(self):
