@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CascadeCausalityMap } from "@/components/CascadeCausalityMap";
 import { DbNotice } from "@/components/DbNotice";
 import { EffectPath } from "@/components/EffectPath";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -48,6 +49,7 @@ export default async function CascadeDetailPage({ params }: PageProps) {
   const sources = sourceState.data ?? [];
   const systems = stringListFromRecord(data.germanyRelevance, "systems_affected");
   const germanyDescription = textFromRecord(data.germanyRelevance, "description");
+  const timeToImpact = textFromRecord(data.germanyRelevance, "time_to_impact");
   const stepText = describeLinks(data.steps);
 
   return (
@@ -63,6 +65,14 @@ export default async function CascadeDetailPage({ params }: PageProps) {
             <DeutscheConfidenceBadge value={data.confidence} />
             <span className="mono-label">{data.zeithorizont}</span>
           </div>
+          <CascadeCausalityMap
+            trigger={data.trigger}
+            steps={data.steps}
+            householdImpact={data.haushaltswirkung}
+            confidence={data.confidence}
+            severity={data.severity}
+            timeToImpact={timeToImpact ?? data.zeithorizont}
+          />
           <EffectPath
             signal={data.trigger}
             germanyRelevance={germanyDescription ?? "Deutschland-Bezug ist im Datensatz als Einordnung hinterlegt."}
