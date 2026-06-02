@@ -8,6 +8,29 @@ import psycopg2
 from .config import settings
 from .models import IngestionItem
 
+
+def _append_observation(cur, indicator_id: str, value, date_str: Optional[str], source_stand: str) -> bool:
+    """Schreibt eine einzelne Beobachtung in indicator_observations.
+
+    Gibt True zurück wenn der Insert ausgeführt wurde, False wenn übersprungen
+    (fehlender Wert oder nicht-parsebares Datum — kein Crash).
+    """
+    if value is None or date_str is None:
+        return False
+    try:
+        observed_at = datetime.fromisoformat(date_str)
+    except (ValueError, TypeError):
+        # Nicht-parsebares Datum: überspringen, aber nicht crashen
+        return False
+    cur.execute(
+        """INSERT INTO indicator_observations
+           (indicator_id, observed_at, value, source_stand)
+           VALUES (%s, %s, %s, %s)
+           ON CONFLICT (indicator_id, observed_at) DO NOTHING""",
+        (indicator_id, observed_at, value, source_stand),
+    )
+    return True
+
 TABLE_TO_SOURCE_TYPE = {
     "lagebild_items": "lagebild",
     "cost_impacts": "cost",
@@ -113,6 +136,13 @@ def insert_draft(item: IngestionItem, item_type: str = "lagebild_items") -> Opti
                     ),
                 )
                 item_id = item.indicator_id
+
+                # Append-only Historie: current_value und ggf. previous_value eintragen
+                source_stand_obs = now.strftime("%B %Y")
+                _append_observation(cur, item.indicator_id, item.current_value, item.current_value_date, source_stand_obs)
+                # Sofort zwei Punkte Historie wenn previous_value vorhanden
+                if item.previous_value is not None and item.previous_value_date is not None:
+                    _append_observation(cur, item.indicator_id, item.previous_value, item.previous_value_date, source_stand_obs)
 
             cur.execute(
                 """INSERT INTO editorial_audit_log

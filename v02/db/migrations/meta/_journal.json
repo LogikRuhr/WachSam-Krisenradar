@@ -64,6 +64,13 @@
       "when": 1780330122109,
       "tag": "0008_famous_giant_man",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1780386184357,
+      "tag": "0009_powerful_jack_flag",
+      "breakpoints": true
     }
   ]
 }

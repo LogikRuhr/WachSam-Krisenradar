@@ -388,9 +388,31 @@ export const governanceRelations = relations(governance, ({ one }) => ({
   }),
 }));
 
-export const indicatorsRelations = relations(indicators, ({ one }) => ({
+export const indicatorObservations = pgTable(
+  "indicator_observations",
+  {
+    indicatorId: text("indicator_id")
+      .notNull()
+      .references(() => indicators.id, { onDelete: "cascade" }),
+    observedAt: timestamp("observed_at", { withTimezone: true }).notNull(),
+    value: numeric("value").notNull(),
+    sourceStand: text("source_stand"),
+    ingestedAt: timestamp("ingested_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.indicatorId, table.observedAt] })],
+);
+
+export const indicatorsRelations = relations(indicators, ({ one, many }) => ({
   cascade: one(cascades, {
     fields: [indicators.linkedCascade],
     references: [cascades.id],
+  }),
+  observations: many(indicatorObservations),
+}));
+
+export const indicatorObservationsRelations = relations(indicatorObservations, ({ one }) => ({
+  indicator: one(indicators, {
+    fields: [indicatorObservations.indicatorId],
+    references: [indicators.id],
   }),
 }));
