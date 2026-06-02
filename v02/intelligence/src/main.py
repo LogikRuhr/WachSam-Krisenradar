@@ -9,6 +9,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from .adapters.destatis import DestatisAdapter
 from .adapters.bnetza import BNetzAAdapter
 from .adapters.eia import EIAAdapter
+from .adapters.fred import FREDAdapter
 from .adapters.fao import FAOAdapter
 from .adapters.tankerkoenig import TankerkoenigAdapter
 from .adapters.eurostat import EurostatAdapter
@@ -22,6 +23,7 @@ ADAPTER_TYPE_MAP = {
     "Destatis": "facts",
     "BNetzA": "indicators",
     "EIA": "indicators",
+    "FRED": "indicators",
     "FAO": "facts",
     "Eurostat": "facts",
     "WarningIndicators": "facts",
@@ -45,6 +47,7 @@ async def run_ingestion():
         DestatisAdapter(),
         BNetzAAdapter(),
         EIAAdapter(),
+        FREDAdapter(),
         FAOAdapter(),
         TankerkoenigAdapter(),
         EurostatAdapter(),

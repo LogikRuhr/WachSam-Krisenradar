@@ -7,6 +7,7 @@ from src.adapters.destatis import DestatisAdapter
 from src.adapters.destatis import parse_vpi_table
 from src.adapters.bnetza import BNetzAAdapter
 from src.adapters.eia import EIAAdapter
+from src.adapters.fred import FREDAdapter
 from src.adapters.fao import FAOAdapter
 from src.adapters.eurostat import EurostatAdapter
 from src.adapters.warning_indicators import WarningIndicatorsAdapter
@@ -263,3 +264,95 @@ def test_tankerkoenig_returns_empty_on_api_error(monkeypatch):
 def test_tankerkoenig_returns_empty_without_api_key(monkeypatch):
     monkeypatch.setattr("src.adapters.tankerkoenig.settings.TANKERKOENIG_API_KEY", "")
     assert TankerkoenigAdapter().fetch_latest() == []
+
+
+# ---------------------------------------------------------------------------
+# FRED — Gaspreis Europa (PNGASEUUSDM)
+# ---------------------------------------------------------------------------
+
+def _mock_fred(monkeypatch, payload):
+    """Hilfsfunktion: mockt requests.get für den FRED-Adapter."""
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = payload
+    monkeypatch.setattr("src.adapters.fred.requests.get", lambda *args, **kwargs: response)
+
+
+def test_fred_adapter_parses_two_observations(monkeypatch):
+    """Zwei gültige Beobachtungen → IngestionItem mit current + previous."""
+    _mock_fred(monkeypatch, {
+        "observations": [
+            {"date": "2026-04-01", "value": "12.34"},
+            {"date": "2026-03-01", "value": "11.50"},
+        ]
+    })
+
+    items = FREDAdapter().fetch_latest()
+    assert len(items) == 1
+    item = items[0]
+
+    assert item.indicator_id == "wi-gaspreis-europa"
+    assert item.current_value == 12.34
+    assert item.current_value_date == "2026-04-01"
+    assert item.previous_value == 11.50
+    assert item.previous_value_date == "2026-03-01"
+    _validate_items(items)
+
+
+def test_fred_adapter_skips_dot_placeholder(monkeypatch):
+    """
+    FRED markiert fehlende Werte mit ".".
+    Der Adapter muss "." überspringen und den nächsten gültigen Wert als current nutzen.
+    """
+    _mock_fred(monkeypatch, {
+        "observations": [
+            {"date": "2026-05-01", "value": "."},   # aktuell fehlend → überspringen
+            {"date": "2026-04-01", "value": "12.34"},
+            {"date": "2026-03-01", "value": "11.50"},
+        ]
+    })
+
+    item = FREDAdapter().fetch_latest()[0]
+
+    assert item.current_value == 12.34
+    assert item.current_value_date == "2026-04-01"
+    assert item.previous_value == 11.50
+
+
+def test_fred_adapter_handles_all_dots(monkeypatch):
+    """Alle Werte "." → Fallback-Item (kein Crash), keine indicator_id."""
+    _mock_fred(monkeypatch, {
+        "observations": [
+            {"date": "2026-05-01", "value": "."},
+            {"date": "2026-04-01", "value": "."},
+        ]
+    })
+
+    items = FREDAdapter().fetch_latest()
+    assert len(items) == 1
+    # Fallback enthält keine indicator_id
+    assert items[0].indicator_id is None
+
+
+def test_fred_adapter_returns_fallback_on_http_error(monkeypatch):
+    """HTTP-Fehler → Fallback-Item, kein Crash, leere Liste wird NICHT zurückgegeben."""
+    response = MagicMock()
+    response.status_code = 503
+    monkeypatch.setattr("src.adapters.fred.requests.get", lambda *args, **kwargs: response)
+
+    items = FREDAdapter().fetch_latest()
+    assert len(items) == 1
+    assert items[0].indicator_id is None
+    assert items[0].confidence_suggestion == "niedrig"
+
+
+def test_fred_adapter_returns_fallback_on_network_exception(monkeypatch):
+    """Netzwerkfehler (Exception) → Fallback-Item, kein unkontrollierter Absturz."""
+    monkeypatch.setattr(
+        "src.adapters.fred.requests.get",
+        lambda *args, **kwargs: (_ for _ in ()).throw(ConnectionError("timeout")),
+    )
+
+    items = FREDAdapter().fetch_latest()
+    assert len(items) == 1
+    assert items[0].indicator_id is None

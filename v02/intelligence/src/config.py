@@ -13,6 +13,7 @@ class Settings(BaseSettings):
 
     GIE_API_KEY: str = ""
     EIA_API_KEY: str = ""
+    FRED_API_KEY: str = ""
     TANKERKOENIG_API_KEY: str = ""
 
     GOOGLE_APPLICATION_CREDENTIALS: str = ""

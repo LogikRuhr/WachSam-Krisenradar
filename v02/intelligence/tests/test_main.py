@@ -48,6 +48,7 @@ def test_run_ingestion_routes_bnetza_indicator_items_to_indicator_updates(monkey
     monkeypatch.setattr(main, "DestatisAdapter", EmptyAdapter)
     monkeypatch.setattr(main, "BNetzAAdapter", FakeBNetzAAdapter)
     monkeypatch.setattr(main, "EIAAdapter", EmptyAdapter)
+    monkeypatch.setattr(main, "FREDAdapter", EmptyAdapter)
     monkeypatch.setattr(main, "FAOAdapter", EmptyAdapter)
     monkeypatch.setattr(main, "TankerkoenigAdapter", EmptyAdapter)
     monkeypatch.setattr(main, "EurostatAdapter", EmptyAdapter)

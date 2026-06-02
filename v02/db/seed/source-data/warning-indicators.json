@@ -2,7 +2,7 @@
   "meta": {
     "version": "v0.2",
     "stand": "2026-05-21",
-    "count": 10,
+    "count": 11,
     "note": "10 Frühwarnindikatoren. Basis: docs/warning-indicators.md"
   },
   "indicators": [
@@ -292,6 +292,32 @@
       "germany_relevance": "Erzeugerpreise folgen in 3–6 Monaten; Lebensmittelpreise in 6–9 Monaten",
       "linked_cascade": "cascade-g",
       "scale_direction": "higher_is_worse"
+    },
+    {
+      "id": "wi-gaspreis-europa",
+      "label": "Gaspreis Europa (FRED PNGASEUUSDM)",
+      "threshold_warn": 15,
+      "threshold_critical": 25,
+      "unit": "USD/MMBtu",
+      "system": "energie",
+      "severity_trigger": "erhoeht",
+      "quelle": "FRED / World Bank — Global price of Natural Gas, EU (monatlich)",
+      "sources": [
+        {
+          "name": "FRED — PNGASEUUSDM (St. Louis Fed)",
+          "url": "https://fred.stlouisfed.org/series/PNGASEUUSDM",
+          "stand": "2026"
+        },
+        {
+          "name": "World Bank — Commodity Markets Outlook",
+          "url": "https://www.worldbank.org/en/research/commodity-markets",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "Trigger der Stickstoff-Kaskade: hoher Gaspreis → hohe Düngemittelkosten → steigende Lebensmittelpreise (3–6 Monate Verzögerung); direkte Wirkung auf Industriegas und Haushaltsheizung",
+      "linked_cascade": "cascade-h",
+      "scale_direction": "higher_is_worse",
+      "threshold_method": "warn = 15 USD/MMBtu (ca. 2× Vorkrisenniveau 2019-2021 ~7 USD); critical = 25 USD/MMBtu (Orientierung an Extremphase Aug–Dez 2022 >30 USD, Rückrechnung für strukturell erhöhtes Niveau)"
     }
   ]
 }
