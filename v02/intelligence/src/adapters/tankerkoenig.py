@@ -96,6 +96,9 @@ class TankerkoenigAdapter(BaseAdapter):
 
     BASE_URL = "https://creativecommons.tankerkoenig.de/json/list.php"
     SOURCE_URL = "https://creativecommons.tankerkoenig.de/"
+    source_label = "Tankerkoenig MTS-K (E10/Diesel, 16 PLZ)"
+    requires_api_key = True  # TANKERKOENIG_API_KEY zwingend
+    output_target = "indicators"
 
     def __init__(self):
         super().__init__("Tankerkoenig")

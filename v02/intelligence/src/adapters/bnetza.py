@@ -10,6 +10,9 @@ class BNetzAAdapter(BaseAdapter):
     """BNetzA / GIE AGSI+ — Gasspeicher-Füllstände."""
 
     source_class = "behoerde"
+    source_label = "GIE AGSI+ (agsi.gie.eu)"
+    requires_api_key = False  # GIE_API_KEY optional (nur Rate-Limit)
+    output_target = "indicators"
 
     def __init__(self):
         super().__init__("BNetzA")

@@ -47,12 +47,39 @@ def get_connection():
     return psycopg2.connect(settings.POSTGRES_URL)
 
 
+# --- Dry-Run-Schutz -----------------------------------------------------------
+# Globaler Flag: im Dry-Run oeffnet insert_draft KEINE Verbindung und schreibt
+# nichts. Wird vom Orchestrator (main.py --dry-run) via set_dry_run() gesetzt.
+_DRY_RUN = False
+
+
+def set_dry_run(value: bool) -> None:
+    """Aktiviert/deaktiviert den globalen Dry-Run-Schutz fuer insert_draft."""
+    global _DRY_RUN
+    _DRY_RUN = bool(value)
+
+
+def is_dry_run() -> bool:
+    return _DRY_RUN
+
+
 def insert_draft(item: IngestionItem, item_type: str = "lagebild_items") -> Optional[str]:
     """Schreibt ein IngestionItem als Draft in die Postgres-DB.
 
     Nutzt die bestehenden Drizzle-Tabellen mit editorial_status='draft'.
     Das Editorial-CMS übernimmt Approve/Publish.
+
+    Im Dry-Run (set_dry_run(True)) wird KEINE Verbindung geoeffnet und nichts
+    geschrieben — es wird nur die beabsichtigte Operation geloggt.
     """
+    if _DRY_RUN:
+        is_indicator = item_type == "indicators" and bool(item.indicator_id)
+        op = "UPDATE" if is_indicator else "INSERT"
+        item_id = item.indicator_id if is_indicator else "(neue uuid)"
+        detail = f" current_value={item.current_value}" if is_indicator else ""
+        print(f"[DRY-RUN] {op} {item_type} → {item_id}{detail} — {item.title}")
+        return item_id
+
     item_id = str(uuid.uuid4())
     now = datetime.utcnow()
 
