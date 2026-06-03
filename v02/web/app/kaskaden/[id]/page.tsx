@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CascadeCausalityMap } from "@/components/CascadeCausalityMap";
+import { CascadeStoryPanel } from "@/components/CascadeStoryPanel";
 import { DbNotice } from "@/components/DbNotice";
-import { DisclosureSection } from "@/components/DisclosureSection";
-import { SectionHeader } from "@/components/SectionHeader";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { SourcePills } from "@/components/SourcePill";
 import { getCascadeById, getItemSources } from "@/lib/public-data";
@@ -71,95 +70,101 @@ export default async function CascadeDetailPage({ params }: PageProps) {
   return (
     <main className="page-shell cascade-detail" aria-labelledby="page-title">
       <Link className="detail-back" href="/kaskaden">← Zurück zur Liste</Link>
-      <SectionHeader label="Wirkungskette" title={data.title}>
-        <p>{data.trigger}</p>
-      </SectionHeader>
-      <div className="detail-grid-three">
-        <section className="detail-main detail-main-span-two">
+
+      <section className="cascade-hero-panel" aria-labelledby="page-title">
+        <div className="cascade-hero-copy">
+          <div className="strich" aria-hidden="true" />
+          <p className="mono-label">Wirkungskette</p>
+          <h1 id="page-title" className="bebas-title">{data.title}</h1>
+          <p className="cascade-impact-line">{data.haushaltswirkung}</p>
+          <p>
+            WachSam ordnet diese Kette als mögliche Weitergabe von einem globalen Signal über betroffene Systeme bis in den Alltag deutscher Haushalte ein.
+          </p>
           <div className="detail-badge-row">
             <SeverityBadge value={data.severity} />
             <DeutscheConfidenceBadge value={data.confidence} />
-            <span className="mono-label">{data.zeithorizont}</span>
+            <span className="mono-label">{timeToImpact ?? data.zeithorizont}</span>
           </div>
-          <section className="cascade-summary-panel" aria-label="Kurzfassung der Wirkungskette">
-            <p className="mono-label">Kurz erklärt</p>
-            <p className="lead">{data.haushaltswirkung}</p>
-            <p>
-              WachSam liest diese Kette als mögliche Weitergabe von einem globalen Signal über betroffene Systeme bis in den Alltag deutscher Haushalte.
-              Die Einordnung bleibt redaktionell und ist keine sichere Prognose.
-            </p>
-          </section>
+        </div>
+        <CascadeCausalityMap
+          trigger={data.trigger}
+          steps={data.steps}
+          householdImpact={data.haushaltswirkung}
+          confidence={data.confidence}
+          severity={data.severity}
+          timeToImpact={timeToImpact ?? data.zeithorizont}
+          compact
+        />
+      </section>
 
-          <div className="disclosure-stack">
-            <DisclosureSection
-              number="01"
-              title="Wirkungskette ansehen"
-              summary="Signal, Systemstress und Haushaltswirkung als Karte."
-              defaultOpen
-            >
-              <CascadeCausalityMap
-                trigger={data.trigger}
-                steps={data.steps}
-                householdImpact={data.haushaltswirkung}
-                confidence={data.confidence}
-                severity={data.severity}
-                timeToImpact={timeToImpact ?? data.zeithorizont}
-              />
-            </DisclosureSection>
-
-            <DisclosureSection
-              number="02"
-              title="Deutschland-Relevanz"
-              summary="Warum diese globale Entwicklung für Deutschland relevant ist."
-            >
+      <div className="cascade-story-stack">
+        <CascadeStoryPanel
+          eyebrow="01 Signal"
+          title="Was stößt die Kette an?"
+          visualLabel="Auslöser"
+          visualTitle="Globales Signal"
+          visualItems={[data.trigger, germanyDescription ?? "Deutschland-Bezug redaktionell eingeordnet"]}
+          body={
+            <>
+              <p>{data.trigger}</p>
               <p>{germanyDescription ?? "Deutschland-Bezug ist im Datensatz als Einordnung hinterlegt."}</p>
-              {systems.length ? (
-                <div className="system-badge-row">
-                  {systems.map((system) => (
-                    <span className="system-badge" key={system}>{systemLabel(system)}</span>
-                  ))}
-                </div>
-              ) : null}
-            </DisclosureSection>
+            </>
+          }
+        />
 
-            <DisclosureSection
-              number="03"
-              title="Haushaltswirkung"
-              summary="Welche Alltagsbereiche dadurch belastet werden können."
-            >
+        <CascadeStoryPanel
+          eyebrow="02 Systemstress"
+          title="Wo setzt sich der Druck fort?"
+          visualLabel="Betroffene Systeme"
+          visualTitle={systems.length ? systems.map(systemLabel).slice(0, 3).join(" · ") : "Systembereiche"}
+          visualItems={data.steps.map((step) => textFromRecord(step, "description") ?? "Kaskadenschritt")}
+          reverse
+          body={
+            <ol className="cascade-clean-list">
+              {data.steps.map((step, index) => (
+                <li key={`${index}-${textFromRecord(step, "description")}`}>
+                  <strong>{String(index + 1).padStart(2, "0")}</strong>
+                  <span>{textFromRecord(step, "description") ?? "Kaskadenschritt wird redaktionell eingeordnet."}</span>
+                </li>
+              ))}
+            </ol>
+          }
+        />
+
+        <CascadeStoryPanel
+          eyebrow="03 Haushalt"
+          title="Was heißt das im Alltag?"
+          visualLabel="Auswirkung"
+          visualTitle="Haushalt"
+          visualItems={[data.haushaltswirkung, `Zeithorizont: ${timeToImpact ?? data.zeithorizont}`, `Evidenz: ${data.confidence}`]}
+          body={
+            <>
               <p>{data.haushaltswirkung}</p>
-              <Link className="text-link" href="/massnahmen">Passende Maßnahmen ansehen</Link>
-            </DisclosureSection>
-
-            <DisclosureSection
-              number="04"
-              title="Quellen und Unsicherheit"
-              summary="Stand, Quellen und redaktionelle Evidenzspur."
-            >
-              <div className="detail-badge-row">
-                <DeutscheConfidenceBadge value={data.confidence} />
-                <span className="mono-label">Zeithorizont: {timeToImpact ?? data.zeithorizont}</span>
+              <p>Die Einordnung bleibt probabilistisch: möglich, zeitverzögert und abhängig von Quellenlage, Preisen und politischer Reaktion.</p>
+              <div className="cascade-action-row">
+                <Link className="text-link" href="/massnahmen">Maßnahmen ansehen</Link>
+                <Link className="text-link" href="/profil">Haushaltsprofil im Member-Bereich pflegen</Link>
               </div>
-              <SourcePills sources={sources} />
-              <p className="mono-meta">Redaktionelle Einordnung, kein Automatismus.</p>
-            </DisclosureSection>
-          </div>
-        </section>
-        <aside className="detail-aside" aria-label="Deutschland-Relevanz und Quellen">
-          <section className="detail-aside-box">
-            <h2 className="detail-title-small">Lesefluss</h2>
-            <p>Öffne die Abschnitte der Reihe nach: erst die Karte, dann Deutschland-Relevanz, Haushaltswirkung und Quellen.</p>
-          </section>
-          <section className="detail-aside-box">
-            <h2 className="detail-title-small">Nächster Schritt</h2>
-            <Link className="text-link" href="/profil">Haushaltsprofil im Member-Bereich pflegen</Link>
-          </section>
-          <section className="detail-aside-box">
-            <h2 className="detail-title-small">Weitere Lesespur</h2>
-            <Link className="text-link" href={`/deutschland-relevanz/${data.id}`}>Deutschland-Relevanz öffnen</Link>
-          </section>
-        </aside>
+            </>
+          }
+        />
       </div>
+
+      <section className="cascade-source-band" aria-labelledby="cascade-source-heading">
+        <div>
+          <p className="mono-label">Quellen und Unsicherheit</p>
+          <h2 id="cascade-source-heading" className="detail-title-small">Warum diese Einordnung nicht automatisch ist</h2>
+          <p>WachSam zeigt eine redaktionelle Wirkungskette, keine sichere Prognose. Confidence, Stand und Quellen bleiben deshalb sichtbar.</p>
+        </div>
+        <div className="cascade-source-stack">
+          <div className="detail-badge-row">
+            <DeutscheConfidenceBadge value={data.confidence} />
+            <span className="mono-label">Zeithorizont: {timeToImpact ?? data.zeithorizont}</span>
+          </div>
+          <SourcePills sources={sources} />
+          <Link className="text-link" href={`/deutschland-relevanz/${data.id}`}>Deutschland-Relevanz öffnen</Link>
+        </div>
+      </section>
     </main>
   );
 }

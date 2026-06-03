@@ -10,6 +10,7 @@ type CascadeCausalityMapProps = {
   confidence?: string | null;
   severity?: string | null;
   timeToImpact?: string | null;
+  compact?: boolean;
 };
 
 const systemLabels: Record<string, string> = {
@@ -47,11 +48,12 @@ export function CascadeCausalityMap({
   confidence,
   severity,
   timeToImpact,
+  compact = false,
 }: CascadeCausalityMapProps) {
   const visibleSteps = steps.length ? steps : [{ description: "Systemstress wird redaktionell eingeordnet.", systems: [] }];
 
   return (
-    <section className="causality-map" aria-labelledby="causality-map-heading">
+    <section className={compact ? "causality-map causality-map-compact" : "causality-map"} aria-labelledby="causality-map-heading">
       <div className="causality-map-head">
         <div>
           <p id="causality-map-heading" className="mono-label">Kausalitäts-Map</p>
