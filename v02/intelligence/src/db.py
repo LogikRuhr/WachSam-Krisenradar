@@ -43,6 +43,51 @@ TABLE_TO_SOURCE_TYPE = {
 }
 
 
+_MONATE_DE = (
+    "Januar", "Februar", "März", "April", "Mai", "Juni",
+    "Juli", "August", "September", "Oktober", "November", "Dezember",
+)
+
+
+def _de_date_label(iso: Optional[str]) -> Optional[str]:
+    """Deutsches Label aus ISO-Datum/-Zeitraum. None wenn leer/nicht parsebar.
+
+    "2026-05-27" → "27. Mai 2026" · "2026-05" → "Mai 2026" · "2026" → "2026".
+    """
+    if not iso:
+        return None
+    s = str(iso).strip()
+    try:
+        d = datetime.fromisoformat(s)
+        return f"{d.day}. {_MONATE_DE[d.month - 1]} {d.year}"
+    except (ValueError, TypeError):
+        pass
+    parts = s.split("-")
+    if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+        m = int(parts[1])
+        if 1 <= m <= 12:
+            return f"{_MONATE_DE[m - 1]} {parts[0]}"
+    if len(s) == 4 and s.isdigit():
+        return s
+    return None
+
+
+def _resolve_source_stand(item: IngestionItem, value_date: Optional[str], retrieved_at: datetime):
+    """Liefert (stand_date_iso | None, stand_label) — verwendet NIE 'now' als
+    fachlichen Quellenstand.
+
+    Reihenfolge: explizites item.source_stand_label/-date → reales Wert-Datum →
+    defensives Abruf-Label (nur damit NOT-NULL-Spalten befüllt sind, nicht als
+    echter Stand). retrieved_at ist der technische Abrufzeitpunkt.
+    """
+    stand_date = item.source_stand_date or value_date
+    label = item.source_stand_label or _de_date_label(stand_date)
+    if not label:
+        abgerufen = _de_date_label(retrieved_at.date().isoformat()) or retrieved_at.date().isoformat()
+        label = f"Quelle ohne ausgewiesenen Stand; abgerufen am {abgerufen}"
+    return stand_date, label
+
+
 def get_connection():
     return psycopg2.connect(settings.POSTGRES_URL)
 
@@ -164,12 +209,18 @@ def insert_draft(item: IngestionItem, item_type: str = "lagebild_items") -> Opti
                 )
                 item_id = item.indicator_id
 
-                # Append-only Historie: current_value und ggf. previous_value eintragen
-                source_stand_obs = now.strftime("%B %Y")
-                _append_observation(cur, item.indicator_id, item.current_value, item.current_value_date, source_stand_obs)
+                # Append-only Historie: source_stand = reales Datum der Beobachtung
+                # (NICHT now). Jede Beobachtung trägt ihren eigenen Stand.
+                _append_observation(
+                    cur, item.indicator_id, item.current_value, item.current_value_date,
+                    item.source_stand_date or item.current_value_date,
+                )
                 # Sofort zwei Punkte Historie wenn previous_value vorhanden
                 if item.previous_value is not None and item.previous_value_date is not None:
-                    _append_observation(cur, item.indicator_id, item.previous_value, item.previous_value_date, source_stand_obs)
+                    _append_observation(
+                        cur, item.indicator_id, item.previous_value, item.previous_value_date,
+                        item.previous_value_date,
+                    )
 
             cur.execute(
                 """INSERT INTO editorial_audit_log
@@ -186,13 +237,19 @@ def insert_draft(item: IngestionItem, item_type: str = "lagebild_items") -> Opti
             )
 
             source_type = TABLE_TO_SOURCE_TYPE.get(item_type, "lagebild")
-            source_stand = now.strftime("%B %Y")
+            # source_stand = fachliches DE-Label (nie synthetisch aus now). Bei
+            # Indikatoren reales Wert-Datum, sonst explizites Item-Label oder
+            # defensiver Abruf-Hinweis (item_sources.source_stand ist NOT NULL).
+            indicator_value_date = (
+                item.current_value_date if (item_type == "indicators" and item.indicator_id) else None
+            )
+            _, source_stand_label = _resolve_source_stand(item, indicator_value_date, now)
             cur.execute(
                 """INSERT INTO item_sources
                    (id, item_type, item_id, source_name, source_url, source_stand, order_idx)
                    VALUES (%s, %s, %s, %s, %s, %s, 0)
                    ON CONFLICT DO NOTHING""",
-                (str(uuid.uuid4()), source_type, item_id, item.title, item.source_url, source_stand),
+                (str(uuid.uuid4()), source_type, item_id, item.title, item.source_url, source_stand_label),
             )
 
             conn.commit()
