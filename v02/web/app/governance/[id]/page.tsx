@@ -13,11 +13,11 @@ export const dynamic = "force-dynamic";
 function DeutscheConfidenceBadge({ value }: { value?: string | null }) {
   const key = value ?? "niedrig";
   const labels: Record<string, string> = {
-    niedrig: "Sicherheit der Einschätzung niedrig",
-    mittel: "Sicherheit der Einschätzung mittel",
-    hoch: "Sicherheit der Einschätzung hoch",
+    niedrig: "Einschätzungssicherheit: niedrig",
+    mittel: "Einschätzungssicherheit: mittel",
+    hoch: "Einschätzungssicherheit: hoch",
   };
-  return <span className={`confidence-badge confidence-${key}`}>{labels[key] ?? `Sicherheit der Einschätzung ${key}`}</span>;
+  return <span className={`confidence-badge confidence-${key}`}>{labels[key] ?? `Einschätzungssicherheit: ${key}`}</span>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -39,11 +39,11 @@ export default async function GovernanceDetailPage({ params }: PageProps) {
     <main className="page-shell" aria-labelledby="page-title">
       <Link className="detail-back" href="/governance">← Zurück zur Liste</Link>
       <SectionHeader label="Vertrauenslage" title={data.title}>
-        <p>Versprechen, Realität und mögliche Haushaltswirkung als nachvollziehbare Vertrauenslage.</p>
+        <p>Versprechen, Realität und mögliche Haushaltsauswirkung als nachvollziehbare Vertrauenslage.</p>
       </SectionHeader>
       <div className="detail-badge-row">
         <DeutscheConfidenceBadge value={data.confidence} />
-        <span className="mono-label">Sicherheit der Einschätzung</span>
+        <span className="mono-label">Einschätzungssicherheit</span>
       </div>
       <section className="two-col chain-box">
         <div className="detail-panel">
@@ -56,7 +56,7 @@ export default async function GovernanceDetailPage({ params }: PageProps) {
         </div>
       </section>
       <section className="detail-panel">
-        <h2 className="detail-title-small">Haushaltswirkung</h2>
+        <h2 className="detail-title-small">Haushaltsauswirkung</h2>
         <p>{data.haushaltswirkung}</p>
       </section>
       <section className="detail-panel chain-box">

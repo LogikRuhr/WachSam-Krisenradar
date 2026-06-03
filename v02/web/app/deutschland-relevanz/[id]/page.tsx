@@ -38,11 +38,11 @@ export default async function HotspotDetailPage({ params }: PageProps) {
     <main className="page-shell" aria-labelledby="page-title">
       <Link className="detail-back" href="/kaskaden">← Zurück zur Kaskade-Liste</Link>
       <SectionHeader label="Deutschland-Relevanz" title={data.title}>
-        <p>Hotspot-Sicht: globales Signal, Deutschland-Wirkung und Haushaltswirkung in einer Lesespur.</p>
+        <p>Hotspot-Sicht: globale Entwicklung, Deutschland-Wirkung und Haushaltsauswirkung in einer Lesespur.</p>
       </SectionHeader>
       <section className="detail-grid-three">
         <div className="detail-panel">
-          <h2 className="detail-title-small">Globales Signal</h2>
+          <h2 className="detail-title-small">Globale Entwicklung</h2>
           <p>{data.trigger}</p>
         </div>
         <div className="detail-panel">
@@ -50,7 +50,7 @@ export default async function HotspotDetailPage({ params }: PageProps) {
           <p>{germanyDescription ?? "Keine Beschreibung hinterlegt."}</p>
         </div>
         <div className="detail-panel">
-          <h2 className="detail-title-small">Haushaltswirkung</h2>
+          <h2 className="detail-title-small">Haushaltsauswirkung</h2>
           <p>{data.haushaltswirkung}</p>
         </div>
       </section>

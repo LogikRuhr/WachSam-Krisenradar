@@ -20,7 +20,7 @@ export default async function GovernancePage() {
         {state.rows.map((item, index) => (
           <PainCard key={item.id} number={formatIndex(index)} title={item.title} meta={<ConfidenceBadge value={item.confidence} />} footer={<><SourcePills sources={item.sources} /><Link className="cross-link font-mono uppercase tracking-wide text-[var(--color-accent)]" href={`/governance/${item.id}`}>Detail öffnen</Link>{item.linkedCascade ? <Link className="cross-link" href={`/kaskaden/${item.linkedCascade}`}>Wirkungskette</Link> : null}</>}>
             <div className="two-col"><p><strong>Versprechen</strong><br />{item.versprechen}</p><p><strong>Realität</strong><br />{item.realitaet}</p></div>
-            <p><strong>Haushaltswirkung:</strong> {item.haushaltswirkung}</p>
+            <p><strong>Haushaltsauswirkung:</strong> {item.haushaltswirkung}</p>
           </PainCard>
         ))}
       </section>

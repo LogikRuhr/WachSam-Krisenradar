@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 const pfade = [
-  { href: "/lagebild", label: "Was gerade läuft", text: "Die Lage Deutschlands über zehn Systembereiche." },
-  { href: "/kosten", label: "Was es kostet", text: "Mehrkosten für Haushalte nach Bereichen und Zeitfenstern." },
-  { href: "/kaskaden", label: "Warum das zusammenhängt", text: "Wirkungsketten von Signal bis Haushaltswirkung." },
-  { href: "/massnahmen", label: "Was ich tun kann", text: "Ruhige, praktische Prüfschritte ohne Alarmismus." },
+  { href: "/lagebild", label: "Aktuelle Lage ansehen", text: "Entwicklungen mit Relevanz für Deutschland." },
+  { href: "/kosten", label: "Haushaltsauswirkungen prüfen", text: "Mögliche Mehrkosten, Versorgung und Alltagseinordnung." },
+  { href: "/kaskaden", label: "Zusammenhänge verstehen", text: "Wirkungsketten von Entwicklung bis Haushaltsauswirkung." },
+  { href: "/massnahmen", label: "Maßnahmen prüfen", text: "Ruhige, praktische Prüfschritte mit Quellenstand." },
 ];
 
 export function PfadHub() {

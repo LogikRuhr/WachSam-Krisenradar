@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
-import { WerkzeugeDrawer } from "./WerkzeugeDrawer";
 
 const tabs = [
   ["/lagebild", "Lage"],
   ["/kosten", "Haushalt"],
   ["/kaskaden", "Wirkungsketten"],
   ["/massnahmen", "Maßnahmen"],
+  ["/quellen", "Quellen"],
+  ["/profil", "Profil"],
 ];
 
 export async function TopNav() {
@@ -23,7 +24,7 @@ export async function TopNav() {
       <Link href="/" className="logo" aria-label="WachSam Startseite">
         Wach<span>Sam</span>
       </Link>
-      <nav className="path-tabs" aria-label="Vier WachSam Pfade">
+      <nav className="path-tabs" aria-label="WachSam Hauptnavigation">
         {tabs.map(([href, label]) => (
           <Link className="path-tab hover-rost" href={href} key={href}>
             {label}
@@ -31,7 +32,6 @@ export async function TopNav() {
         ))}
       </nav>
       <div className="nav-tools">
-        <WerkzeugeDrawer />
         {isSignedIn ? (
           <div className="auth-chip">
             <Link href="/profil">Mein Bereich</Link>

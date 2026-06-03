@@ -39,7 +39,7 @@ export function WerkzeugeDrawer() {
         type="button"
         onClick={() => setOpen(true)}
       >
-        Werkzeuge
+        Weitere Bereiche
       </button>
       <div className="drawer-root">
         <div className={open ? "drawer-backdrop open" : "drawer-backdrop"} onClick={() => setOpen(false)} />
@@ -56,13 +56,13 @@ export function WerkzeugeDrawer() {
           className="drawer-close"
           type="button"
           onClick={() => setOpen(false)}
-          aria-label="Werkzeuge schließen"
+          aria-label="Weitere Bereiche schließen"
         >
           ×
         </button>
         <p className="mono-label">Navigation</p>
-        <h2 className="drawer-title" id="werkzeuge-title">Werkzeuge</h2>
-        <nav className="drawer-links" aria-label="Werkzeuge">
+        <h2 className="drawer-title" id="werkzeuge-title">Weitere Bereiche</h2>
+        <nav className="drawer-links" aria-label="Weitere Bereiche">
           {sections.map(([href, label]) => (
             <Link href={href} key={href} onClick={() => setOpen(false)}>
               {label}

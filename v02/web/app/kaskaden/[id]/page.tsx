@@ -42,11 +42,11 @@ function systemLabel(system: string) {
 function DeutscheConfidenceBadge({ value }: { value?: string | null }) {
   const key = value ?? "niedrig";
   const labels: Record<string, string> = {
-    niedrig: "Sicherheit der Einschätzung niedrig",
-    mittel: "Sicherheit der Einschätzung mittel",
-    hoch: "Sicherheit der Einschätzung hoch",
+    niedrig: "Einschätzungssicherheit: niedrig",
+    mittel: "Einschätzungssicherheit: mittel",
+    hoch: "Einschätzungssicherheit: hoch",
   };
-  return <span className={`confidence-badge confidence-${key}`}>{labels[key] ?? `Sicherheit der Einschätzung ${key}`}</span>;
+  return <span className={`confidence-badge confidence-${key}`}>{labels[key] ?? `Einschätzungssicherheit: ${key}`}</span>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -78,7 +78,7 @@ export default async function CascadeDetailPage({ params }: PageProps) {
           <h1 id="page-title" className="bebas-title">{data.title}</h1>
           <p className="cascade-impact-line">{data.haushaltswirkung}</p>
           <p>
-            WachSam ordnet diese Kette als mögliche Weitergabe von einem globalen Signal über betroffene Systeme bis in den Alltag deutscher Haushalte ein.
+            WachSam ordnet diese Kette als mögliche Weitergabe von einer globalen Entwicklung über betroffene Systeme bis in den Alltag deutscher Haushalte ein.
           </p>
           <div className="detail-badge-row">
             <SeverityBadge value={data.severity} />
@@ -99,10 +99,10 @@ export default async function CascadeDetailPage({ params }: PageProps) {
 
       <div className="cascade-story-stack">
         <CascadeStoryPanel
-          eyebrow="01 Signal"
+          eyebrow="01 Entwicklung"
           title="Was stößt die Kette an?"
           visualLabel="Auslöser"
-          visualTitle="Globales Signal"
+          visualTitle="Globale Entwicklung"
           visualItems={[data.trigger, germanyDescription ?? "Deutschland-Bezug redaktionell eingeordnet"]}
           body={
             <>
@@ -113,7 +113,7 @@ export default async function CascadeDetailPage({ params }: PageProps) {
         />
 
         <CascadeStoryPanel
-          eyebrow="02 Systemstress"
+          eyebrow="02 Systembelastung"
           title="Wo setzt sich der Druck fort?"
           visualLabel="Betroffene Systeme"
           visualTitle={systems.length ? systems.map(systemLabel).slice(0, 3).join(" · ") : "Systembereiche"}
@@ -136,7 +136,7 @@ export default async function CascadeDetailPage({ params }: PageProps) {
           title="Was heißt das im Alltag?"
           visualLabel="Auswirkung"
           visualTitle="Haushalt"
-          visualItems={[data.haushaltswirkung, `Zeithorizont: ${timeToImpact ?? data.zeithorizont}`, `Evidenz: ${data.confidence}`]}
+          visualItems={[data.haushaltswirkung, `Zeithorizont: ${timeToImpact ?? data.zeithorizont}`, `Einschätzungssicherheit: ${data.confidence}`]}
           body={
             <>
               <p>{data.haushaltswirkung}</p>
@@ -154,7 +154,7 @@ export default async function CascadeDetailPage({ params }: PageProps) {
         <div>
           <p className="mono-label">Quellen und Unsicherheit</p>
           <h2 id="cascade-source-heading" className="detail-title-small">Warum diese Einordnung nicht automatisch ist</h2>
-          <p>WachSam zeigt eine redaktionelle Wirkungskette, keine sichere Prognose. Confidence, Stand und Quellen bleiben deshalb sichtbar.</p>
+          <p>WachSam zeigt eine redaktionelle Wirkungskette, keine sichere Prognose. Einschätzungssicherheit, Stand und Quellen bleiben deshalb sichtbar.</p>
         </div>
         <div className="cascade-source-stack">
           <div className="detail-badge-row">

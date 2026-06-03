@@ -42,7 +42,7 @@ export default function DatenschutzPage() {
           <div>
             <h2 className="font-semibold text-[var(--on-surface)]">4. Kein Tracking, keine Analytics</h2>
             <p className="mt-2">
-              WachSam verwendet <strong>keine</strong> Tracking-Tools, keine Analytics-Dienste,
+              WachSam verwendet <strong>keine</strong> Tracking-Dienste, keine Analytics-Dienste,
               keine Werbe-Cookies und keine Drittanbieter-Skripte. Es gibt keinen Google Analytics,
               kein Meta Pixel und kein vergleichbares System.
             </p>

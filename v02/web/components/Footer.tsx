@@ -2,16 +2,21 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="border-t border-[var(--outline)] bg-[var(--surface-container)] px-4 py-8 sm:px-6">
-      <div className="mx-auto flex max-w-5xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="font-mono text-xs text-[var(--on-surface-variant)]">
-          © {new Date().getFullYear()} RuhrLogik · WachSam Krisenradar
-        </p>
-        <nav className="flex gap-4 font-mono text-xs text-[var(--on-surface-variant)]">
-          <Link href="/impressum" className="hover:text-[var(--primary)]">
+    <footer className="site-footer">
+      <div className="site-footer-inner">
+        <div>
+          <p className="mono-label">
+            © {new Date().getFullYear()} RuhrLogik · WachSam Krisenradar
+          </p>
+          <p className="footer-transparency">
+            WachSam liefert Orientierung auf Basis öffentlicher Quellen und redaktioneller Einordnung. Die Plattform ersetzt keine Behördeninformationen und keine rechtliche, medizinische oder finanzielle Beratung.
+          </p>
+        </div>
+        <nav className="site-footer-links">
+          <Link href="/impressum">
             Impressum
           </Link>
-          <Link href="/datenschutz" className="hover:text-[var(--primary)]">
+          <Link href="/datenschutz">
             Datenschutz
           </Link>
         </nav>

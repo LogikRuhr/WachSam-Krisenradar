@@ -24,7 +24,7 @@ export default async function KaskadenPage() {
           <PainCard key={item.id} number={letters[index] ?? item.id} title={item.title} meta={<><SeverityBadge value={item.severity} /><ConfidenceBadge value={item.confidence} /></>} footer={<><SourcePills sources={item.sources} /><Link className="cross-link" href={`/kaskaden/${item.id}`}>Detail öffnen</Link></>}>
             <p>{item.trigger}</p>
             <p><strong>Zeithorizont:</strong> {item.zeithorizont}</p>
-            <p><strong>Haushaltswirkung:</strong> {item.haushaltswirkung}</p>
+            <p><strong>Haushaltsauswirkung:</strong> {item.haushaltswirkung}</p>
           </PainCard>
         ))}
       </section>

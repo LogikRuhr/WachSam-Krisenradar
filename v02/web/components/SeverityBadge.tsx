@@ -8,5 +8,5 @@ const labels: Record<string, string> = {
 
 export function SeverityBadge({ value }: { value?: string | null }) {
   const key = value ?? "stabil";
-  return <span className={`severity-badge severity-${key}`}>{labels[key] ?? key}</span>;
+  return <span className={`severity-badge severity-${key}`}>Lage-Stufe: {labels[key] ?? key}</span>;
 }

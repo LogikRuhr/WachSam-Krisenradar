@@ -18,19 +18,20 @@ export function SignalChain({ chain, note, stand }: SignalChainProps) {
   const rising = isRising(signal.trend);
 
   return (
-    <article className="signal-chain" aria-label={`Signal ${bereichLabel(signal.bereich)}`}>
+    <article className="signal-chain" aria-label={`Entwicklung ${bereichLabel(signal.bereich)}`}>
       <div className="card-meta">
         <SeverityBadge value={signal.severity} />
-        <span className="mono-label">{bereichLabel(signal.bereich)}</span>
+        <span className="mono-label">Bereich: {bereichLabel(signal.bereich)}</span>
         <span className={`trend-marker ${rising ? "trend-rising" : "trend-flat"}`}>{trendLabel(signal.trend)}</span>
         {stand ? <span className="mono-label signal-stand">Stand {stand}</span> : null}
       </div>
 
+      <span className="chain-label signal-section-label">Entwicklung</span>
       <h3 className="signal-title">{signal.titel}</h3>
       <p className="lead">{signal.beschreibung}</p>
 
       <div className="chain-row">
-        <span className="chain-label">Für deinen Haushalt</span>
+        <span className="chain-label">Bedeutung für Haushalte</span>
         {note ? <p className="chain-personal">{note}</p> : null}
         {impact ? (
           <>
@@ -44,7 +45,7 @@ export function SignalChain({ chain, note, stand }: SignalChainProps) {
 
       {action ? (
         <div className="chain-row chain-action">
-          <span className="chain-label">Was du tun kannst</span>
+          <span className="chain-label">Nächster sinnvoller Schritt</span>
           <p>
             <strong>{action.titel}</strong> — {action.beschreibung}
           </p>
@@ -53,6 +54,7 @@ export function SignalChain({ chain, note, stand }: SignalChainProps) {
       ) : null}
 
       <div className="signal-foot">
+        <span className="chain-label">Quellenhinweis</span>
         <SourcePills sources={signal.sources} />
         <Link className="cross-link" href="/lagebild">
           Mehr im Lagebild

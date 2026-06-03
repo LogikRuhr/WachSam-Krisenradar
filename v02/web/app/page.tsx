@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { DbNotice } from "@/components/DbNotice";
+import { HomeStorySteps } from "@/components/HomeStorySteps";
 import { PfadHub } from "@/components/PfadHub";
-import { SectionHeader } from "@/components/SectionHeader";
 import { SignalChain } from "@/components/SignalChain";
 import { Verdict } from "@/components/Verdict";
 import { computeVerdict, personalNote } from "@/lib/personalization";
@@ -19,8 +20,9 @@ function formatStand(value: Date | string | null | undefined): string | null {
 
 export default async function HomePage() {
   const profile = await getCurrentUserProfile();
-  const signals = await getFrontDoorSignals();
+  const signals = await getFrontDoorSignals(8);
   const verdict = computeVerdict(signals.rows.map((chain) => chain.signal));
+  const chainsWithImpact = signals.rows.filter((chain) => chain.impact).slice(0, 3);
 
   const latestStand = signals.rows
     .map((chain) => chain.signal.publishedAt ?? chain.signal.retrievedAt)
@@ -29,17 +31,35 @@ export default async function HomePage() {
 
   return (
     <main className="page-shell" aria-labelledby="page-title">
-      <SectionHeader label="Heute im Fokus" title="Die Lage für deinen Haushalt">
-        <p>Was sich bewegt, was es für dich bedeutet, was du tun kannst — ruhig eingeordnet.</p>
-      </SectionHeader>
+      <section className="home-hero" aria-labelledby="page-title">
+        <div className="strich" aria-hidden="true" />
+        <p className="mono-label">WachSam · Lage- und Auswirkungenradar</p>
+        <h1 id="page-title" className="bebas-title">Was globale Entwicklungen für deinen Alltag in Deutschland bedeuten.</h1>
+        <p className="lead">
+          Energie, Preise, Lieferketten, Infrastruktur und Arbeitsmarkt wirken oft zusammen. WachSam ordnet Entwicklungen nach Deutschland-Relevanz, Haushaltsauswirkung, Quellenlage und realistischen Maßnahmen ein.
+        </p>
+        <p className="home-trustline">Keine Panik. Kein Newsfeed. Eine ruhige Lageeinordnung mit Quellenstand.</p>
+        <div className="home-actions">
+          <Link className="btn-rost" href="#aktuelle-lage">Aktuelle Lage ansehen</Link>
+          <Link className="text-link" href="/massnahmen">Maßnahmen prüfen</Link>
+        </div>
+      </section>
+
+      <HomeStorySteps />
 
       {!signals.connected ? <DbNotice error={signals.error} /> : null}
 
       {signals.connected ? <Verdict verdict={verdict} stand={formatStand(latestStand)} /> : null}
 
-      {signals.rows.length > 0 ? (
-        <section className="signals-grid" aria-label="Aktuelle Signale">
-          {signals.rows.map((chain) => (
+      {chainsWithImpact.length > 0 ? (
+        <section className="home-section" id="aktuelle-lage" aria-labelledby="aktuelle-lage-title">
+          <div className="home-section-head">
+            <p className="mono-label">Aktuelle Lagekarten</p>
+            <h2 id="aktuelle-lage-title" className="focus-title">Entwicklungen mit Haushaltsauswirkung</h2>
+            <p>Prominent erscheinen nur Einordnungen, bei denen eine konkrete Haushaltsauswirkung hinterlegt ist.</p>
+          </div>
+          <div className="signals-grid">
+          {chainsWithImpact.map((chain) => (
             <SignalChain
               key={chain.signal.id}
               chain={chain}
@@ -47,18 +67,34 @@ export default async function HomePage() {
               stand={formatStand(chain.signal.publishedAt ?? chain.signal.retrievedAt)}
             />
           ))}
+          </div>
         </section>
       ) : signals.connected ? (
         <section className="hero-card">
-          <p className="lead">Aktuell liegen keine veröffentlichten Signale vor. Die Lage wirkt ruhig.</p>
+          <p className="lead">Aktuell liegen keine veröffentlichten Lagekarten mit konkreter Haushaltsauswirkung vor. Die übrigen Hinweise bleiben in redaktioneller Prüfung.</p>
+          <Link className="text-link" href="/lagebild">Zum Lagebild</Link>
         </section>
       ) : null}
 
-      {!profile.modus ? (
-        <p className="mono-label" style={{ marginTop: "8px" }}>
-          Tipp: Mit einem Haushaltsprofil (Modus + Heizart) ordnet WachSam die Signale auf deinen Alltag zu.
-        </p>
-      ) : null}
+      <section className="home-impact-band" aria-labelledby="haushalt-title">
+        <div>
+          <p className="mono-label">Haushaltsauswirkungen</p>
+          <h2 id="haushalt-title" className="detail-title-small">Was davon im Alltag ankommen kann</h2>
+          <p>Kosten, Versorgung, Mobilität, Gesundheit, Arbeit und Planung werden nicht isoliert betrachtet, sondern als mögliche Folgen einer Entwicklung eingeordnet.</p>
+        </div>
+        <div>
+          <p className="mono-label">Nächster Schritt</p>
+          <p>Prüfe zuerst einfache und realistische Maßnahmen. WachSam zeigt mögliche Auswirkungen, keine sicheren Vorhersagen.</p>
+          <Link className="text-link" href="/massnahmen">Maßnahmen prüfen</Link>
+        </div>
+      </section>
+
+      <section className="home-transparency" aria-labelledby="transparenz-title">
+        <p className="mono-label">Quellen und Transparenz</p>
+        <h2 id="transparenz-title" className="detail-title-small">Einordnung mit Unsicherheit</h2>
+        <p>Jede Einschätzung bleibt abhängig von Quellenlage, Datenqualität, Zeitfenster und redaktioneller Prüfung. WachSam ersetzt keine Behördeninformationen und keine rechtliche, medizinische oder finanzielle Beratung.</p>
+        <Link className="text-link" href="/quellen">Quellen ansehen</Link>
+      </section>
 
       <PfadHub />
     </main>

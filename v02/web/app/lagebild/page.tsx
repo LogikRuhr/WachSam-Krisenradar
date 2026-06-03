@@ -49,7 +49,7 @@ export default async function LagebildPage() {
         </section>
       ) : state.connected ? (
         <section className="hero-card">
-          <p className="lead">Aktuell liegen keine veröffentlichten Lagebild-Signale vor.</p>
+          <p className="lead">Aktuell liegen keine veröffentlichten Lagebild-Hinweise vor.</p>
         </section>
       ) : null}
     </main>

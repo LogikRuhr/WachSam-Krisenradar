@@ -50,14 +50,14 @@ export function CascadeCausalityMap({
   timeToImpact,
   compact = false,
 }: CascadeCausalityMapProps) {
-  const visibleSteps = steps.length ? steps : [{ description: "Systemstress wird redaktionell eingeordnet.", systems: [] }];
+  const visibleSteps = steps.length ? steps : [{ description: "Systembelastung wird redaktionell eingeordnet.", systems: [] }];
 
   return (
     <section className={compact ? "causality-map causality-map-compact" : "causality-map"} aria-labelledby="causality-map-heading">
       <div className="causality-map-head">
         <div>
-          <p id="causality-map-heading" className="mono-label">Kausalitäts-Map</p>
-          <h2 className="detail-title-small">Vom Signal zur Haushaltswirkung</h2>
+          <p id="causality-map-heading" className="mono-label">Wirkungskarte</p>
+          <h2 className="detail-title-small">Von der Entwicklung zur Haushaltsauswirkung</h2>
         </div>
         <div className="causality-map-meta">
           {severity ? <SeverityBadge value={severity} /> : null}
@@ -69,7 +69,7 @@ export function CascadeCausalityMap({
       <div className="causality-map-flow" role="list" aria-label="Visualisierte Wirkungskette">
         <article className="causality-node causality-node-signal" role="listitem">
           <span className="causality-node-index">01</span>
-          <span className="causality-node-label">Globales Signal</span>
+          <span className="causality-node-label">Globale Entwicklung</span>
           <p>{trigger}</p>
         </article>
 
@@ -78,7 +78,7 @@ export function CascadeCausalityMap({
         </div>
 
         <div className="causality-step-stack" role="listitem">
-          <span className="causality-node-label">Systemstress</span>
+          <span className="causality-node-label">Systembelastung</span>
           {visibleSteps.map((step, index) => {
             const systems = systemsFromStep(step);
             return (
@@ -107,7 +107,7 @@ export function CascadeCausalityMap({
 
         <article className="causality-node causality-node-household" role="listitem">
           <span className="causality-node-index">{String(visibleSteps.length + 2).padStart(2, "0")}</span>
-          <span className="causality-node-label">Haushaltswirkung</span>
+          <span className="causality-node-label">Haushaltsauswirkung</span>
           <p>{householdImpact}</p>
         </article>
       </div>
