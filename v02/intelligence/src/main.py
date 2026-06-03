@@ -20,6 +20,7 @@ from .adapters.warning_indicators import WarningIndicatorsAdapter
 from .crawler.rss_crawler import RSSCrawler
 from .extractors.llm_extractor import extract_with_llm
 from .db import insert_draft, set_dry_run
+from .validation import validate_draft
 
 
 ADAPTER_TYPE_MAP = {
@@ -117,11 +118,25 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
     print(f"\n{len(items)} Items total.")
 
     saved = 0
+    invalid = 0
     for item in items:
         item_type = resolve_item_type(item)
+
+        # Kanon-Validierung — nur protokollieren, NICHT blockieren. Invalide Drafts
+        # werden nicht auto-published; das Editorial-Gate entscheidet später.
+        result = validate_draft(item)
+        if result.errors:
+            invalid += 1
+            print(f"  [VALIDIERUNG] '{item.title}': {len(result.errors)} Fehler — {result.errors}")
+        if result.warnings:
+            print(f"  [VALIDIERUNG] '{item.title}': {len(result.warnings)} Hinweise — {result.warnings}")
+
         draft_id = insert_draft(item, item_type)
         if draft_id:
             saved += 1
+
+    if invalid:
+        print(f"⚠ {invalid}/{len(items)} Items mit Kanon-Fehlern (nicht blockiert, Review im Editorial-Gate).")
 
     label = "geplant (Dry-Run, kein Write)" if dry_run else "in DB gespeichert"
     print(f"{saved}/{len(items)} Drafts {label}.")
