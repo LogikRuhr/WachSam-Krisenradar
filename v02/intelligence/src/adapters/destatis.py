@@ -120,6 +120,9 @@ class DestatisAdapter(BaseAdapter):
 
     BASE_URL = "https://www-genesis.destatis.de/genesisWS/rest/2020"
     source_class = "behoerde"
+    source_label = "Destatis GENESIS (VPI 61111-0002)"
+    requires_api_key = False  # GAST-Fallback ohne Credentials
+    output_target = "indicators"
 
     def __init__(self):
         super().__init__("Destatis")

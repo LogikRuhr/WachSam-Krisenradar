@@ -18,6 +18,9 @@ class FAOAdapter(BaseAdapter):
         "https://www.fao.org/media/docs/worldfoodsituationlibraries/default-document-library/"
         "food_price_indices_data.csv?download=true&sfvrsn=523ebd2a_79"
     )
+    source_label = "FAO Food Price Index (CSV)"
+    requires_api_key = False
+    output_target = "indicators"
 
     def __init__(self):
         super().__init__("FAO")

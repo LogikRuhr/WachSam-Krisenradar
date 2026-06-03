@@ -12,6 +12,9 @@ class FREDAdapter(BaseAdapter):
 
     SERIES_URL = "https://api.stlouisfed.org/fred/series/observations"
     SERIES_ID = "PNGASEUUSDM"
+    source_label = "FRED St. Louis Fed (PNGASEUUSDM)"
+    requires_api_key = True  # FRED_API_KEY zwingend
+    output_target = "indicators"
 
     def __init__(self):
         super().__init__("FRED")

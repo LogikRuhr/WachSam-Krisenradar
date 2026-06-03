@@ -11,6 +11,9 @@ class EIAAdapter(BaseAdapter):
     """EIA OpenData — Brent crude oil spot price."""
 
     SERIES_URL = "https://api.eia.gov/v2/seriesid/PET.RBRTE.D"
+    source_label = "EIA OpenData v2 (Brent PET.RBRTE.D)"
+    requires_api_key = True  # EIA_API_KEY zwingend
+    output_target = "indicators"
 
     def __init__(self):
         super().__init__("EIA")

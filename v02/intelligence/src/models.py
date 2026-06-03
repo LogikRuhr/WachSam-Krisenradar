@@ -37,3 +37,11 @@ class IngestionItem(BaseModel):
     current_value_date: Optional[str] = None
     previous_value: Optional[float] = None
     previous_value_date: Optional[str] = None
+
+    # Fachlicher Quellenstand — getrennt vom technischen Abruf (last_ingested_at).
+    # Dual-Format: source_stand_date maschinenlesbar (ISO, z.B. "2026-05-27" oder
+    # "2026-05"), source_stand_label menschenlesbar/DE (z.B. "27. Mai 2026",
+    # "Mai 2026", "KW 22/2026"). NIE synthetisch aus now setzen.
+    source_stand_date: Optional[str] = None
+    source_stand_label: Optional[str] = None
+    source_period_type: Optional[str] = None  # date | month | quarter | year | unknown

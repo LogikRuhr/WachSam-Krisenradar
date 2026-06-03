@@ -7,6 +7,7 @@ import psycopg2
 
 from .config import settings
 from .models import IngestionItem
+from .validation import validate_draft, format_validation_reason
 
 
 def _append_observation(cur, indicator_id: str, value, date_str: Optional[str], source_stand: str) -> bool:
@@ -43,8 +44,69 @@ TABLE_TO_SOURCE_TYPE = {
 }
 
 
+_MONATE_DE = (
+    "Januar", "Februar", "März", "April", "Mai", "Juni",
+    "Juli", "August", "September", "Oktober", "November", "Dezember",
+)
+
+
+def _de_date_label(iso: Optional[str]) -> Optional[str]:
+    """Deutsches Label aus ISO-Datum/-Zeitraum. None wenn leer/nicht parsebar.
+
+    "2026-05-27" → "27. Mai 2026" · "2026-05" → "Mai 2026" · "2026" → "2026".
+    """
+    if not iso:
+        return None
+    s = str(iso).strip()
+    try:
+        d = datetime.fromisoformat(s)
+        return f"{d.day}. {_MONATE_DE[d.month - 1]} {d.year}"
+    except (ValueError, TypeError):
+        pass
+    parts = s.split("-")
+    if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+        m = int(parts[1])
+        if 1 <= m <= 12:
+            return f"{_MONATE_DE[m - 1]} {parts[0]}"
+    if len(s) == 4 and s.isdigit():
+        return s
+    return None
+
+
+def _resolve_source_stand(item: IngestionItem, value_date: Optional[str], retrieved_at: datetime):
+    """Liefert (stand_date_iso | None, stand_label) — verwendet NIE 'now' als
+    fachlichen Quellenstand.
+
+    Reihenfolge: explizites item.source_stand_label/-date → reales Wert-Datum →
+    defensives Abruf-Label (nur damit NOT-NULL-Spalten befüllt sind, nicht als
+    echter Stand). retrieved_at ist der technische Abrufzeitpunkt.
+    """
+    stand_date = item.source_stand_date or value_date
+    label = item.source_stand_label or _de_date_label(stand_date)
+    if not label:
+        abgerufen = _de_date_label(retrieved_at.date().isoformat()) or retrieved_at.date().isoformat()
+        label = f"Quelle ohne ausgewiesenen Stand; abgerufen am {abgerufen}"
+    return stand_date, label
+
+
 def get_connection():
     return psycopg2.connect(settings.POSTGRES_URL)
+
+
+# --- Dry-Run-Schutz -----------------------------------------------------------
+# Globaler Flag: im Dry-Run oeffnet insert_draft KEINE Verbindung und schreibt
+# nichts. Wird vom Orchestrator (main.py --dry-run) via set_dry_run() gesetzt.
+_DRY_RUN = False
+
+
+def set_dry_run(value: bool) -> None:
+    """Aktiviert/deaktiviert den globalen Dry-Run-Schutz fuer insert_draft."""
+    global _DRY_RUN
+    _DRY_RUN = bool(value)
+
+
+def is_dry_run() -> bool:
+    return _DRY_RUN
 
 
 def insert_draft(item: IngestionItem, item_type: str = "lagebild_items") -> Optional[str]:
@@ -52,7 +114,18 @@ def insert_draft(item: IngestionItem, item_type: str = "lagebild_items") -> Opti
 
     Nutzt die bestehenden Drizzle-Tabellen mit editorial_status='draft'.
     Das Editorial-CMS übernimmt Approve/Publish.
+
+    Im Dry-Run (set_dry_run(True)) wird KEINE Verbindung geoeffnet und nichts
+    geschrieben — es wird nur die beabsichtigte Operation geloggt.
     """
+    if _DRY_RUN:
+        is_indicator = item_type == "indicators" and bool(item.indicator_id)
+        op = "UPDATE" if is_indicator else "INSERT"
+        item_id = item.indicator_id if is_indicator else "(neue uuid)"
+        detail = f" current_value={item.current_value}" if is_indicator else ""
+        print(f"[DRY-RUN] {op} {item_type} → {item_id}{detail} — {item.title}")
+        return item_id
+
     item_id = str(uuid.uuid4())
     now = datetime.utcnow()
 
@@ -137,35 +210,51 @@ def insert_draft(item: IngestionItem, item_type: str = "lagebild_items") -> Opti
                 )
                 item_id = item.indicator_id
 
-                # Append-only Historie: current_value und ggf. previous_value eintragen
-                source_stand_obs = now.strftime("%B %Y")
-                _append_observation(cur, item.indicator_id, item.current_value, item.current_value_date, source_stand_obs)
+                # Append-only Historie: source_stand = reales Datum der Beobachtung
+                # (NICHT now). Jede Beobachtung trägt ihren eigenen Stand.
+                _append_observation(
+                    cur, item.indicator_id, item.current_value, item.current_value_date,
+                    item.source_stand_date or item.current_value_date,
+                )
                 # Sofort zwei Punkte Historie wenn previous_value vorhanden
                 if item.previous_value is not None and item.previous_value_date is not None:
-                    _append_observation(cur, item.indicator_id, item.previous_value, item.previous_value_date, source_stand_obs)
+                    _append_observation(
+                        cur, item.indicator_id, item.previous_value, item.previous_value_date,
+                        item.previous_value_date,
+                    )
 
+            # Validierungsergebnis nachvollziehbar im Audit-Log dokumentieren
+            # (reason ist nullable; nicht-blockierend, kein Auto-Publish).
+            audit_reason = format_validation_reason(validate_draft(item))
             cur.execute(
                 """INSERT INTO editorial_audit_log
-                   (id, item_type, item_id, action, from_status, to_status, created_at)
-                   VALUES (%s, %s, %s, %s, NULL, %s, %s)""",
+                   (id, item_type, item_id, action, from_status, to_status, reason, created_at)
+                   VALUES (%s, %s, %s, %s, NULL, %s, %s, %s)""",
                 (
                     str(uuid.uuid4()),
                     item_type,
                     item_id,
                     "ingest_value" if (item_type == "indicators" and item.indicator_id) else "create",
                     "published" if (item_type == "indicators" and item.indicator_id) else "draft",
+                    audit_reason,
                     now,
                 ),
             )
 
             source_type = TABLE_TO_SOURCE_TYPE.get(item_type, "lagebild")
-            source_stand = now.strftime("%B %Y")
+            # source_stand = fachliches DE-Label (nie synthetisch aus now). Bei
+            # Indikatoren reales Wert-Datum, sonst explizites Item-Label oder
+            # defensiver Abruf-Hinweis (item_sources.source_stand ist NOT NULL).
+            indicator_value_date = (
+                item.current_value_date if (item_type == "indicators" and item.indicator_id) else None
+            )
+            _, source_stand_label = _resolve_source_stand(item, indicator_value_date, now)
             cur.execute(
                 """INSERT INTO item_sources
                    (id, item_type, item_id, source_name, source_url, source_stand, order_idx)
                    VALUES (%s, %s, %s, %s, %s, %s, 0)
                    ON CONFLICT DO NOTHING""",
-                (str(uuid.uuid4()), source_type, item_id, item.title, item.source_url, source_stand),
+                (str(uuid.uuid4()), source_type, item_id, item.title, item.source_url, source_stand_label),
             )
 
             conn.commit()
