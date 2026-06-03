@@ -1,8 +1,12 @@
 """Tests für die Fact-to-Impact-Draft-Validierung (Kanon-Check, nicht-blockierend)."""
+import json
 from datetime import datetime
 
+import pytest
+
+from src import db
 from src.models import GermanyRelevance, IngestionItem
-from src.validation import validate_draft
+from src.validation import validate_draft, format_validation_reason
 
 
 def _item(**kwargs):
@@ -99,3 +103,83 @@ def test_all_canon_values_accepted():
         assert validate_draft(_item(confidence_suggestion=conf)).valid
     for tag in ("steep", "rca", "bia", "fmea", "scenario"):
         assert validate_draft(_item(methodology_tag=tag)).valid
+
+
+# --- format_validation_reason ------------------------------------------------
+def test_format_reason_clean_is_none():
+    assert format_validation_reason(validate_draft(_item())) is None
+
+
+def test_format_reason_contains_errors_and_warnings():
+    item = _item(severity_suggestion="panik", source_stand_label=None, source_stand_date=None)
+    reason = format_validation_reason(validate_draft(item))
+    assert reason is not None
+    payload = json.loads(reason)
+    assert any("severity" in e for e in payload["validation_errors"])
+    assert any("source_stand" in w for w in payload["validation_warnings"])
+
+
+# --- Audit-Log-reason (über insert_draft, ohne echte DB) ---------------------
+class _Cur:
+    def __init__(self):
+        self.calls = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+    def execute(self, sql, params=None):
+        self.calls.append((sql, params))
+
+
+class _Conn:
+    def __init__(self, cur):
+        self._cur = cur
+
+    def cursor(self):
+        return self._cur
+
+    def commit(self):
+        pass
+
+    def rollback(self):
+        pass
+
+    def close(self):
+        pass
+
+
+@pytest.fixture(autouse=True)
+def _no_dry_run():
+    db.set_dry_run(False)
+    yield
+    db.set_dry_run(False)
+
+
+def _audit_params(cur):
+    for sql, params in cur.calls:
+        if "editorial_audit_log" in sql:
+            return params
+    return None
+
+
+def test_invalid_draft_writes_validation_reason_to_audit_log(monkeypatch):
+    cur = _Cur()
+    monkeypatch.setattr(db, "get_connection", lambda: _Conn(cur))
+    item = _item(severity_suggestion="panik")  # Kanon-Fehler
+    db.insert_draft(item, "lagebild_items")
+
+    reason = _audit_params(cur)[5]  # (id, item_type, item_id, action, to_status, reason, created_at)
+    assert reason is not None
+    payload = json.loads(reason)
+    assert any("severity" in e for e in payload["validation_errors"])
+
+
+def test_clean_draft_audit_reason_is_none(monkeypatch):
+    cur = _Cur()
+    monkeypatch.setattr(db, "get_connection", lambda: _Conn(cur))
+    db.insert_draft(_item(), "lagebild_items")
+
+    assert _audit_params(cur)[5] is None

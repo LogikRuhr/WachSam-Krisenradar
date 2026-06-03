@@ -9,8 +9,9 @@ nichts. Die Verdrahtung (main.py) loggt das Ergebnis; invalide Drafts werden
 nicht automatisch published — das Editorial-Gate entscheidet später über
 Korrektur, Ablehnung oder Veröffentlichung.
 """
+import json
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 from .models import IngestionItem
 
@@ -72,3 +73,18 @@ def validate_draft(item: IngestionItem) -> ValidationResult:
         res.warnings.append("kein source_stand (fachlicher Stand/Frische unbekannt)")
 
     return res
+
+
+def format_validation_reason(result: ValidationResult) -> Optional[str]:
+    """Kompakter, maschinenlesbarer JSON-String für editorial_audit_log.reason.
+
+    None, wenn keine Fehler/Hinweise vorliegen (dann bleibt reason NULL).
+    """
+    if not result.errors and not result.warnings:
+        return None
+    payload = {}
+    if result.errors:
+        payload["validation_errors"] = result.errors
+    if result.warnings:
+        payload["validation_warnings"] = result.warnings
+    return json.dumps(payload, ensure_ascii=False)

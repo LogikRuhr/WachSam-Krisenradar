@@ -7,6 +7,7 @@ import psycopg2
 
 from .config import settings
 from .models import IngestionItem
+from .validation import validate_draft, format_validation_reason
 
 
 def _append_observation(cur, indicator_id: str, value, date_str: Optional[str], source_stand: str) -> bool:
@@ -222,16 +223,20 @@ def insert_draft(item: IngestionItem, item_type: str = "lagebild_items") -> Opti
                         item.previous_value_date,
                     )
 
+            # Validierungsergebnis nachvollziehbar im Audit-Log dokumentieren
+            # (reason ist nullable; nicht-blockierend, kein Auto-Publish).
+            audit_reason = format_validation_reason(validate_draft(item))
             cur.execute(
                 """INSERT INTO editorial_audit_log
-                   (id, item_type, item_id, action, from_status, to_status, created_at)
-                   VALUES (%s, %s, %s, %s, NULL, %s, %s)""",
+                   (id, item_type, item_id, action, from_status, to_status, reason, created_at)
+                   VALUES (%s, %s, %s, %s, NULL, %s, %s, %s)""",
                 (
                     str(uuid.uuid4()),
                     item_type,
                     item_id,
                     "ingest_value" if (item_type == "indicators" and item.indicator_id) else "create",
                     "published" if (item_type == "indicators" and item.indicator_id) else "draft",
+                    audit_reason,
                     now,
                 ),
             )
