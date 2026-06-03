@@ -3,6 +3,7 @@ import { DbNotice } from "@/components/DbNotice";
 import { PainCard } from "@/components/PainCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SourcePills } from "@/components/SourcePill";
+import { bereichLabel } from "@/lib/personalization";
 import { formatIndex, getCostImpacts } from "@/lib/public-data";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,7 @@ export default async function KostenPage() {
         {state.rows.map((item, index) => (
           <PainCard key={item.id} number={formatIndex(index)} title={item.titel} meta={<ConfidenceBadge value={item.confidence} />} footer={<SourcePills sources={item.sources} />}>
             <p>{item.beschreibung}</p>
-            <p><strong>Bereich:</strong> {item.bereich} · <strong>Zeithorizont:</strong> {item.zeithorizont}</p>
+            <p><strong>Bereich:</strong> {bereichLabel(item.bereich)} · <strong>Zeithorizont:</strong> {item.zeithorizont}</p>
             <p><strong>Unsicherheit:</strong> {item.unsicherheit}</p>
           </PainCard>
         ))}

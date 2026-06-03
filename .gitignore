@@ -24,6 +24,7 @@ Thumbs.db
 .idea/
 .vscode/
 .codex/
+.codex-remote-attachments/
 .claude/
 .superpowers/
 .playwright-mcp/

@@ -4,6 +4,7 @@ import { PainCard } from "@/components/PainCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { SourcePills } from "@/components/SourcePill";
+import { bereichLabel } from "@/lib/personalization";
 import { formatIndex, getSupplyRisks } from "@/lib/public-data";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export default async function VersorgungPage() {
         {state.rows.map((item, index) => (
           <PainCard key={item.id} number={formatIndex(index)} title={item.titel} meta={<><SeverityBadge value={item.severity} /><ConfidenceBadge value={item.confidence} /></>} footer={<SourcePills sources={item.sources} />}>
             <p>{item.beschreibung}</p>
-            <p><strong>Bereich:</strong> {item.bereich} · <strong>Zeithorizont:</strong> {item.zeithorizont}</p>
+            <p><strong>Bereich:</strong> {bereichLabel(item.bereich)} · <strong>Zeithorizont:</strong> {item.zeithorizont}</p>
             {item.unsicherheit ? <p><strong>Unsicherheit:</strong> {item.unsicherheit}</p> : null}
           </PainCard>
         ))}

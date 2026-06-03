@@ -366,9 +366,10 @@ export async function getSignalChains(limit?: number): Promise<DbState<SignalCha
   return { rows, connected: true };
 }
 
-/** Eingangstür: nur die Top-3-Signale, verkettet. */
-export function getFrontDoorSignals(limit = 3): Promise<DbState<SignalChain>> {
-  return getSignalChains(limit);
+/** Eingangstür: nur Signalketten mit konkreter Haushaltsauswirkung. */
+export async function getFrontDoorSignals(limit = 3): Promise<DbState<SignalChain>> {
+  const state = await getSignalChains();
+  return { ...state, rows: state.rows.filter((chain) => chain.impact !== null).slice(0, limit) };
 }
 
 export function describeLinks(links: Array<Record<string, unknown>> | null | undefined) {

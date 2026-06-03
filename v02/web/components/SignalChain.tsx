@@ -39,7 +39,7 @@ export function SignalChain({ chain, note, stand }: SignalChainProps) {
             <ConfidenceBadge value={impact.confidence} />
           </>
         ) : (
-          <p className="chain-muted">Für diesen Bereich liegt noch keine konkrete Haushaltsauswirkung vor.</p>
+          <p className="chain-muted">Haushaltsauswirkung noch in redaktioneller Prüfung.</p>
         )}
       </div>
 
