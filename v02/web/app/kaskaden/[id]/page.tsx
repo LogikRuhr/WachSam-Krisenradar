@@ -110,7 +110,7 @@ export default async function CascadeDetailPage({ params }: PageProps) {
             <DisclosureSection
               number="02"
               title="Deutschland-Relevanz"
-              summary="Warum diese globale Entwicklung fuer Deutschland relevant ist."
+              summary="Warum diese globale Entwicklung für Deutschland relevant ist."
             >
               <p>{germanyDescription ?? "Deutschland-Bezug ist im Datensatz als Einordnung hinterlegt."}</p>
               {systems.length ? (
@@ -125,7 +125,7 @@ export default async function CascadeDetailPage({ params }: PageProps) {
             <DisclosureSection
               number="03"
               title="Haushaltswirkung"
-              summary="Welche Alltagsbereiche dadurch belastet werden koennen."
+              summary="Welche Alltagsbereiche dadurch belastet werden können."
             >
               <p>{data.haushaltswirkung}</p>
               <Link className="text-link" href="/massnahmen">Passende Maßnahmen ansehen</Link>
