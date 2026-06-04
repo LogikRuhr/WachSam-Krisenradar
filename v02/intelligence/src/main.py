@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import json
 import os
 import signal
 import sys
@@ -19,8 +20,10 @@ from .adapters.eurostat import EurostatAdapter
 from .adapters.warning_indicators import WarningIndicatorsAdapter
 from .crawler.rss_crawler import RSSCrawler
 from .extractors.llm_extractor import extract_with_llm
-from .db import insert_draft, set_dry_run
+from .db import insert_draft, set_dry_run, fetch_indicator_thresholds
 from .validation import validate_draft
+from .gate import evaluate_plausibility, build_shadow_log
+from .plausibility_rules import get_rules
 
 
 ADAPTER_TYPE_MAP = {
@@ -130,6 +133,22 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
             print(f"  [VALIDIERUNG] '{item.title}': {len(result.errors)} Fehler — {result.errors}")
         if result.warnings:
             print(f"  [VALIDIERUNG] '{item.title}': {len(result.warnings)} Hinweise — {result.warnings}")
+
+        # --- W6a Plausibilitäts-Gate (SHADOW / Log-only) ----------------------
+        # Bewertet nur, was das Gate TUN würde, und loggt strukturiertes JSON.
+        # KEIN Eingriff in den Live-/DB-Pfad: kein Block, kein Stale-on-error,
+        # kein current_value-Overwrite, kein Write. Nur Indikator-Pfad.
+        if item_type == "indicators" and item.indicator_id:
+            thresholds = fetch_indicator_thresholds(item.indicator_id)
+            verdict = evaluate_plausibility(
+                indicator_id=item.indicator_id,
+                raw_value=item.current_value,
+                previous_value=item.previous_value,
+                rules=get_rules(item.indicator_id),
+                thresholds=thresholds,
+                scale_direction=(thresholds or {}).get("scale_direction", "higher_is_worse"),
+            )
+            print(json.dumps(build_shadow_log(item, verdict), ensure_ascii=False))
 
         draft_id = insert_draft(item, item_type)
         if draft_id:
