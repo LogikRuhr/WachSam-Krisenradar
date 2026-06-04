@@ -129,6 +129,8 @@ class TankerkoenigAdapter(BaseAdapter):
     def fetch_latest(self) -> List[IngestionItem]:
         if not settings.TANKERKOENIG_API_KEY:
             self.log_error("TANKERKOENIG_API_KEY nicht gesetzt")
+            for indicator_id in FUEL_INDICATORS.values():
+                self.record_source_error(indicator_id, "api_key_missing", source_url=self.SOURCE_URL)
             return []
 
         stations: List[dict] = []
@@ -143,6 +145,8 @@ class TankerkoenigAdapter(BaseAdapter):
         averages = average_fuel_prices(stations)
         if averages["station_count"] == 0:
             self.log_error("Keine offenen Stationen mit gueltigem Preis — kein Update")
+            for indicator_id in FUEL_INDICATORS.values():
+                self.record_source_error(indicator_id, "no_valid_stations", source_url=self.SOURCE_URL)
             return []
 
         value_date = date.today().isoformat()
@@ -150,6 +154,7 @@ class TankerkoenigAdapter(BaseAdapter):
         for fuel, indicator_id in FUEL_INDICATORS.items():
             value = averages[fuel]
             if value is None:
+                self.record_source_error(indicator_id, "no_price_in_sample", source_url=self.SOURCE_URL)
                 continue
             label = FUEL_LABELS[fuel]
             items.append(self.create_item(

@@ -67,10 +67,18 @@ class EIAAdapter(BaseAdapter):
                     )]
 
             self.log_error(f"Brent fetch: Status {response.status_code}")
+            self.record_source_error(
+                "wi-oel-brent", f"HTTP {response.status_code}",
+                source_url="https://www.eia.gov/dnav/pet/hist/rbrted.htm",
+            )
             return self._fallback()
 
         except Exception as e:
             self.log_error(f"Brent fetch failed: {e}")
+            self.record_source_error(
+                "wi-oel-brent", f"fetch_error: {type(e).__name__}",
+                source_url="https://www.eia.gov/dnav/pet/hist/rbrted.htm",
+            )
             return self._fallback()
 
     def _fallback(self) -> List[IngestionItem]:

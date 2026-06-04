@@ -208,6 +208,37 @@ def evaluate_plausibility(
     )
 
 
+def source_error_verdict(
+    indicator_id: str,
+    reason: str,
+    raw_value: Any = None,
+    keep_previous: bool = True,
+) -> GateVerdict:
+    """C4-Verdikt für einen Quell-/Fetch-/Parsingfehler (W6a.1 — Shadow).
+
+    Rein, ohne Seiteneffekt. Für Fälle, in denen ein Adapter einen bekannten
+    Indikator NICHT mit einem Messwert beliefern konnte (HTTP-Fehler, leere
+    Antwort, unparsebarer Wert). Im Shadow-Modus wird das Verdikt nur geloggt.
+
+    Parameter
+    - reason: kompakte Fehlerbeschreibung (z.B. "HTTP 401", "HTTP 400", "parse_error")
+    - raw_value: ursprünglicher Rohwert, falls vorhanden (sonst None)
+    - keep_previous: True (Fetch fehlgeschlagen, kein neuer Wert → keep_previous_value),
+                     False (Wert kam an, war aber unparsebar → parsing_error)
+    """
+    action = ACTION_KEEP_PREVIOUS if keep_previous else ACTION_PARSING_ERROR
+    return GateVerdict(
+        indicator_id=indicator_id,
+        raw_value=_json_safe(raw_value),
+        parsed_value=None,
+        previous_value=None,
+        gate_class=GATE_C4,
+        would_action=action,
+        reason=f"C4 Quellenfehler: {reason}",
+        warnings=[],
+    )
+
+
 def build_shadow_log(item, verdict: GateVerdict) -> dict:
     """Strukturiertes Shadow-Log-Dict mit allen Pflichtfeldern (W6a).
 

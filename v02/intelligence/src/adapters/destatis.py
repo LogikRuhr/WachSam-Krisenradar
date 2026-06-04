@@ -177,10 +177,18 @@ class DestatisAdapter(BaseAdapter):
                 )]
 
             self.log_error(f"VPI fetch: Status {response.status_code}")
+            self.record_source_error(
+                "wi-inflation-vpi-de", f"HTTP {response.status_code}",
+                source_url="https://www.destatis.de/DE/Themen/Wirtschaft/Preise/Verbraucherpreisindex/_inhalt.html",
+            )
             return self._fallback_vpi()
 
         except Exception as e:
             self.log_error(f"VPI fetch failed: {e}")
+            self.record_source_error(
+                "wi-inflation-vpi-de", f"fetch_error: {type(e).__name__}",
+                source_url="https://www.destatis.de/DE/Themen/Wirtschaft/Preise/Verbraucherpreisindex/_inhalt.html",
+            )
             return self._fallback_vpi()
 
     def _fallback_vpi(self) -> List[IngestionItem]:

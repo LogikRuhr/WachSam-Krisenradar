@@ -1,6 +1,7 @@
 """Unit-Tests für das Plausibilitäts-Gate (W6a, Shadow). Rein gemockt, kein DB/Netz."""
 from src.gate import (
     evaluate_plausibility,
+    source_error_verdict,
     build_shadow_log,
     GateVerdict,
     SHADOW_EVENT,
@@ -134,3 +135,42 @@ def test_build_shadow_log_contains_all_required_fields():
     assert log["source_name"] == "https://agsi.gie.eu/"
     assert log["source_stand"] == "27. Mai 2026"
     assert log["observed_at"] == "2026-05-27"
+
+
+# --- C4-Quellfehler-Verdikt (W6a.1) ------------------------------------------
+
+def test_source_error_verdict_is_c4_keep_previous_by_default():
+    """Fetch-/Quellfehler ohne neuen Wert → C4, behält Vorwert (Shadow)."""
+    v = source_error_verdict("wi-inflation-vpi-de", "HTTP 401")
+    assert isinstance(v, GateVerdict)
+    assert v.gate_class == GATE_C4
+    assert v.would_action == ACTION_KEEP_PREVIOUS
+    assert v.indicator_id == "wi-inflation-vpi-de"
+    assert v.parsed_value is None
+    assert v.raw_value is None
+    assert v.previous_value is None
+
+
+def test_source_error_verdict_reason_carries_compact_detail():
+    """Der reason transportiert die kompakte Fehlerbeschreibung (z.B. HTTP 400)."""
+    v = source_error_verdict("wi-gaspreis-europa", "HTTP 400")
+    assert "HTTP 400" in v.reason
+
+
+def test_source_error_verdict_parsing_variant():
+    """Wert kam an, war aber unparsebar → parsing_error statt keep_previous."""
+    v = source_error_verdict("wi-oel-brent", "parse_error", raw_value="N/A", keep_previous=False)
+    assert v.gate_class == GATE_C4
+    assert v.would_action == ACTION_PARSING_ERROR
+    assert v.raw_value == "N/A"
+    assert v.parsed_value is None
+
+
+def test_source_error_verdict_works_with_build_shadow_log():
+    """source_error_verdict ist mit build_shadow_log kompatibel (alle Pflichtfelder)."""
+    v = source_error_verdict("wi-inflation-vpi-de", "HTTP 401")
+    log = build_shadow_log(_StubItem(), v)
+    assert REQUIRED_SHADOW_FIELDS.issubset(log.keys())
+    assert log["gate_class"] == GATE_C4
+    assert log["raw_value"] is None
+    assert log["parsed_value"] is None

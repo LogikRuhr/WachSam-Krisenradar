@@ -65,6 +65,10 @@ class FAOAdapter(BaseAdapter):
             )
         except Exception as e:
             self.log_error(f"FAO FPI fetch failed: {e}")
+            self.record_source_error(
+                "wi-fao-food-price-index", f"fetch_error: {type(e).__name__}",
+                source_url="https://www.fao.org/worldfoodsituation/foodpricesindex/en",
+            )
             return None
 
     def _fallback(self) -> IngestionItem:
