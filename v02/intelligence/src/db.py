@@ -93,6 +93,41 @@ def get_connection():
     return psycopg2.connect(settings.POSTGRES_URL)
 
 
+def fetch_indicator_thresholds(indicator_id: str) -> Optional[dict]:
+    """Read-only Lookup der Schwellen eines Indikators für das C3-Gate (Shadow).
+
+    Liefert {threshold_warn, threshold_critical, scale_direction} oder None.
+    SCHREIBT NICHTS. Dry-Run-/Fehler-sicher: im Dry-Run, ohne DB, bei Timeout oder
+    fehlender Zeile → None (das Gate überspringt C3 dann mit Warnung). Kurzer
+    connect_timeout, damit Tests/Umgebungen ohne DB nicht hängen.
+    """
+    if _DRY_RUN:
+        return None
+    try:
+        conn = psycopg2.connect(settings.POSTGRES_URL, connect_timeout=3)
+    except Exception:
+        return None
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT threshold_warn, threshold_critical, scale_direction "
+                "FROM indicators WHERE id = %s",
+                (indicator_id,),
+            )
+            row = cur.fetchone()
+        if not row:
+            return None
+        return {
+            "threshold_warn": row[0],
+            "threshold_critical": row[1],
+            "scale_direction": row[2] or "higher_is_worse",
+        }
+    except Exception:
+        return None
+    finally:
+        conn.close()
+
+
 # --- Dry-Run-Schutz -----------------------------------------------------------
 # Globaler Flag: im Dry-Run oeffnet insert_draft KEINE Verbindung und schreibt
 # nichts. Wird vom Orchestrator (main.py --dry-run) via set_dry_run() gesetzt.
