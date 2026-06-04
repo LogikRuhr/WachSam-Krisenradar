@@ -110,6 +110,19 @@ pnpm run test:audit
 
 Alle Schritte müssen PASS sein, bevor ein `v02/`-Edit „fertig" ist.
 
+### Browser-Smoke v0.3
+
+Für Änderungen an öffentlichen `v02/web/app/**`-Routen, Navigation oder globalem CSS:
+
+```bash
+cd v02
+pnpm run smoke:ui:install
+pnpm run smoke:ui
+```
+
+Der Smoke startet Next.js lokal auf `127.0.0.1:3100` und setzt bewusst keine `DATABASE_URL`.
+Eine fehlende lokale DB darf als Entwicklungs-Hinweis erscheinen; Browser-Console-Fehler, Page-Errors, HTTP-5xx und horizontaler Overflow auf Desktop oder Mobile sind Failures.
+
 ### DB-Migration-Check
 
 Vor jedem Edit am Drizzle-Schema oder an Migrationsdateien:

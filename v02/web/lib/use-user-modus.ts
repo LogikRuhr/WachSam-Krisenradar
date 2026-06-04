@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getHouseholdByUserId, type HouseholdHeizart, type HouseholdModus } from "@/lib/profile";
-import { auth } from "@/lib/auth";
+import { auth, isAuthRuntimeConfigured } from "@/lib/auth";
 
 export type UserProfile = {
   modus: HouseholdModus | null;
@@ -10,6 +10,8 @@ export type UserProfile = {
 };
 
 export async function getCurrentUserModus(): Promise<HouseholdModus | null> {
+  if (!isAuthRuntimeConfigured()) return null;
+
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return null;
@@ -19,6 +21,8 @@ export async function getCurrentUserModus(): Promise<HouseholdModus | null> {
 }
 
 export async function getCurrentUserProfile(): Promise<UserProfile> {
+  if (!isAuthRuntimeConfigured()) return { modus: null, plz: null, heizart: null };
+
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return { modus: null, plz: null, heizart: null };

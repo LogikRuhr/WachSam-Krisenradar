@@ -28,6 +28,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "database" },
 });
 
+export function isAuthRuntimeConfigured() {
+  return Boolean(process.env.DATABASE_URL && (process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET));
+}
+
 export function assertAuthRuntimeReady() {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL ist für Auth-Runtime erforderlich.");

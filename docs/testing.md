@@ -139,7 +139,14 @@ python -m pytest tests/ -v
 
 ### E2E mit Playwright + Test-DB-Seed
 
-End-to-End-Tests mit Playwright laufen gegen eine vollständig geseedete Test-DB. Der Seed-Datensatz ist deterministisch und enthält keine PII. Ab W1.7 (Hard-Cutover-Vorbereitung) Pflicht für jeden User-facing Flow.
+Der erste v0.3-Browser-Smoke läuft ohne DB-Secrets gegen öffentliche Routen:
+
+```bash
+cd v02
+pnpm run smoke:ui
+```
+
+Er startet Next.js lokal über Playwright, prüft Startseite, Kernnavigation, mehrere öffentliche Routen, Browser-Fehler, HTTP-5xx und horizontalen Overflow auf Desktop und Mobile. Eine fehlende lokale DB ist in diesem Smoke erlaubt, solange die UI sauber degradet. Vollständige End-to-End-Tests mit geseedeter Test-DB bleiben für User-facing Flows ab Hard-Cutover-Vorbereitung Pflicht.
 
 ### CI-Matrix v0.3
 
