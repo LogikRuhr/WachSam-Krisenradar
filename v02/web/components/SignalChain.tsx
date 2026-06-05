@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { SeverityBadge } from "./SeverityBadge";
 import { SourcePills } from "./SourcePill";
-import { bereichLabel, isRising, trendLabel } from "@/lib/personalization";
+import { aufwandLabel, bereichLabel, isRising, trendLabel } from "@/lib/personalization";
 import type { SignalChain as SignalChainData } from "@/lib/public-data";
 
 type SignalChainProps = {
@@ -49,7 +49,7 @@ export function SignalChain({ chain, note, stand }: SignalChainProps) {
           <p>
             <strong>{action.titel}</strong> — {action.beschreibung}
           </p>
-          <span className="mono-label">Aufwand: {action.aufwand}</span>
+          <span className="mono-label">Aufwand: {aufwandLabel(action.aufwand)}</span>
         </div>
       ) : null}
 

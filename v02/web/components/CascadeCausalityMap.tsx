@@ -1,5 +1,6 @@
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { SeverityBadge } from "./SeverityBadge";
+import { systemLabel } from "@/lib/personalization";
 
 type CascadeStep = Record<string, unknown>;
 
@@ -13,19 +14,6 @@ type CascadeCausalityMapProps = {
   compact?: boolean;
 };
 
-const systemLabels: Record<string, string> = {
-  arbeit: "Arbeit",
-  energie: "Energie",
-  finanzen: "Finanzen",
-  gesellschaft: "Gesellschaft",
-  gesundheit: "Gesundheit",
-  industrie: "Industrie",
-  infrastruktur: "Infrastruktur",
-  lebensmittel: "Lebensmittel",
-  logistik: "Logistik",
-  mobilitaet: "Mobilität",
-};
-
 function textFromStep(step: CascadeStep) {
   const raw = step.description;
   return typeof raw === "string" ? raw : "Kaskadenschritt ohne Beschreibung.";
@@ -35,10 +23,6 @@ function systemsFromStep(step: CascadeStep) {
   const raw = step.systems;
   if (!Array.isArray(raw)) return [];
   return raw.filter((entry): entry is string => typeof entry === "string");
-}
-
-function formatSystem(system: string) {
-  return systemLabels[system] ?? system;
 }
 
 export function CascadeCausalityMap({
@@ -91,7 +75,7 @@ export function CascadeCausalityMap({
                   <div className="causality-system-row">
                     {systems.map((system) => (
                       <span className="system-badge" key={`${index}-${system}`}>
-                        {formatSystem(system)}
+                        {systemLabel(system)}
                       </span>
                     ))}
                   </div>

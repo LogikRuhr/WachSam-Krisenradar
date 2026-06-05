@@ -7,7 +7,6 @@ const tabs = [
   ["/kaskaden", "Wirkungsketten"],
   ["/massnahmen", "Maßnahmen"],
   ["/quellen", "Quellen"],
-  ["/profil", "Profil"],
 ];
 
 export async function TopNav() {
