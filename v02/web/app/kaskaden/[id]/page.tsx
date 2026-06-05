@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CascadeCausalityMap } from "@/components/CascadeCausalityMap";
 import { CascadeStoryPanel } from "@/components/CascadeStoryPanel";
+import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { DbNotice } from "@/components/DbNotice";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { SourcePills } from "@/components/SourcePill";
@@ -21,16 +22,6 @@ function textFromRecord(value: Record<string, unknown> | null | undefined, key: 
 function stringListFromRecord(value: Record<string, unknown> | null | undefined, key: string) {
   const raw = value?.[key];
   return Array.isArray(raw) ? raw.filter((entry): entry is string => typeof entry === "string") : [];
-}
-
-function DeutscheConfidenceBadge({ value }: { value?: string | null }) {
-  const key = value ?? "niedrig";
-  const labels: Record<string, string> = {
-    niedrig: "Einschätzungssicherheit: niedrig",
-    mittel: "Einschätzungssicherheit: mittel",
-    hoch: "Einschätzungssicherheit: hoch",
-  };
-  return <span className={`confidence-badge confidence-${key}`}>{labels[key] ?? `Einschätzungssicherheit: ${key}`}</span>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -66,7 +57,7 @@ export default async function CascadeDetailPage({ params }: PageProps) {
           </p>
           <div className="detail-badge-row">
             <SeverityBadge value={data.severity} />
-            <DeutscheConfidenceBadge value={data.confidence} />
+            <ConfidenceBadge value={data.confidence} />
             <span className="mono-label">{timeToImpact ?? data.zeithorizont}</span>
           </div>
         </div>
@@ -142,7 +133,7 @@ export default async function CascadeDetailPage({ params }: PageProps) {
         </div>
         <div className="cascade-source-stack">
           <div className="detail-badge-row">
-            <DeutscheConfidenceBadge value={data.confidence} />
+            <ConfidenceBadge value={data.confidence} />
             <span className="mono-label">Zeithorizont: {timeToImpact ?? data.zeithorizont}</span>
           </div>
           <SourcePills sources={sources} />

@@ -45,6 +45,29 @@ export function confidenceRank(confidence: string): number {
   return CONFIDENCE_RANK[confidence] ?? 0;
 }
 
+const CONFIDENCE_EXPLAIN: Record<string, string> = {
+  niedrig:
+    "Wenige oder noch unsichere Quellen. Eher ein erster Hinweis als ein belastbares Bild — bitte mit Vorsicht lesen.",
+  mittel:
+    "Mehrere Quellen deuten in eine Richtung, einzelne Fragen bleiben offen. Die Einordnung ist plausibel, Details können sich noch ändern.",
+  hoch:
+    "Mehrere belastbare Quellen stützen die Einordnung. Größere Überraschungen sind weniger wahrscheinlich, sicher ist sie trotzdem nicht.",
+};
+
+const CONFIDENCE_EXPLAIN_FALLBACK =
+  "Wie belastbar die Einschätzung ist, hängt von Quellenlage, Datenqualität und Unsicherheit ab.";
+
+/** Einheitliches Label für die Einschätzungssicherheit; nie leer. */
+export function confidenceLabel(confidence: string): string {
+  return `Einschätzungssicherheit: ${confidence}`;
+}
+
+/** Ruhige Klartext-Erklärung, was eine Confidence-Stufe praktisch bedeutet. */
+export function confidenceExplain(confidence: string | null | undefined): string {
+  if (!confidence) return CONFIDENCE_EXPLAIN_FALLBACK;
+  return CONFIDENCE_EXPLAIN[confidence] ?? CONFIDENCE_EXPLAIN_FALLBACK;
+}
+
 export function isRising(trend: string): boolean {
   return trend === "steigend" || trend === "eskalierend";
 }

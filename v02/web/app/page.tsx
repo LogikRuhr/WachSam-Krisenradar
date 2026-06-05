@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DbNotice } from "@/components/DbNotice";
 import { HomeStorySteps } from "@/components/HomeStorySteps";
+import { MethodikHinweis } from "@/components/MethodikHinweis";
 import { PfadHub } from "@/components/PfadHub";
 import { SignalChain } from "@/components/SignalChain";
 import { Verdict } from "@/components/Verdict";
@@ -93,8 +94,11 @@ export default async function HomePage() {
         <p className="mono-label">Quellen und Transparenz</p>
         <h2 id="transparenz-title" className="detail-title-small">Einordnung mit Unsicherheit</h2>
         <p>Jede Einschätzung bleibt abhängig von Quellenlage, Datenqualität, Zeitfenster und redaktioneller Prüfung. WachSam ersetzt keine Behördeninformationen und keine rechtliche, medizinische oder finanzielle Beratung.</p>
+        {formatStand(latestStand) ? <p className="mono-label">Datenstand: {formatStand(latestStand)}</p> : null}
         <Link className="text-link" href="/quellen">Quellen ansehen</Link>
       </section>
+
+      <MethodikHinweis variant="lage" />
 
       <PfadHub />
     </main>
