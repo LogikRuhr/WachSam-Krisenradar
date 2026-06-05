@@ -91,10 +91,18 @@ class FREDAdapter(BaseAdapter):
                     )]
 
             self.log_error(f"Gas price fetch: Status {response.status_code}")
+            self.record_source_error(
+                "wi-gaspreis-europa", f"HTTP {response.status_code}",
+                source_url="https://fred.stlouisfed.org/series/PNGASEUUSDM",
+            )
             return self._fallback()
 
         except Exception as e:
             self.log_error(f"Gas price fetch failed: {e}")
+            self.record_source_error(
+                "wi-gaspreis-europa", f"fetch_error: {type(e).__name__}",
+                source_url="https://fred.stlouisfed.org/series/PNGASEUUSDM",
+            )
             return self._fallback()
 
     def _fallback(self) -> List[IngestionItem]:

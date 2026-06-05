@@ -223,3 +223,136 @@ def test_non_indicator_item_skips_shadow_gate(monkeypatch, capsys):
             shadow_lines.append(obj)
 
     assert shadow_lines == []
+
+
+# --- W6a.1: C4-Quellfehler-Sichtbarkeit im Ingestion-Fluss -------------------
+
+def _collect_shadow_lines(capsys):
+    out = []
+    for line in capsys.readouterr().out.splitlines():
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            obj = json.loads(line)
+        except ValueError:
+            continue
+        if obj.get("event") == "plausibility_gate_shadow":
+            out.append(obj)
+    return out
+
+
+def _patch_other_adapters(monkeypatch, keep):
+    """Alle Adapter außer `keep` auf EmptyAdapter setzen; Crawler/Threshold neutralisieren."""
+    for attr in ("DestatisAdapter", "BNetzAAdapter", "EIAAdapter", "FREDAdapter",
+                 "FAOAdapter", "TankerkoenigAdapter", "EurostatAdapter",
+                 "WarningIndicatorsAdapter"):
+        if attr != keep:
+            monkeypatch.setattr(main, attr, EmptyAdapter)
+    monkeypatch.setattr(main, "RSSCrawler", EmptyCrawler)
+    monkeypatch.setattr(main, "fetch_indicator_thresholds", lambda _id: None)
+
+
+def test_adapter_source_error_emits_single_c4_shadow_log(monkeypatch, capsys):
+    """Ein Adapter-Quellfehler für einen bekannten Indikator erzeugt genau ein
+    C4-Shadow-JSON — zusätzlich zum unveränderten Fallback-Item."""
+    fallback = _lagebild_item()  # Fallback OHNE indicator_id (wie Destatis/FRED/EIA/FAO)
+
+    class FakeFailingAdapter:
+        name = "Destatis"
+
+        def __init__(self):
+            self.source_errors = []
+
+        def fetch_latest(self):
+            self.source_errors.append({
+                "indicator_id": "wi-inflation-vpi-de",
+                "reason": "HTTP 401",
+                "source_url": "https://www.destatis.de/",
+                "source_stand": None,
+                "observed_at": None,
+                "raw_value": None,
+                "keep_previous": True,
+            })
+            return [fallback]
+
+    monkeypatch.setattr(main, "DestatisAdapter", FakeFailingAdapter)
+    _patch_other_adapters(monkeypatch, keep="DestatisAdapter")
+
+    inserted = []
+    monkeypatch.setattr(main, "insert_draft",
+                        lambda it, t: inserted.append((it, t)) or "draft-id")
+
+    asyncio.run(main.run_ingestion())
+
+    # Produktiver Pfad unverändert: Fallback-Item wird als lagebild_items inserted.
+    assert inserted == [(fallback, "lagebild_items")]
+
+    logs = _collect_shadow_lines(capsys)
+    assert len(logs) == 1
+    log = logs[0]
+    assert log["indicator_id"] == "wi-inflation-vpi-de"
+    assert log["gate_class"] == "C4"
+    assert log["would_action"] == "keep_previous_value"
+    assert "HTTP 401" in log["reason"]
+    assert log["raw_value"] is None
+    assert log["parsed_value"] is None
+
+
+def test_source_error_deduped_when_indicator_already_logged(monkeypatch, capsys):
+    """Hat ein Item (auch Fallback) für die indicator_id bereits einen Shadow-Log
+    erzeugt, darf der Quellfehler-Pfad KEINEN zweiten Log ausgeben (BNetzA-Schutz)."""
+    item = _bnetza_item()  # trägt indicator_id wi-gasspeicher-fuellstand → Item-Shadow-Log
+
+    class FakeDoubleAdapter:
+        name = "BNetzA"
+
+        def __init__(self):
+            self.source_errors = []
+
+        def fetch_latest(self):
+            # Meldet zusätzlich einen Quellfehler für DENSELBEN Indikator.
+            self.source_errors.append({
+                "indicator_id": "wi-gasspeicher-fuellstand",
+                "reason": "HTTP 500",
+                "source_url": "https://agsi.gie.eu/",
+                "source_stand": None, "observed_at": None,
+                "raw_value": None, "keep_previous": True,
+            })
+            return [item]
+
+    monkeypatch.setattr(main, "BNetzAAdapter", FakeDoubleAdapter)
+    _patch_other_adapters(monkeypatch, keep="BNetzAAdapter")
+    monkeypatch.setattr(main, "insert_draft", lambda it, t: "id")
+
+    asyncio.run(main.run_ingestion())
+
+    logs = _collect_shadow_lines(capsys)
+    assert len(logs) == 1                       # genau ein Log, kein Doppel
+    assert logs[0]["gate_class"] == "ok"        # der Item-Log gewinnt, kein C4
+
+
+def test_source_error_without_indicator_id_emits_no_log(monkeypatch, capsys):
+    """Quellfehler ohne zuordenbaren Indikator → kein Log, keine erfundene ID."""
+
+    class FakeNoIndicatorAdapter:
+        name = "Destatis"
+
+        def __init__(self):
+            self.source_errors = []
+
+        def fetch_latest(self):
+            self.source_errors.append({
+                "indicator_id": None, "reason": "HTTP 503",
+                "source_url": "https://x/", "source_stand": None,
+                "observed_at": None, "raw_value": None, "keep_previous": True,
+            })
+            return []
+
+    monkeypatch.setattr(main, "DestatisAdapter", FakeNoIndicatorAdapter)
+    _patch_other_adapters(monkeypatch, keep="DestatisAdapter")
+    monkeypatch.setattr(main, "insert_draft", lambda it, t: "id")
+
+    asyncio.run(main.run_ingestion())
+
+    assert _collect_shadow_lines(capsys) == []

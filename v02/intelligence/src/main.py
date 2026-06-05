@@ -5,6 +5,7 @@ import os
 import signal
 import sys
 from datetime import datetime
+from types import SimpleNamespace
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -22,7 +23,7 @@ from .crawler.rss_crawler import RSSCrawler
 from .extractors.llm_extractor import extract_with_llm
 from .db import insert_draft, set_dry_run, fetch_indicator_thresholds
 from .validation import validate_draft
-from .gate import evaluate_plausibility, build_shadow_log
+from .gate import evaluate_plausibility, source_error_verdict, build_shadow_log
 from .plausibility_rules import get_rules
 
 
@@ -92,6 +93,7 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
         print()
 
     items = []
+    source_errors = []
     if allow_fetch:
         for adapter in adapters:
             try:
@@ -100,6 +102,9 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
                 print(f"  [{adapter.name}] {len(result)} Items")
             except Exception as e:
                 print(f"  [{adapter.name}] FEHLER: {e}")
+            # W6a.1: gemeldete Quell-/Fetch-/Parsingfehler einsammeln (rein
+            # additiv; getattr-defensiv für Adapter/Fakes ohne das Attribut).
+            source_errors.extend(getattr(adapter, "source_errors", []))
 
         crawler = RSSCrawler()
         try:
@@ -122,6 +127,7 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
 
     saved = 0
     invalid = 0
+    shadow_logged_ids = set()
     for item in items:
         item_type = resolve_item_type(item)
 
@@ -149,10 +155,38 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
                 scale_direction=(thresholds or {}).get("scale_direction", "higher_is_worse"),
             )
             print(json.dumps(build_shadow_log(item, verdict), ensure_ascii=False))
+            shadow_logged_ids.add(item.indicator_id)
 
         draft_id = insert_draft(item, item_type)
         if draft_id:
             saved += 1
+
+    # --- W6a.1 C4-Quellfehler-Sichtbarkeit (SHADOW / Log-only) ----------------
+    # Für bekannte Indikatoren, deren Adapter einen Quell-/Fetch-/Parsingfehler
+    # gemeldet hat und die KEIN Item (auch kein Fallback) durch den Shadow-Block
+    # geschickt haben, zusätzlich ein C4-Shadow-Log. KEIN Eingriff in den Live-/
+    # DB-Pfad: kein Block, kein Stale, kein current_value-Halten, kein Write.
+    # Dedup über shadow_logged_ids verhindert Doppel-Logs (z.B. BNetzA-Fallback).
+    for err in source_errors:
+        ind = err.get("indicator_id")
+        if not ind or ind in shadow_logged_ids:
+            continue
+        verdict = source_error_verdict(
+            ind,
+            err.get("reason", "Quellenfehler"),
+            raw_value=err.get("raw_value"),
+            keep_previous=err.get("keep_previous", True),
+        )
+        shadow_logged_ids.add(ind)
+        # build_shadow_log ist duck-typed (liest Attribute via getattr) — ein
+        # leichtes Shim trägt die Quell-Metadaten aus dem Fehler-Eintrag.
+        shim = SimpleNamespace(
+            source_url=err.get("source_url"),
+            source_stand_label=err.get("source_stand"),
+            source_stand_date=None,
+            current_value_date=err.get("observed_at"),
+        )
+        print(json.dumps(build_shadow_log(shim, verdict), ensure_ascii=False))
 
     if invalid:
         print(f"⚠ {invalid}/{len(items)} Items mit Kanon-Fehlern (nicht blockiert, Review im Editorial-Gate).")
