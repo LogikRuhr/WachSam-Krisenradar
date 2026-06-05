@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { computeVerdict, isRising, personalNote, trendLabel, bereichLabel } from "./personalization";
+import { computeVerdict, isRising, personalNote, trendLabel, bereichLabel, aufwandLabel, systemLabel } from "./personalization";
 
 // --- computeVerdict ----------------------------------------------------------
 
@@ -39,6 +39,20 @@ assert.equal(isRising("gleichbleibend"), false);
 assert.equal(bereichLabel("mobilitaet"), "Mobilität");
 assert.equal(trendLabel("steigend"), "steigt");
 assert.equal(trendLabel("gleichbleibend"), "stabil");
+
+// --- aufwandLabel: deutsche Anzeige statt roher Slug ---------------------------
+
+assert.equal(aufwandLabel("niedrig"), "Niedrig", "niedrig → Niedrig (kein roher Slug in der UI)");
+assert.equal(aufwandLabel("mittel"), "Mittel");
+assert.equal(aufwandLabel("hoch"), "Hoch");
+assert.equal(aufwandLabel("sonstiges"), "sonstiges", "unbekannter Aufwand → unverändert, nie leer");
+
+// --- systemLabel: eine Quelle der Wahrheit für Systembereiche ------------------
+
+assert.equal(systemLabel("mobilitaet"), "Mobilität", "systemLabel deckt Bereiche identisch zu bereichLabel ab");
+assert.equal(systemLabel("energie"), "Energie");
+assert.equal(systemLabel("gesellschaft"), "Gesellschaft");
+assert.equal(systemLabel("nicht-vorhanden"), "nicht-vorhanden", "unbekanntes System → Roh-Wert als Fallback, kein Crash");
 
 // --- personalNote: heizart differenziert NUR bei Energie ---------------------
 

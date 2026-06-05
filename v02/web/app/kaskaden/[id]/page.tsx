@@ -7,6 +7,7 @@ import { DbNotice } from "@/components/DbNotice";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { SourcePills } from "@/components/SourcePill";
 import { getCascadeById, getItemSources } from "@/lib/public-data";
+import { systemLabel } from "@/lib/personalization";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -20,23 +21,6 @@ function textFromRecord(value: Record<string, unknown> | null | undefined, key: 
 function stringListFromRecord(value: Record<string, unknown> | null | undefined, key: string) {
   const raw = value?.[key];
   return Array.isArray(raw) ? raw.filter((entry): entry is string => typeof entry === "string") : [];
-}
-
-const systemLabels: Record<string, string> = {
-  arbeit: "Arbeit",
-  energie: "Energie",
-  finanzen: "Finanzen",
-  gesellschaft: "Gesellschaft",
-  gesundheit: "Gesundheit",
-  industrie: "Industrie",
-  infrastruktur: "Infrastruktur",
-  lebensmittel: "Lebensmittel",
-  logistik: "Logistik",
-  mobilitaet: "Mobilität",
-};
-
-function systemLabel(system: string) {
-  return systemLabels[system] ?? system;
 }
 
 function DeutscheConfidenceBadge({ value }: { value?: string | null }) {

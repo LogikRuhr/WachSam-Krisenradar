@@ -13,6 +13,8 @@ const SEVERITY_RANK: Record<string, number> = {
 const AUFWAND_RANK: Record<string, number> = { niedrig: 1, mittel: 2, hoch: 3 };
 const CONFIDENCE_RANK: Record<string, number> = { niedrig: 1, mittel: 2, hoch: 3 };
 
+const AUFWAND_LABEL: Record<string, string> = { niedrig: "Niedrig", mittel: "Mittel", hoch: "Hoch" };
+
 export const BEREICH_LABEL: Record<string, string> = {
   energie: "Energie",
   lebensmittel: "Lebensmittel",
@@ -34,6 +36,11 @@ export function aufwandRank(aufwand: string): number {
   return AUFWAND_RANK[aufwand] ?? 99;
 }
 
+/** Deutsche Anzeige für den Aufwand-Slug; unbekannte Werte bleiben unverändert (nie leer). */
+export function aufwandLabel(aufwand: string): string {
+  return AUFWAND_LABEL[aufwand] ?? aufwand;
+}
+
 export function confidenceRank(confidence: string): number {
   return CONFIDENCE_RANK[confidence] ?? 0;
 }
@@ -44,6 +51,14 @@ export function isRising(trend: string): boolean {
 
 export function bereichLabel(bereich: string): string {
   return BEREICH_LABEL[bereich] ?? bereich;
+}
+
+/**
+ * Label für Systembereiche in Wirkungsketten. Bewusst dieselbe Quelle wie
+ * bereichLabel, damit Karten und Kaskaden nicht auseinanderdriften.
+ */
+export function systemLabel(system: string): string {
+  return bereichLabel(system);
 }
 
 export function trendLabel(trend: string): string {
