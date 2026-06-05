@@ -17,6 +17,8 @@ build/
 coverage/
 __pycache__/
 *.pyc
+test-results/
+playwright-report/
 
 # Local tooling
 .DS_Store

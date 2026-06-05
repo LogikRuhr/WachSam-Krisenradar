@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { auth, signOut } from "@/lib/auth";
+import { auth, isAuthRuntimeConfigured, signOut } from "@/lib/auth";
 
 const tabs = [
   ["/lagebild", "Lage"],
@@ -11,7 +11,7 @@ const tabs = [
 ];
 
 export async function TopNav() {
-  const session = await auth();
+  const session = isAuthRuntimeConfigured() ? await auth() : null;
   const isSignedIn = !!session?.user;
 
   async function logoutAction() {
