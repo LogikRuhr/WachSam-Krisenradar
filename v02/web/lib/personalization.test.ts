@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { computeVerdict, isRising, personalNote, trendLabel, bereichLabel, aufwandLabel, systemLabel, confidenceLabel, confidenceExplain } from "./personalization";
+import { computeVerdict, isRising, personalNote, modusLead, trendLabel, bereichLabel, aufwandLabel, systemLabel, confidenceLabel, confidenceExplain, profileCompleteness, prioritizeActionsForProfile } from "./personalization";
 
 // --- computeVerdict ----------------------------------------------------------
 
@@ -81,5 +81,64 @@ assert.ok(finanzen && finanzen.includes("Single"), "Nicht-Energie nutzt Modus, n
 // Ohne Profil → keine Notiz
 assert.equal(personalNote("energie", { modus: null, heizart: null }), null, "ohne Profil keine Notiz");
 assert.equal(personalNote("energie", { modus: null, heizart: "unbekannt" }), null, "heizart unbekannt + kein Modus → null");
+
+// --- personalNote: Haushaltsbereiche differenzieren (Karten nicht identisch) ---
+
+// Drei verschiedene Nicht-Energie-Haushaltsbereiche, gleicher Modus → drei
+// verschiedene Notizen statt dreimal demselben generischen Modus-Satz.
+const lmFam = personalNote("lebensmittel", { modus: "familie", heizart: null });
+const moFam = personalNote("mobilitaet", { modus: "familie", heizart: null });
+const fiFam = personalNote("finanzen", { modus: "familie", heizart: null });
+assert.ok(lmFam && lmFam.includes("Lebensmittel"), "Lebensmittel-Bereich hat eigene Notiz");
+assert.ok(moFam && /Mobilität|Wege|Sprit/.test(moFam), "Mobilität-Bereich hat eigene Notiz");
+assert.ok(fiFam && /Finanz/.test(fiFam), "Finanzen-Bereich hat eigene Notiz");
+assert.notEqual(lmFam, moFam, "verschiedene Bereiche → verschiedene Notizen");
+assert.notEqual(lmFam, fiFam, "Lebensmittel ≠ Finanzen");
+assert.notEqual(moFam, fiFam, "Mobilität ≠ Finanzen");
+
+// Gleicher Bereich, anderer Modus → andere Betonung (nie dieselbe Notiz).
+const lmSingle = personalNote("lebensmittel", { modus: "single", heizart: null });
+assert.ok(lmSingle && lmSingle.includes("Lebensmittel"), "Single-Lebensmittel-Notiz nennt den Bereich");
+assert.notEqual(lmFam, lmSingle, "gleicher Bereich, anderer Modus → andere Betonung");
+
+// Nicht abgedeckter Bereich → ruhiger Fallback auf den generischen Modus-Lead.
+assert.equal(
+  personalNote("gesellschaft", { modus: "rentner", heizart: null }),
+  modusLead("rentner"),
+  "nicht abgedeckter Bereich → generischer Modus-Lead",
+);
+
+// Bereichsnotiz nur mit gesetztem Modus; ohne Profil weiterhin null.
+assert.equal(personalNote("lebensmittel", { modus: null, heizart: null }), null, "Bereichsnotiz nur mit Modus");
+
+// --- profileCompleteness: ehrliche Vollständigkeit ----------------------------
+
+const voll = profileCompleteness({ modus: "familie", plz: "44787", heizart: "gas" });
+assert.equal(voll.filled, 3, "volles Profil → 3/3");
+assert.equal(voll.total, 3);
+
+const leer = profileCompleteness({ modus: null, plz: null, heizart: null });
+assert.equal(leer.filled, 0, "leeres Profil → 0/3");
+
+const teil = profileCompleteness({ modus: "single", plz: "   ", heizart: "unbekannt" });
+assert.equal(teil.filled, 1, "leere PLZ und heizart 'unbekannt' zählen nicht als gesetzt");
+assert.equal(teil.fields.find((f) => f.key === "modus")?.set, true, "modus gesetzt");
+assert.equal(teil.fields.find((f) => f.key === "heizart")?.set, false, "heizart 'unbekannt' = nicht gesetzt");
+
+// --- prioritizeActionsForProfile: relevant zuerst, dann niedriger Aufwand ------
+
+const acts = [
+  { id: "a", aufwand: "hoch", bezugZuBereich: ["energie"] },
+  { id: "b", aufwand: "niedrig", bezugZuBereich: ["finanzen"] },
+  { id: "c", aufwand: "niedrig", bezugZuBereich: ["energie"] },
+];
+const mitHeiz = prioritizeActionsForProfile(acts, { heizart: "gas" });
+assert.deepEqual(mitHeiz.map((a) => a.id), ["c", "a", "b"], "energie-Bezug zuerst (niedrig vor hoch), dann Rest");
+
+const ohneHeiz = prioritizeActionsForProfile(acts, { heizart: "unbekannt" });
+assert.deepEqual(ohneHeiz.map((a) => a.id), ["b", "c", "a"], "ohne Heizart: nur nach Aufwand, stabil");
+
+assert.equal(prioritizeActionsForProfile(acts, { heizart: "gas" }, 2).length, 2, "limit greift");
+assert.deepEqual(prioritizeActionsForProfile([], { heizart: "gas" }), [], "leere Liste → leer, kein Crash");
 
 console.log("personalization.test.ts: PASS");
