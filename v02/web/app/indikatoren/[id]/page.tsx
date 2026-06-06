@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DbNotice } from "@/components/DbNotice";
 import { InjectionTracker } from "@/components/InjectionTracker";
+import { MethodikHinweis } from "@/components/MethodikHinweis";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { SourcePills } from "@/components/SourcePill";
@@ -128,6 +129,8 @@ export default async function IndicatorDetailPage({ params }: PageProps) {
               <p>Statische Schwellenwert-Übersicht — kein Live-Wert.</p>
             </section>
           ) : null}
+
+          <MethodikHinweis variant="indikator" />
         </section>
 
         <aside className="detail-aside" aria-label="Deutschland-Relevanz und Quellen">

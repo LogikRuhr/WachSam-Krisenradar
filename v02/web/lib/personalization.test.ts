@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { computeVerdict, isRising, personalNote, trendLabel, bereichLabel, aufwandLabel, systemLabel } from "./personalization";
+import { computeVerdict, isRising, personalNote, trendLabel, bereichLabel, aufwandLabel, systemLabel, confidenceLabel, confidenceExplain } from "./personalization";
 
 // --- computeVerdict ----------------------------------------------------------
 
@@ -53,6 +53,17 @@ assert.equal(systemLabel("mobilitaet"), "Mobilität", "systemLabel deckt Bereich
 assert.equal(systemLabel("energie"), "Energie");
 assert.equal(systemLabel("gesellschaft"), "Gesellschaft");
 assert.equal(systemLabel("nicht-vorhanden"), "nicht-vorhanden", "unbekanntes System → Roh-Wert als Fallback, kein Crash");
+
+// --- confidence: zentrales Label + verständliche Erklärung pro Stufe -----------
+
+assert.equal(confidenceLabel("niedrig"), "Einschätzungssicherheit: niedrig");
+assert.equal(confidenceLabel("hoch"), "Einschätzungssicherheit: hoch");
+assert.equal(confidenceLabel("sonstig"), "Einschätzungssicherheit: sonstig", "unbekannte Stufe → mit Roh-Wert, nie leer");
+
+assert.ok(confidenceExplain("niedrig").length > 0, "niedrig hat einen Erklärtext");
+assert.ok(confidenceExplain("niedrig").includes("Quellen"), "Erklärung nennt die Quellenlage");
+assert.notEqual(confidenceExplain("niedrig"), confidenceExplain("hoch"), "Stufen erklären sich unterschiedlich");
+assert.ok(confidenceExplain(null).length > 0, "null → generischer Erklärtext, kein Crash");
 
 // --- personalNote: heizart differenziert NUR bei Energie ---------------------
 
