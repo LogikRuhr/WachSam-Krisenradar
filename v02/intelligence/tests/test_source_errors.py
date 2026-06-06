@@ -83,6 +83,8 @@ def test_destatis_records_source_error_on_http_error(monkeypatch):
 
 def test_fred_records_source_error_on_http_error(monkeypatch):
     from src.adapters import fred
+    # Gültiger Key gesetzt: Test prüft bewusst den HTTP-Fehlerpfad, nicht den Key-Guard.
+    monkeypatch.setattr(fred.settings, "FRED_API_KEY", "test-key")
     monkeypatch.setattr(fred.requests, "get", lambda *a, **k: _FakeResp(status_code=400))
     adapter = fred.FREDAdapter()
 
@@ -93,6 +95,29 @@ def test_fred_records_source_error_on_http_error(monkeypatch):
     assert len(adapter.source_errors) == 1
     assert adapter.source_errors[0]["indicator_id"] == "wi-gaspreis-europa"
     assert "400" in adapter.source_errors[0]["reason"]
+
+
+def test_fred_guards_missing_api_key(monkeypatch):
+    """Ohne FRED_API_KEY wird kein Request gemacht; stattdessen Quellfehler + Fallback."""
+    from src.adapters import fred
+    monkeypatch.setattr(fred.settings, "FRED_API_KEY", "")
+
+    def boom(*a, **k):
+        raise AssertionError("requests.get darf ohne FRED_API_KEY nicht aufgerufen werden")
+
+    monkeypatch.setattr(fred.requests, "get", boom)
+    adapter = fred.FREDAdapter()
+
+    items = adapter.fetch_latest()
+
+    # Produktiver Fallback unverändert: ein Item OHNE indicator_id.
+    assert len(items) == 1
+    assert items[0].indicator_id is None
+    # Genau ein Quellfehler, klassifiziert als fehlender Key.
+    assert len(adapter.source_errors) == 1
+    err = adapter.source_errors[0]
+    assert err["indicator_id"] == "wi-gaspreis-europa"
+    assert "api_key" in err["reason"].lower()
 
 
 def test_eia_records_source_error_on_http_error(monkeypatch):

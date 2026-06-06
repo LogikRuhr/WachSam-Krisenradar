@@ -275,6 +275,9 @@ def test_tankerkoenig_returns_empty_without_api_key(monkeypatch):
 
 def _mock_fred(monkeypatch, payload):
     """Hilfsfunktion: mockt requests.get für den FRED-Adapter."""
+    # Gültiger Key, damit der defensive Key-Guard durchlässt und der gemockte
+    # Pfad geprüft wird (nicht der api_key_missing-Fallback).
+    monkeypatch.setattr("src.adapters.fred.settings.FRED_API_KEY", "test-key")
     called = {}
 
     def fake_get(url, *args, **kwargs):
@@ -348,6 +351,8 @@ def test_fred_adapter_handles_all_dots(monkeypatch):
 
 def test_fred_adapter_returns_fallback_on_http_error(monkeypatch):
     """HTTP-Fehler → Fallback-Item, kein Crash, leere Liste wird NICHT zurückgegeben."""
+    # Gültiger Key gesetzt: Test prüft bewusst den HTTP-Fehlerpfad, nicht den Key-Guard.
+    monkeypatch.setattr("src.adapters.fred.settings.FRED_API_KEY", "test-key")
     response = MagicMock()
     response.status_code = 503
     monkeypatch.setattr("src.adapters.fred.requests.get", lambda *args, **kwargs: response)
@@ -360,6 +365,8 @@ def test_fred_adapter_returns_fallback_on_http_error(monkeypatch):
 
 def test_fred_adapter_returns_fallback_on_network_exception(monkeypatch):
     """Netzwerkfehler (Exception) → Fallback-Item, kein unkontrollierter Absturz."""
+    # Gültiger Key gesetzt: Test prüft bewusst den Netzwerk-Fehlerpfad, nicht den Key-Guard.
+    monkeypatch.setattr("src.adapters.fred.settings.FRED_API_KEY", "test-key")
     monkeypatch.setattr(
         "src.adapters.fred.requests.get",
         lambda *args, **kwargs: (_ for _ in ()).throw(ConnectionError("timeout")),

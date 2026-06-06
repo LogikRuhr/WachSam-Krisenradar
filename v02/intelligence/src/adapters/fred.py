@@ -27,6 +27,17 @@ class FREDAdapter(BaseAdapter):
 
         Fehlende Werte werden durch "." kodiert und übersprungen.
         """
+        # Defensiver Key-Guard: ohne API-Key gar nicht erst anfragen (vermeidet
+        # einen kaputten Request → unnötigen HTTP-Fehler) und den Fehlerzweig
+        # sauber als Quellfehler melden. Identisch zum EIA-Adapter.
+        if not settings.FRED_API_KEY:
+            self.log_error("FRED_API_KEY nicht gesetzt — Abruf übersprungen")
+            self.record_source_error(
+                "wi-gaspreis-europa", "api_key_missing",
+                source_url="https://fred.stlouisfed.org/series/PNGASEUUSDM",
+            )
+            return self._fallback()
+
         try:
             params = {
                 "series_id": self.SERIES_ID,

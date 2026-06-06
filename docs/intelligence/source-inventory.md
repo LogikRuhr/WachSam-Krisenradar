@@ -199,7 +199,7 @@ Umgesetzt nach Jean-Freigabe (Welle 2, Schritt 1) — minimal, ohne Fachlogik-Um
 
 ## 11. Adapter-Status & Datenqualität (Update 2026-06-06)
 
-Fokus: Datenquellen-Status sichtbarer machen + **eine** risikofreie Härtung (EIA-Key-Guard). **Kein** Active Gate, **keine** Migration, **kein** `source_health`, **kein** Secret berührt. W6b bleibt gesperrt.
+Fokus: Datenquellen-Status sichtbarer machen + zwei risikofreie, gleichartige Härtungen (**EIA- und FRED-Key-Guard**). **Kein** Active Gate, **keine** Migration, **kein** `source_health`, **kein** Secret berührt. W6b bleibt gesperrt.
 
 ### 11.1 Statusmatrix der aktiven Indikator-Quellen
 
@@ -208,7 +208,7 @@ Fokus: Datenquellen-Status sichtbarer machen + **eine** risikofreie Härtung (EI
 | `bnetza.py` (GIE AGSI+) | `wi-gasspeicher-fuellstand` | stabil | ✓ | Fallback liefert immer ein Item (maskiert „Erfolg" trotz Fehler) | ja |
 | `destatis.py` | `wi-inflation-vpi-de` | **defekt gemeldet (HTTP 404)** | ✓ | Fehlerzweig → Fallback + C4-Shadow greift; Live-Wert evtl. veraltet | ja |
 | `eia.py` | `wi-oel-brent` | stabil (**gehärtet**) | ✓ | NEU: Key-Guard — ohne `EIA_API_KEY` kein Request, sauberer Quellfehler | ja |
-| `fred.py` | `wi-gaspreis-europa` | **defekt gemeldet (HTTP 400)** | ✓ | Fehlerzweig → Fallback + C4-Shadow greift; sauberste Adapter-Impl. | ja |
+| `fred.py` | `wi-gaspreis-europa` | **defekt gemeldet (HTTP 400)**, jetzt **gehärtet** | ✓ | NEU: Key-Guard — ohne `FRED_API_KEY` kein Request, sauberer Quellfehler (entschärft Missing-Key-Fall). 400 **mit** Key = Endpoint/Parameter-Frage → Daten-Task. Sonst sauberste Adapter-Impl. | ja |
 | `fao.py` | `wi-fao-food-price-index` | stabil, **fragil** | ✓ | statische `sfvrsn`-URL + User-Agent-Spoofing → bricht bei FAO-Update | ja |
 | `tankerkoenig.py` | `wi-kraftstoffpreis-super-e10`, `-diesel` | stabil (live-verifiziert) | **✗ (bewusst)** | Tagesstichprobe über 16 PLZ, keine Historisierung beabsichtigt | **nein** |
 
@@ -217,7 +217,7 @@ Deaktiviert (nicht in `main.py`): `eurostat.py` (Stub — API gerufen + verworfe
 ### 11.2 Stabil / defekt / unvollständig
 
 - **Stabil & belastbar:** GIE (Gasspeicher), EIA (Brent, jetzt mit Guard), Tankerkönig (Sprit).
-- **Defekt gemeldet (HTTP-Fehler, Fallback + C4-Shadow greifen, Wert evtl. veraltet):** Destatis VPI (404), FRED Erdgas-EU (400). Reparatur = **separater Daten-Task** (Endpoint/Parameter/Key klären) — hier bewusst nicht berührt (kein Secret, keine API-Reparatur).
+- **Defekt gemeldet (HTTP-Fehler, Fallback + C4-Shadow greifen, Wert evtl. veraltet):** Destatis VPI (404), FRED Erdgas-EU (400). FRED hat jetzt zusätzlich einen Key-Guard (Missing-Key-Fall sauber abgefangen); die 400 **mit** gesetztem Key bleibt eine Endpoint/Parameter-Frage. Eigentliche Reparatur = **separater Daten-Task** (Endpoint/Parameter/Key klären) — hier bewusst nicht berührt (kein Secret, keine API-Reparatur).
 - **Fragil (kein Defekt, aber Bruchrisiko):** FAO (URL-/UA-Abhängigkeit).
 - **Unvollständig:** Tankerkönig ohne `previous_value` → C2-Delta-Anomalie für Spritpreise nicht prüfbar (bewusste Tagesstichprobe, kein Bug).
 - **Deaktiviert/Stub:** Eurostat, WarningIndicators.
@@ -236,14 +236,15 @@ W6b bleibt gesperrt. Unabhängig von der Freigabe fehlt für ein sinnvolles Scha
 ### 11.4 Risikofreie Härtung in diesem PR
 
 - **EIA-Key-Guard** (`eia.py`, `fetch_brent`): ohne `EIA_API_KEY` wird **gar nicht** angefragt; der Fehlerzweig meldet `api_key_missing` als Quellfehler (W6a.1-C4) und liefert den **bestehenden** Fallback. Kein Secret berührt, keine Änderung am Erfolgspfad.
-- **Tests:** neuer `test_eia_guards_missing_api_key`; bestehender HTTP-Fehlertest auf gültigen Key umgestellt (prüft weiter den 403-Pfad). Gemockte Suite: **98 passed**.
+- **FRED-Key-Guard** (`fred.py`, `fetch_gas_price`): identisches Muster — ohne `FRED_API_KEY` kein Request, `api_key_missing`-Quellfehler + bestehender Fallback. Verhindert einen kaputten Request (Missing-Key → unnötiger HTTP-Fehler). Kein Secret, kein Eingriff in den Erfolgspfad.
+- **Tests:** neue `test_eia_guards_missing_api_key` und `test_fred_guards_missing_api_key`; alle bestehenden FRED-/EIA-Mock-Tests auf gültigen Key umgestellt (prüfen weiter ihren Mock-Pfad — die zuvor protokollierte CI-Falle „gemockter Test fällt ohne Key in den Guard-Fallback" ist damit ausgeschlossen). Verifiziert: FRED/EIA/source-error-Gruppe **16 passed**; volle gemockte Suite **112 passed, 5 skipped** (DB-Integration; 5 Live-Adapter-Tests deselektiert).
 
 ### 11.5 Empfehlungen (bewusst NICHT in diesem PR umgesetzt)
 
 - **CI-Härtung:** die 5 Live-API-Tests (`test_adapters.py`, `test_integration.py`) mit `@pytest.mark.live` markieren und aus der PR-CI nehmen (separater, nicht-blockierender Lauf) → entschärft die `intelligence-verify`-Flakiness. *(eigener Test-/CI-PR)*
 - **Public-Transparenz** (risikoarm, vorhandene Felder, **kein Alarm**): `current_value_date`/`last_ingested_at` je Indikator als ruhiges „Stand"-Label sichtbarer; optional dezenter Trend-Hinweis aus `current_value` vs. `previous_value`. *(eigener kleiner Web-PR — Scope-Trennung, nicht hier)*
 - **FAO-Robustheit:** statische `sfvrsn`-URL gegen stabilere Bezugsquelle/Parameter prüfen.
-- **Destatis/FRED-Reparatur:** Endpoint/Parameter/Key in separatem Daten-Task klären (Risikogate: ggf. Keys/Credentials).
+- **Destatis/FRED-Reparatur:** Key-Guard ist erledigt; offen bleibt die eigentliche Endpoint/Parameter-Klärung (FRED 400 mit Key, Destatis 404) in separatem Daten-Task (Risikogate: ggf. Keys/Credentials).
 
 **Bewusst nicht angefasst (Risikogate/Freigabe):** `source_health`-Tabelle, UI-Anomaly-Badge, W6b/Active Gate, Tankerkönig-Historisierung, Destatis/FRED-API-Reparatur mit Secrets.
 
