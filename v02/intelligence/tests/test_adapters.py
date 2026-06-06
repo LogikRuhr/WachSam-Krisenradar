@@ -113,6 +113,9 @@ def test_bnetza_adapter_parses_gie_data_envelope(monkeypatch):
 
 
 def test_eia_adapter_maps_brent_to_indicator_live_value(monkeypatch):
+    # Gültiger Key gesetzt, damit der defensive Key-Guard durchlässt und der
+    # gemockte Erfolgspfad geprüft wird (nicht der api_key_missing-Fallback).
+    monkeypatch.setattr("src.adapters.eia.settings.EIA_API_KEY", "test-key")
     response = MagicMock()
     response.status_code = 200
     response.json.return_value = {
