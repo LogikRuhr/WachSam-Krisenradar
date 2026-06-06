@@ -33,6 +33,7 @@ def _validate_items(items):
         assert item.confidence_suggestion in ("niedrig", "mittel", "hoch")
 
 
+@pytest.mark.live
 def test_destatis_adapter():
     adapter = DestatisAdapter()
     assert adapter.name == "Destatis"
@@ -82,6 +83,7 @@ def test_destatis_adapter_maps_vpi_to_indicator_live_value(monkeypatch):
     assert item.previous_value_date == "2026-03"
 
 
+@pytest.mark.live
 def test_bnetza_adapter():
     adapter = BNetzAAdapter()
     assert adapter.name == "BNetzA"
@@ -148,6 +150,7 @@ def test_eia_adapter_maps_brent_to_indicator_live_value(monkeypatch):
     assert item.previous_value_date == "2026-05-23"
 
 
+@pytest.mark.live
 def test_fao_adapter():
     adapter = FAOAdapter()
     assert adapter.name == "FAO"
@@ -182,6 +185,7 @@ def test_fao_adapter_maps_food_price_index_to_indicator_live_value(monkeypatch):
     assert item.previous_value_date == "2026-03"
 
 
+@pytest.mark.live
 def test_eurostat_adapter():
     adapter = EurostatAdapter()
     assert adapter.name == "Eurostat"
@@ -189,6 +193,7 @@ def test_eurostat_adapter():
     _validate_items(items)
 
 
+@pytest.mark.live
 def test_warning_indicators_adapter():
     adapter = WarningIndicatorsAdapter()
     assert adapter.name == "WarningIndicators"

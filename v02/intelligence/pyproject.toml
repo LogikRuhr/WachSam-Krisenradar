@@ -16,3 +16,13 @@ dependencies = [
 [build-system]
 requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Live-Tests berühren echte externe APIs und sind in CI flaky (Timeouts).
+# Standardmäßig ausgeschlossen ("not live"); die gemockte Suite läuft so stabil.
+# Manueller Live-Lauf: `python -m pytest -m live` (überschreibt das Default-Filter).
+addopts = "-m 'not live'"
+markers = [
+    "live: berührt echte externe APIs — nicht in der PR-CI, nur manuell (`pytest -m live`)",
+]
