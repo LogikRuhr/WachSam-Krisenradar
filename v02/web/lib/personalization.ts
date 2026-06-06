@@ -162,3 +162,48 @@ export function personalNote(
   }
   return modusLead(profile.modus);
 }
+
+// --- Member-Bereich: Profilstatus & Relevanz ---------------------------------
+
+export type ProfileField = { key: "modus" | "plz" | "heizart"; label: string; set: boolean };
+export type ProfileCompleteness = { filled: number; total: number; fields: ProfileField[] };
+
+/**
+ * Ehrliche Vollständigkeit des Haushaltsprofils. "unbekannt"/leer zählt nicht als
+ * gesetzt — damit der Member-Bereich ruhig erklären kann, was noch fehlt.
+ */
+export function profileCompleteness(profile: {
+  modus: HouseholdModus | null;
+  plz: string | null;
+  heizart: HouseholdHeizart | null;
+}): ProfileCompleteness {
+  const fields: ProfileField[] = [
+    { key: "modus", label: "Haushaltsmodus", set: profile.modus != null },
+    { key: "plz", label: "Postleitzahl", set: profile.plz != null && profile.plz.trim() !== "" },
+    { key: "heizart", label: "Heizart", set: profile.heizart != null && profile.heizart !== "unbekannt" },
+  ];
+  return { filled: fields.filter((field) => field.set).length, total: fields.length, fields };
+}
+
+/** Bereiche, die für dieses Profil besonders relevant sind. Bewusst eng gehalten. */
+export function profileRelevantBereiche(profile: { heizart: HouseholdHeizart | null }): string[] {
+  if (profile.heizart && profile.heizart !== "unbekannt") return ["energie"];
+  return [];
+}
+
+/**
+ * Ruhige Sortierung von Maßnahmen nach Profil: profil-relevante Bereiche zuerst,
+ * dann niedrigerer Aufwand. Reine Reihenfolge, kein Urteil und keine Filterung von Fakten.
+ */
+export function prioritizeActionsForProfile<T extends { aufwand: string; bezugZuBereich: string[] }>(
+  actions: T[],
+  profile: { heizart: HouseholdHeizart | null },
+  limit?: number,
+): T[] {
+  const relevant = new Set(profileRelevantBereiche(profile));
+  const relevanceScore = (action: T) => (action.bezugZuBereich.some((bereich) => relevant.has(bereich)) ? 0 : 1);
+  const sorted = [...actions].sort(
+    (a, b) => relevanceScore(a) - relevanceScore(b) || aufwandRank(a.aufwand) - aufwandRank(b.aufwand),
+  );
+  return limit != null ? sorted.slice(0, limit) : sorted;
+}
