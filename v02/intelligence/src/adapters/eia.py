@@ -20,6 +20,16 @@ class EIAAdapter(BaseAdapter):
         self.source_class = "wirtschaftsinstitut"
 
     def fetch_brent(self) -> List[IngestionItem]:
+        # Defensiver Key-Guard: ohne API-Key gar nicht erst anfragen (vermeidet
+        # unnötige 403-Last) und den Fehlerzweig sauber als Quellfehler melden.
+        if not settings.EIA_API_KEY:
+            self.log_error("EIA_API_KEY nicht gesetzt — Abruf übersprungen")
+            self.record_source_error(
+                "wi-oel-brent", "api_key_missing",
+                source_url="https://www.eia.gov/dnav/pet/hist/rbrted.htm",
+            )
+            return self._fallback()
+
         try:
             params = {
                 "api_key": settings.EIA_API_KEY,

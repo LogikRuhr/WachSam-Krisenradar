@@ -1,6 +1,6 @@
 # WachSam — Source- & Python-Inventur (Welle 1)
 
-**Stand:** 2026-06-03 · **Methode:** read-only Bestandsaufnahme (kein DB-Zugriff, keine externen Crawls, keine Writes) · **Verifiziert:** kritische Befunde (Indikator-Publish-Pfad, Public-UI-Gate) gegen den realen Code geprüft, nicht nur referenziert.
+**Stand:** 2026-06-06 (Status-Update + EIA-Härtung in §11; Basis-Inventur 2026-06-03) · **Methode:** read-only Bestandsaufnahme (kein DB-Zugriff, keine externen Crawls, keine Writes) · **Verifiziert:** kritische Befunde (Indikator-Publish-Pfad, Public-UI-Gate) gegen den realen Code geprüft, nicht nur referenziert.
 
 > Zweck dieses Dokuments: vollständige Sichtbarkeit aller bestehenden Datenbeschaffungs-, Ingestion-, Adapter-, Analyse- und Quellen-Bausteine, **bevor** ein Fact-to-Impact-Layer geplant wird. Bestehende Skripte sind potenzielle Source-of-Truth-Ingestion, keine Altlast.
 
@@ -30,7 +30,7 @@ Legende: DB-Write `J/N/~` · Ext-API `J/N` · Secret `J/N` (Variablenname) · Te
 | 5 | `src/adapters/base.py` | Basisklasse | ABC `BaseAdapter.fetch_latest()`, `create_item`, `log_error` | – | – | – | N | N | N | – | indirekt | aktiv | Kein erzwungener Timeout/Retry/Stale-on-error im Base | Resilienz-Contract in Base hochziehen |
 | 6 | `src/adapters/bnetza.py` | Adapter | Gasspeicher-Füllstand DE | GIE AGSI+ `agsi.gie.eu/api/data/de` | `full` % + Vortag | `indicators` (`wi-gasspeicher-fuellstand`) | J | J | ~ (`GIE_API_KEY`, optional) | 2×/Tag | J (1 Live + 1 gemockt) | **aktiv** | Live-Test ungemockt; Fallback liefert immer Item → „Erfolg" trotz Fehler | behalten, Live-Test mocken |
 | 7 | `src/adapters/destatis.py` | Adapter | VPI / Inflation YoY | GENESIS REST 2020, Tab. 61111-0002 | YoY-Inflation + Vormonat | `indicators` (`wi-inflation-vpi-de`) | J | J | ~ (`DESTATIS_USERNAME/PASSWORD`, `GAST`-Fallback) | 2×/Tag | J (1 Live + gemockt) | **aktiv** | Credentials als Klartext-Header (GENESIS-Konvention); Live-Test ungemockt | behalten, Live-Test mocken |
-| 8 | `src/adapters/eia.py` | Adapter | Brent Crude Spot | EIA OpenData v2 `PET.RBRTE.D` | Brent USD/bbl + Vortag | `indicators` (`wi-oel-brent`) | J | J | J (`EIA_API_KEY`) | 2×/Tag | J (gemockt) | **aktiv** | Kein Key-Guard vor Call (Z.30) → unnötiger 403-Request | Key-Guard ergänzen |
+| 8 | `src/adapters/eia.py` | Adapter | Brent Crude Spot | EIA OpenData v2 `PET.RBRTE.D` | Brent USD/bbl + Vortag | `indicators` (`wi-oel-brent`) | J | J | J (`EIA_API_KEY`) | 2×/Tag | J (gemockt, +Key-Guard-Test) | **aktiv** | Key-Guard ✓ (2026-06-06, §11.4): ohne Key kein Request, sauberer Quellfehler | erledigt |
 | 9 | `src/adapters/fred.py` | Adapter | Erdgaspreis Europa | FRED `PNGASEUUSDM` | Gas USD/MMBtu, 2 Obs | `indicators` (`wi-gaspreis-europa`) | J | J | J (`FRED_API_KEY`) | 2×/Tag | J (5 Tests, gemockt) | **aktiv** | – (sauberste Implementierung) | behalten als Referenz-Pattern |
 | 10 | `src/adapters/fao.py` | Adapter | FAO Food Price Index | FAO CSV-Download (statische Doc-URL) | Index + Vormonat | `indicators` (`wi-fao-food-price-index`) | J | J | N | 2×/Tag | J (1 Live + gemockt) | **aktiv** | User-Agent-Spoofing (`Mozilla/5.0`, 403-Umgehung); fragile `sfvrsn`-URL bricht bei FAO-Update; `pandas`-Abhängigkeit | behalten, URL/Quelle robuster lösen |
 | 11 | `src/adapters/tankerkoenig.py` | Adapter | Spritpreise E10/Diesel | Tankerkönig MTS-K `list.php` | Mittel über 16 PLZ | `indicators` (`wi-kraftstoffpreis-super-e10`, `-diesel`) | J | J | J (`TANKERKOENIG_API_KEY`, Key-Guard ✓) | 2×/Tag | J (6 Tests, gemockt) | **aktiv** (live-verifiziert 06/01) | 16 Calls + `sleep(2)` ≈ 30s/Lauf; Stichprobe ≠ nat. Mittel (ehrlich dokumentiert) | behalten |
@@ -194,4 +194,56 @@ Umgesetzt nach Jean-Freigabe (Welle 2, Schritt 1) — minimal, ohne Fachlogik-Um
 | `v02/db/scripts/seed.ts` (TS) | **nein** | separates manuelles Seed-Skript, nicht Teil dieses Schutzes |
 
 **Restrisiken (offen):** `--allow-fetch` löst echte read-only GETs aus; RSS ohne Timeout; die 5 Live-API-Tests in `test_adapters.py` + `test_integration.py` rufen in CI reale Endpunkte. Verifiziert: `pytest` (gemockte Suite) **43 passed**; Dry-Run-Smoke-Test ohne DB/Netz erfolgreich.
+
+---
+
+## 11. Adapter-Status & Datenqualität (Update 2026-06-06)
+
+Fokus: Datenquellen-Status sichtbarer machen + **eine** risikofreie Härtung (EIA-Key-Guard). **Kein** Active Gate, **keine** Migration, **kein** `source_health`, **kein** Secret berührt. W6b bleibt gesperrt.
+
+### 11.1 Statusmatrix der aktiven Indikator-Quellen
+
+| Adapter | Indikator(en) | Zustand | previous_value | Hinweis | C2-Delta prüfbar? |
+|---------|---------------|---------|----------------|---------|-------------------|
+| `bnetza.py` (GIE AGSI+) | `wi-gasspeicher-fuellstand` | stabil | ✓ | Fallback liefert immer ein Item (maskiert „Erfolg" trotz Fehler) | ja |
+| `destatis.py` | `wi-inflation-vpi-de` | **defekt gemeldet (HTTP 404)** | ✓ | Fehlerzweig → Fallback + C4-Shadow greift; Live-Wert evtl. veraltet | ja |
+| `eia.py` | `wi-oel-brent` | stabil (**gehärtet**) | ✓ | NEU: Key-Guard — ohne `EIA_API_KEY` kein Request, sauberer Quellfehler | ja |
+| `fred.py` | `wi-gaspreis-europa` | **defekt gemeldet (HTTP 400)** | ✓ | Fehlerzweig → Fallback + C4-Shadow greift; sauberste Adapter-Impl. | ja |
+| `fao.py` | `wi-fao-food-price-index` | stabil, **fragil** | ✓ | statische `sfvrsn`-URL + User-Agent-Spoofing → bricht bei FAO-Update | ja |
+| `tankerkoenig.py` | `wi-kraftstoffpreis-super-e10`, `-diesel` | stabil (live-verifiziert) | **✗ (bewusst)** | Tagesstichprobe über 16 PLZ, keine Historisierung beabsichtigt | **nein** |
+
+Deaktiviert (nicht in `main.py`): `eurostat.py` (Stub — API gerufen + verworfen) · `warning_indicators.py` (redundant zu `eia.py`). Imports bleiben für Tests/Reaktivierung.
+
+### 11.2 Stabil / defekt / unvollständig
+
+- **Stabil & belastbar:** GIE (Gasspeicher), EIA (Brent, jetzt mit Guard), Tankerkönig (Sprit).
+- **Defekt gemeldet (HTTP-Fehler, Fallback + C4-Shadow greifen, Wert evtl. veraltet):** Destatis VPI (404), FRED Erdgas-EU (400). Reparatur = **separater Daten-Task** (Endpoint/Parameter/Key klären) — hier bewusst nicht berührt (kein Secret, keine API-Reparatur).
+- **Fragil (kein Defekt, aber Bruchrisiko):** FAO (URL-/UA-Abhängigkeit).
+- **Unvollständig:** Tankerkönig ohne `previous_value` → C2-Delta-Anomalie für Spritpreise nicht prüfbar (bewusste Tagesstichprobe, kein Bug).
+- **Deaktiviert/Stub:** Eurostat, WarningIndicators.
+
+### 11.3 Was fehlt vor einem möglichen W6b (Active Gate)?
+
+W6b bleibt gesperrt. Unabhängig von der Freigabe fehlt für ein sinnvolles Scharfstellen:
+
+1. **Shadow-Fehlalarm-Auswertung** über mehrere echte Läufe (C1–C4 kalibrieren).
+2. **C3-Beobachtbarkeit im Dry-Run:** DB-Schwellen sind `None` → C3 (Schwellenriss) ohne DB-Werte nicht prüfbar.
+3. **C2 für Tankerkönig:** ohne `previous_value` kein Delta-Check (Historisierung = DB-/Schema-Frage → **Freigabe nötig**).
+4. **Echte Ausreißer** in den Zeitreihen, um C1/C2 überhaupt auszulösen.
+
+→ Kalibrierung/Beobachtbarkeit, kein Code-Blocker — aber ohne diese Punkte wäre ein Active Gate blind scharfgestellt.
+
+### 11.4 Risikofreie Härtung in diesem PR
+
+- **EIA-Key-Guard** (`eia.py`, `fetch_brent`): ohne `EIA_API_KEY` wird **gar nicht** angefragt; der Fehlerzweig meldet `api_key_missing` als Quellfehler (W6a.1-C4) und liefert den **bestehenden** Fallback. Kein Secret berührt, keine Änderung am Erfolgspfad.
+- **Tests:** neuer `test_eia_guards_missing_api_key`; bestehender HTTP-Fehlertest auf gültigen Key umgestellt (prüft weiter den 403-Pfad). Gemockte Suite: **98 passed**.
+
+### 11.5 Empfehlungen (bewusst NICHT in diesem PR umgesetzt)
+
+- **CI-Härtung:** die 5 Live-API-Tests (`test_adapters.py`, `test_integration.py`) mit `@pytest.mark.live` markieren und aus der PR-CI nehmen (separater, nicht-blockierender Lauf) → entschärft die `intelligence-verify`-Flakiness. *(eigener Test-/CI-PR)*
+- **Public-Transparenz** (risikoarm, vorhandene Felder, **kein Alarm**): `current_value_date`/`last_ingested_at` je Indikator als ruhiges „Stand"-Label sichtbarer; optional dezenter Trend-Hinweis aus `current_value` vs. `previous_value`. *(eigener kleiner Web-PR — Scope-Trennung, nicht hier)*
+- **FAO-Robustheit:** statische `sfvrsn`-URL gegen stabilere Bezugsquelle/Parameter prüfen.
+- **Destatis/FRED-Reparatur:** Endpoint/Parameter/Key in separatem Daten-Task klären (Risikogate: ggf. Keys/Credentials).
+
+**Bewusst nicht angefasst (Risikogate/Freigabe):** `source_health`-Tabelle, UI-Anomaly-Badge, W6b/Active Gate, Tankerkönig-Historisierung, Destatis/FRED-API-Reparatur mit Secrets.
 
