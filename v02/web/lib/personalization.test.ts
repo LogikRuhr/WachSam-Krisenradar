@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { computeVerdict, isRising, personalNote, trendLabel, bereichLabel, aufwandLabel, systemLabel, confidenceLabel, confidenceExplain, profileCompleteness, prioritizeActionsForProfile } from "./personalization";
+import { computeVerdict, isRising, personalNote, modusLead, trendLabel, bereichLabel, aufwandLabel, systemLabel, confidenceLabel, confidenceExplain, profileCompleteness, prioritizeActionsForProfile } from "./personalization";
 
 // --- computeVerdict ----------------------------------------------------------
 
@@ -81,6 +81,35 @@ assert.ok(finanzen && finanzen.includes("Single"), "Nicht-Energie nutzt Modus, n
 // Ohne Profil → keine Notiz
 assert.equal(personalNote("energie", { modus: null, heizart: null }), null, "ohne Profil keine Notiz");
 assert.equal(personalNote("energie", { modus: null, heizart: "unbekannt" }), null, "heizart unbekannt + kein Modus → null");
+
+// --- personalNote: Haushaltsbereiche differenzieren (Karten nicht identisch) ---
+
+// Drei verschiedene Nicht-Energie-Haushaltsbereiche, gleicher Modus → drei
+// verschiedene Notizen statt dreimal demselben generischen Modus-Satz.
+const lmFam = personalNote("lebensmittel", { modus: "familie", heizart: null });
+const moFam = personalNote("mobilitaet", { modus: "familie", heizart: null });
+const fiFam = personalNote("finanzen", { modus: "familie", heizart: null });
+assert.ok(lmFam && lmFam.includes("Lebensmittel"), "Lebensmittel-Bereich hat eigene Notiz");
+assert.ok(moFam && /Mobilität|Wege|Sprit/.test(moFam), "Mobilität-Bereich hat eigene Notiz");
+assert.ok(fiFam && /Finanz/.test(fiFam), "Finanzen-Bereich hat eigene Notiz");
+assert.notEqual(lmFam, moFam, "verschiedene Bereiche → verschiedene Notizen");
+assert.notEqual(lmFam, fiFam, "Lebensmittel ≠ Finanzen");
+assert.notEqual(moFam, fiFam, "Mobilität ≠ Finanzen");
+
+// Gleicher Bereich, anderer Modus → andere Betonung (nie dieselbe Notiz).
+const lmSingle = personalNote("lebensmittel", { modus: "single", heizart: null });
+assert.ok(lmSingle && lmSingle.includes("Lebensmittel"), "Single-Lebensmittel-Notiz nennt den Bereich");
+assert.notEqual(lmFam, lmSingle, "gleicher Bereich, anderer Modus → andere Betonung");
+
+// Nicht abgedeckter Bereich → ruhiger Fallback auf den generischen Modus-Lead.
+assert.equal(
+  personalNote("gesellschaft", { modus: "rentner", heizart: null }),
+  modusLead("rentner"),
+  "nicht abgedeckter Bereich → generischer Modus-Lead",
+);
+
+// Bereichsnotiz nur mit gesetztem Modus; ohne Profil weiterhin null.
+assert.equal(personalNote("lebensmittel", { modus: null, heizart: null }), null, "Bereichsnotiz nur mit Modus");
 
 // --- profileCompleteness: ehrliche Vollständigkeit ----------------------------
 

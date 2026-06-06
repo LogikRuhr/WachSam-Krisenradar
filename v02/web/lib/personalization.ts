@@ -144,13 +144,43 @@ const HEIZART_ENERGY_NOTE: Record<HouseholdHeizart, string | null> = {
   unbekannt: null,
 };
 
+/**
+ * Bereichs- UND modusabhängige "Für dich"-Einordnung für die zentralen
+ * Haushaltsbereiche. Damit zeigen mehrere Nicht-Energie-Signalkarten nicht
+ * denselben generischen Modus-Satz, sondern je Bereich eine passende Betonung.
+ * Reine Betonung — verändert nie die Fakten. Bereiche ohne Eintrag fallen
+ * ruhig auf modusLead zurück.
+ */
+const BEREICH_MODUS_NOTE: Record<string, Record<HouseholdModus, string>> = {
+  lebensmittel: {
+    single: "Als Single triffst du Lebensmittelpreise vor allem bei kleineren Mengen — wenig Puffer, schnell spürbar.",
+    familie: "Für eine Familie summieren sich Lebensmittelpreise im Wocheneinkauf besonders deutlich.",
+    selbststaendig: "Als Selbstständige(r) gehen schwankende Lebensmittelpreise zusätzlich in deine Alltagskalkulation ein.",
+    rentner: "Bei festem Budget machen sich Lebensmittelpreise im Alltag besonders bemerkbar.",
+  },
+  mobilitaet: {
+    single: "Als Single hängt deine Mobilität oft an einzelnen Wegen — Sprit- und Ticketpreise wirken direkt.",
+    familie: "Für eine Familie summieren sich Mobilitätskosten über mehrere Wege und Personen.",
+    selbststaendig: "Als Selbstständige(r) wirken Mobilitäts- und Spritkosten unmittelbar auf deine Betriebskosten.",
+    rentner: "Für dich zählen bei Mobilität planbare, verlässliche Wege ohne Kostensprünge.",
+  },
+  finanzen: {
+    single: "Als Single trägst du Finanzbelastungen ohne geteilten Haushalt allein — Veränderungen wirken direkt.",
+    familie: "Für eine Familie berühren Finanzsignale Planung, Rücklagen und gemeinsame Fixkosten zugleich.",
+    selbststaendig: "Als Selbstständige(r) greifen private und betriebliche Finanzen ineinander — Zinsen und Preise doppelt spürbar.",
+    rentner: "Für dich zählen bei Finanzthemen planbare, stabile Belastungen statt kurzfristiger Schwankungen.",
+  },
+};
+
 export function modusLead(modus: HouseholdModus | null): string | null {
   return modus ? MODUS_LEAD[modus] : null;
 }
 
 /**
- * "Für dich"-Satz pro Signal. Für Energie-Signale entscheidet die Heizart
- * (verändert nur die Betonung, nie die Fakten); sonst der Modus.
+ * "Für dich"-Satz pro Signal. Reihenfolge: Energie-Signale folgen der Heizart;
+ * zentrale Haushaltsbereiche (Lebensmittel, Mobilität, Finanzen) bekommen eine
+ * bereichs- und modusabhängige Betonung; sonst der generische Modus-Lead.
+ * Verändert nur die Betonung, nie die Fakten.
  */
 export function personalNote(
   bereich: string,
@@ -159,6 +189,10 @@ export function personalNote(
   if (bereich === "energie" && profile.heizart) {
     const note = HEIZART_ENERGY_NOTE[profile.heizart];
     if (note) return note;
+  }
+  if (profile.modus) {
+    const bereichNote = BEREICH_MODUS_NOTE[bereich]?.[profile.modus];
+    if (bereichNote) return bereichNote;
   }
   return modusLead(profile.modus);
 }
