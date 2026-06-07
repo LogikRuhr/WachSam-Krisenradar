@@ -321,3 +321,40 @@ export function householdCheckSteps(profile: {
   steps.push(...UNIVERSAL_CHECKS);
   return steps;
 }
+
+// --- Kaskaden: Lesespur Entwicklung → DE-Relevanz → Systembelastung → Haushalt -
+
+export type CascadePhase = "entwicklung" | "deutschlandRelevanz" | "systembelastung" | "haushalt";
+export type CascadePathNode = { index: string; phase: CascadePhase; text: string; systems: string[] };
+
+const STEP_FALLBACK_TEXT = "Systembelastung wird redaktionell eingeordnet.";
+
+/**
+ * Baut die vollständige Lesespur einer Kaskade als geordnete Knotenliste mit
+ * durchgehender Nummerierung: Globale Entwicklung → (Deutschland-Relevanz, falls
+ * vorhanden) → Systembelastungs-Schritte → Haushaltsauswirkung. Reine Struktur
+ * aus vorhandenen Feldern — keine neuen Daten, keine Veränderung der Inhalte.
+ */
+export function cascadePathNodes(input: {
+  trigger: string;
+  germanyRelevance?: string | null;
+  steps: Array<{ description?: unknown; systems?: unknown }>;
+  householdImpact: string;
+}): CascadePathNode[] {
+  const raw: Array<Omit<CascadePathNode, "index">> = [];
+  raw.push({ phase: "entwicklung", text: input.trigger, systems: [] });
+  if (input.germanyRelevance && input.germanyRelevance.trim() !== "") {
+    raw.push({ phase: "deutschlandRelevanz", text: input.germanyRelevance, systems: [] });
+  }
+  const steps = input.steps.length ? input.steps : [{ description: STEP_FALLBACK_TEXT, systems: [] }];
+  for (const step of steps) {
+    const text =
+      typeof step.description === "string" && step.description ? step.description : "Kaskadenschritt ohne Beschreibung.";
+    const systems = Array.isArray(step.systems)
+      ? step.systems.filter((entry): entry is string => typeof entry === "string")
+      : [];
+    raw.push({ phase: "systembelastung", text, systems });
+  }
+  raw.push({ phase: "haushalt", text: input.householdImpact, systems: [] });
+  return raw.map((node, index) => ({ index: String(index + 1).padStart(2, "0"), ...node }));
+}

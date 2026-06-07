@@ -65,6 +65,7 @@ export default async function CascadeDetailPage({ params }: PageProps) {
           trigger={data.trigger}
           steps={data.steps}
           householdImpact={data.haushaltswirkung}
+          germanyRelevance={germanyDescription}
           confidence={data.confidence}
           severity={data.severity}
           timeToImpact={timeToImpact ?? data.zeithorizont}
@@ -136,7 +137,7 @@ export default async function CascadeDetailPage({ params }: PageProps) {
             <ConfidenceBadge value={data.confidence} />
             <span className="mono-label">Zeithorizont: {timeToImpact ?? data.zeithorizont}</span>
           </div>
-          <SourcePills sources={sources} />
+          <SourcePills sources={sources} compact />
           <Link className="text-link" href={`/deutschland-relevanz/${data.id}`}>Deutschland-Relevanz öffnen</Link>
         </div>
       </section>

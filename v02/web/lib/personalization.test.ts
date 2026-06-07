@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { computeVerdict, isRising, personalNote, modusLead, trendLabel, bereichLabel, aufwandLabel, systemLabel, confidenceLabel, confidenceExplain, profileCompleteness, prioritizeActionsForProfile, householdRelevanceTier, prioritizeSignalsForProfile, householdCheckSteps } from "./personalization";
+import { computeVerdict, isRising, personalNote, modusLead, trendLabel, bereichLabel, aufwandLabel, systemLabel, confidenceLabel, confidenceExplain, profileCompleteness, prioritizeActionsForProfile, householdRelevanceTier, prioritizeSignalsForProfile, householdCheckSteps, cascadePathNodes } from "./personalization";
 
 // --- computeVerdict ----------------------------------------------------------
 
@@ -202,5 +202,51 @@ assert.ok(csLeer.length >= 1, "ohne Profil mindestens universelle Schritte");
 
 const csUnk = householdCheckSteps({ modus: "single", heizart: "unbekannt" });
 assert.ok(!csUnk.some((s) => /Gas|Heizöl|Wärmepumpe/.test(s.text)), "heizart 'unbekannt' → kein heiz-spezifischer Schritt");
+
+// --- cascadePathNodes: Lesespur mit korrekter, durchgehender Nummerierung ------
+
+const pathWithDe = cascadePathNodes({
+  trigger: "Ölpreis steigt",
+  germanyRelevance: "Deutschland ist energieimportabhängig",
+  steps: [{ description: "Spritpreise steigen", systems: ["mobilitaet"] }],
+  householdImpact: "Tanken wird teurer",
+});
+assert.deepEqual(
+  pathWithDe.map((n) => n.phase),
+  ["entwicklung", "deutschlandRelevanz", "systembelastung", "haushalt"],
+  "mit DE-Relevanz: vier Phasen in Reihenfolge",
+);
+assert.deepEqual(pathWithDe.map((n) => n.index), ["01", "02", "03", "04"], "fortlaufende Nummerierung inkl. DE-Knoten");
+assert.deepEqual(
+  pathWithDe.find((n) => n.phase === "systembelastung")?.systems,
+  ["mobilitaet"],
+  "Systeme am Systembelastungs-Schritt bleiben erhalten",
+);
+
+const pathNoDe = cascadePathNodes({
+  trigger: "Ölpreis steigt",
+  germanyRelevance: null,
+  steps: [{ description: "Spritpreise steigen", systems: ["mobilitaet"] }],
+  householdImpact: "Tanken wird teurer",
+});
+assert.deepEqual(
+  pathNoDe.map((n) => n.phase),
+  ["entwicklung", "systembelastung", "haushalt"],
+  "ohne DE-Relevanz: DE-Knoten entfällt, Rest bleibt",
+);
+assert.deepEqual(pathNoDe.map((n) => n.index), ["01", "02", "03"], "Nummerierung ohne DE-Knoten");
+
+const pathEmpty = cascadePathNodes({ trigger: "X", germanyRelevance: "   ", steps: [], householdImpact: "Y" });
+assert.equal(
+  pathEmpty.filter((n) => n.phase === "deutschlandRelevanz").length,
+  0,
+  "leere/whitespace DE-Relevanz → kein DE-Knoten",
+);
+assert.equal(
+  pathEmpty.filter((n) => n.phase === "systembelastung").length,
+  1,
+  "ohne Steps → genau ein Platzhalter-Schritt, kein Crash",
+);
+assert.ok(pathEmpty.some((n) => n.phase === "haushalt"), "Haushalt-Knoten ist immer vorhanden");
 
 console.log("personalization.test.ts: PASS");

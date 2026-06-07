@@ -1,6 +1,7 @@
+import { Fragment } from "react";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { SeverityBadge } from "./SeverityBadge";
-import { systemLabel } from "@/lib/personalization";
+import { cascadePathNodes, systemLabel, type CascadePhase } from "@/lib/personalization";
 
 type CascadeStep = Record<string, unknown>;
 
@@ -8,33 +9,41 @@ type CascadeCausalityMapProps = {
   trigger: string;
   steps: CascadeStep[];
   householdImpact: string;
+  germanyRelevance?: string | null;
   confidence?: string | null;
   severity?: string | null;
   timeToImpact?: string | null;
   compact?: boolean;
 };
 
-function textFromStep(step: CascadeStep) {
-  const raw = step.description;
-  return typeof raw === "string" ? raw : "Kaskadenschritt ohne Beschreibung.";
-}
+const PHASE_LABEL: Record<CascadePhase, string> = {
+  entwicklung: "Globale Entwicklung",
+  deutschlandRelevanz: "Deutschland-Relevanz",
+  systembelastung: "Systembelastung",
+  haushalt: "Haushaltsauswirkung",
+};
 
-function systemsFromStep(step: CascadeStep) {
-  const raw = step.systems;
-  if (!Array.isArray(raw)) return [];
-  return raw.filter((entry): entry is string => typeof entry === "string");
-}
+const NODE_CLASS: Record<CascadePhase, string> = {
+  entwicklung: "causality-node causality-node-signal",
+  deutschlandRelevanz: "causality-node causality-node-relevanz",
+  systembelastung: "causality-node",
+  haushalt: "causality-node causality-node-household",
+};
 
 export function CascadeCausalityMap({
   trigger,
   steps,
   householdImpact,
+  germanyRelevance,
   confidence,
   severity,
   timeToImpact,
   compact = false,
 }: CascadeCausalityMapProps) {
-  const visibleSteps = steps.length ? steps : [{ description: "Systembelastung wird redaktionell eingeordnet.", systems: [] }];
+  const nodes = cascadePathNodes({ trigger, germanyRelevance, steps, householdImpact });
+  const leadNodes = nodes.filter((node) => node.phase === "entwicklung" || node.phase === "deutschlandRelevanz");
+  const stepNodes = nodes.filter((node) => node.phase === "systembelastung");
+  const householdNode = nodes.find((node) => node.phase === "haushalt");
 
   return (
     <section className={compact ? "causality-map causality-map-compact" : "causality-map"} aria-labelledby="causality-map-heading">
@@ -51,49 +60,51 @@ export function CascadeCausalityMap({
       </div>
 
       <div className="causality-map-flow" role="list" aria-label="Visualisierte Wirkungskette">
-        <article className="causality-node causality-node-signal" role="listitem">
-          <span className="causality-node-index">01</span>
-          <span className="causality-node-label">Globale Entwicklung</span>
-          <p>{trigger}</p>
-        </article>
-
-        <div className="causality-connector" aria-hidden="true">
-          <span />
-        </div>
+        {leadNodes.map((node) => (
+          <Fragment key={node.index}>
+            <article className={NODE_CLASS[node.phase]} role="listitem">
+              <span className="causality-node-index">{node.index}</span>
+              <span className="causality-node-label">{PHASE_LABEL[node.phase]}</span>
+              <p>{node.text}</p>
+            </article>
+            <div className="causality-connector" aria-hidden="true">
+              <span />
+            </div>
+          </Fragment>
+        ))}
 
         <div className="causality-step-stack" role="listitem">
-          <span className="causality-node-label">Systembelastung</span>
-          {visibleSteps.map((step, index) => {
-            const systems = systemsFromStep(step);
-            return (
-              <article className="causality-step" key={`${textFromStep(step)}-${index}`}>
-                <div className="causality-step-title">
-                  <span className="causality-node-index">{String(index + 2).padStart(2, "0")}</span>
-                  <p>{textFromStep(step)}</p>
+          <span className="causality-node-label">{PHASE_LABEL.systembelastung}</span>
+          {stepNodes.map((node) => (
+            <article className="causality-step" key={node.index}>
+              <div className="causality-step-title">
+                <span className="causality-node-index">{node.index}</span>
+                <p>{node.text}</p>
+              </div>
+              {node.systems.length ? (
+                <div className="causality-system-row">
+                  {node.systems.map((system) => (
+                    <span className="system-badge" key={`${node.index}-${system}`}>
+                      {systemLabel(system)}
+                    </span>
+                  ))}
                 </div>
-                {systems.length ? (
-                  <div className="causality-system-row">
-                    {systems.map((system) => (
-                      <span className="system-badge" key={`${index}-${system}`}>
-                        {systemLabel(system)}
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
-              </article>
-            );
-          })}
+              ) : null}
+            </article>
+          ))}
         </div>
 
         <div className="causality-connector" aria-hidden="true">
           <span />
         </div>
 
-        <article className="causality-node causality-node-household" role="listitem">
-          <span className="causality-node-index">{String(visibleSteps.length + 2).padStart(2, "0")}</span>
-          <span className="causality-node-label">Haushaltsauswirkung</span>
-          <p>{householdImpact}</p>
-        </article>
+        {householdNode ? (
+          <article className={NODE_CLASS.haushalt} role="listitem">
+            <span className="causality-node-index">{householdNode.index}</span>
+            <span className="causality-node-label">{PHASE_LABEL.haushalt}</span>
+            <p>{householdNode.text}</p>
+          </article>
+        ) : null}
       </div>
 
       <p className="causality-map-note">
