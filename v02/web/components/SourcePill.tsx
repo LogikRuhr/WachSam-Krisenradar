@@ -19,10 +19,10 @@ export function SourcePill({ source }: { source: SourceLike }) {
   );
 }
 
-export function SourcePills({ sources }: { sources?: SourceLike[] }) {
+export function SourcePills({ sources, compact = false }: { sources?: SourceLike[]; compact?: boolean }) {
   if (!sources?.length) return <span className="source-pill source-pill-muted">Keine Quelle verbunden</span>;
   return (
-    <div className="source-row">
+    <div className={compact ? "source-pills-compact" : "source-row"}>
       {sources.map((source) => (
         <SourcePill key={`${source.sourceUrl}-${source.sourceStand}`} source={source} />
       ))}

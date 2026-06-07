@@ -101,6 +101,8 @@ strong { color: var(--on-surface); font-weight: 700; }
 .confidence-hoch { color: var(--success); border-color: rgba(34,197,94,.45); }
 .source-pill { color: var(--info); text-transform: none; letter-spacing: 0; }
 .source-pill-muted { color: var(--on-surface-variant); }
+.source-pills-compact { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+.source-pills-compact .source-pill { width: 100%; justify-content: flex-start; }
 .hover-rost:hover { border-color: var(--primary-hover); color: var(--on-surface); }
 .btn-rost:hover { background: var(--primary-hover); }
 .text-link { color: var(--primary); width: fit-content; }
@@ -198,6 +200,7 @@ strong { color: var(--on-surface); font-weight: 700; }
 .causality-node, .causality-step { border: 1px solid var(--outline); border-radius: 4px; background: rgba(13,13,13,.78); padding: 16px; min-width: 0; }
 .causality-node { min-height: 160px; display: grid; align-content: start; gap: 8px; }
 .causality-node-signal { border-top-color: rgba(76,215,246,.5); }
+.causality-node-relevanz { border-top-color: rgba(234,179,8,.55); }
 .causality-node-household { border-top-color: rgba(212,84,10,.65); }
 .causality-node p, .causality-step p, .causality-map-note { margin: 0; max-width: none; font-size: 14px; line-height: 1.6; }
 .causality-node p, .causality-step p { color: var(--on-surface); }
