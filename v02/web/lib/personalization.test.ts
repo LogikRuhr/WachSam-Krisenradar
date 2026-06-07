@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { computeVerdict, isRising, personalNote, modusLead, trendLabel, bereichLabel, aufwandLabel, systemLabel, confidenceLabel, confidenceExplain, profileCompleteness, prioritizeActionsForProfile } from "./personalization";
+import { computeVerdict, isRising, personalNote, modusLead, trendLabel, bereichLabel, aufwandLabel, systemLabel, confidenceLabel, confidenceExplain, profileCompleteness, prioritizeActionsForProfile, householdRelevanceTier, prioritizeSignalsForProfile, householdCheckSteps } from "./personalization";
 
 // --- computeVerdict ----------------------------------------------------------
 
@@ -140,5 +140,67 @@ assert.deepEqual(ohneHeiz.map((a) => a.id), ["b", "c", "a"], "ohne Heizart: nur 
 
 assert.equal(prioritizeActionsForProfile(acts, { heizart: "gas" }, 2).length, 2, "limit greift");
 assert.deepEqual(prioritizeActionsForProfile([], { heizart: "gas" }), [], "leere Liste → leer, kein Crash");
+
+// --- householdRelevanceTier: profil-spitz < Haushalts-Kern < Rest --------------
+
+assert.equal(householdRelevanceTier("energie", { heizart: "gas" }), 0, "Energie + Heizart → profil-spitz (0)");
+assert.equal(householdRelevanceTier("energie", { heizart: "unbekannt" }), 1, "Energie ohne Heizart → nur Kern (1)");
+assert.equal(householdRelevanceTier("lebensmittel", { heizart: null }), 1, "Lebensmittel → Haushalts-Kern (1)");
+assert.equal(householdRelevanceTier("industrie", { heizart: "gas" }), 2, "Industrie → Rest (2)");
+
+// --- prioritizeActionsForProfile: Haushalts-Kern schlägt Nicht-Kern ------------
+
+const actsCore = [
+  { id: "x", aufwand: "niedrig", bezugZuBereich: ["industrie"] }, // Nicht-Kern
+  { id: "y", aufwand: "niedrig", bezugZuBereich: ["lebensmittel"] }, // Kern
+];
+assert.deepEqual(
+  prioritizeActionsForProfile(actsCore, { heizart: "unbekannt" }).map((a) => a.id),
+  ["y", "x"],
+  "Haushalts-Kernbereich vor Nicht-Kern bei gleichem Aufwand",
+);
+
+// --- prioritizeSignalsForProfile: Relevanz-Tier, dann Severity -----------------
+
+const chains = [
+  { signal: { bereich: "industrie", severity: "kritisch", trend: "steigend" } }, // hohe Severity, Nicht-Kern
+  { signal: { bereich: "energie", severity: "beobachten", trend: "gleichbleibend" } }, // profil-spitz bei Gas
+];
+assert.deepEqual(
+  prioritizeSignalsForProfile(chains, { heizart: "gas" }).map((c) => c.signal.bereich),
+  ["energie", "industrie"],
+  "Gasheizer: Energie-Signal zuerst trotz niedrigerer Severity",
+);
+assert.deepEqual(
+  prioritizeSignalsForProfile(chains, { heizart: "unbekannt" }).map((c) => c.signal.bereich),
+  ["energie", "industrie"],
+  "ohne Heizart: Energie (Kern) noch vor Industrie (Rest)",
+);
+
+const chainsTie = [
+  { signal: { bereich: "finanzen", severity: "beobachten", trend: "gleichbleibend" } },
+  { signal: { bereich: "lebensmittel", severity: "kritisch", trend: "steigend" } },
+];
+assert.deepEqual(
+  prioritizeSignalsForProfile(chainsTie, { heizart: "unbekannt" }).map((c) => c.signal.bereich),
+  ["lebensmittel", "finanzen"],
+  "gleicher Tier → Severity entscheidet",
+);
+assert.equal(prioritizeSignalsForProfile([], { heizart: "gas" }).length, 0, "leer → leer, kein Crash");
+assert.equal(prioritizeSignalsForProfile(chains, { heizart: "gas" }, 1).length, 1, "limit greift");
+
+// --- householdCheckSteps: ruhige, abgeleitete Prüfschritte ohne Speicherung ----
+
+const csGasFam = householdCheckSteps({ modus: "familie", heizart: "gas" });
+assert.ok(csGasFam.some((s) => /Gas/.test(s.text)), "Gasheizer bekommt einen Gas-Prüfschritt");
+assert.ok(csGasFam.some((s) => /Wocheneinkauf/.test(s.text)), "Familie bekommt einen Familien-Prüfschritt");
+assert.ok(csGasFam.length >= 3, "Heizart + Modus + universell → mindestens 3");
+assert.ok(csGasFam.every((s) => s.key && s.text), "jeder Schritt hat key + text");
+
+const csLeer = householdCheckSteps({ modus: null, heizart: null });
+assert.ok(csLeer.length >= 1, "ohne Profil mindestens universelle Schritte");
+
+const csUnk = householdCheckSteps({ modus: "single", heizart: "unbekannt" });
+assert.ok(!csUnk.some((s) => /Gas|Heizöl|Wärmepumpe/.test(s.text)), "heizart 'unbekannt' → kein heiz-spezifischer Schritt");
 
 console.log("personalization.test.ts: PASS");

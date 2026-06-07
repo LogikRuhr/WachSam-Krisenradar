@@ -9,9 +9,11 @@ import { auth } from "@/lib/auth";
 import {
   aufwandLabel,
   bereichLabel,
+  householdCheckSteps,
   modusLead,
   personalNote,
   prioritizeActionsForProfile,
+  prioritizeSignalsForProfile,
   profileCompleteness,
 } from "@/lib/personalization";
 import { getHouseholdByUserId, upsertHouseholdAction } from "@/lib/profile";
@@ -45,9 +47,10 @@ export default async function ProfilPage() {
   ]);
 
   const completeness = profileCompleteness(profile);
-  const topChains = signalsState.rows.slice(0, 3);
+  const topChains = prioritizeSignalsForProfile(signalsState.rows, profile, 3);
   const energieNote = profile.heizart && profile.heizart !== "unbekannt" ? personalNote("energie", profile) : null;
   const actions = prioritizeActionsForProfile(actionsState.rows, profile, 4);
+  const checkSteps = householdCheckSteps(profile);
   const modusIntro = modusLead(profile.modus);
 
   return (
@@ -63,9 +66,9 @@ export default async function ProfilPage() {
 
       <section className="home-section" aria-labelledby="relevanz-title">
         <div className="home-section-head">
-          <p className="mono-label">Was betrifft mich?</p>
+          <p className="mono-label">Was betrifft mich wirklich?</p>
           <h2 id="relevanz-title" className="focus-title">Aktuelle Lage für deinen Haushalt</h2>
-          <p>Die wichtigsten Entwicklungen — mit einem Hinweis, was sie konkret für dich bedeuten können.</p>
+          <p>Nach deinem Haushalt sortiert: die Bereiche, die dich direkt treffen, zuerst — mit einem Hinweis, was sie konkret für dich bedeuten können.</p>
         </div>
         {!signalsState.connected ? (
           <DbNotice error={signalsState.error} />
@@ -126,6 +129,21 @@ export default async function ProfilPage() {
         ) : (
           <p className="lead">Aktuell sind keine Maßnahmen hinterlegt.</p>
         )}
+      </section>
+
+      <section className="home-section" aria-labelledby="checkliste-title">
+        <div className="home-section-head">
+          <p className="mono-label">Deine Prüf-Checkliste</p>
+          <h2 id="checkliste-title" className="focus-title">Ruhige Schritte für deinen Haushalt</h2>
+          <p>Aus deinem Profil abgeleitete Prüfschritte — Orientierung zum Selbermachen. Nichts davon wird gespeichert.</p>
+        </div>
+        <div className="detail-aside-box">
+          <ul className="check-steps">
+            {checkSteps.map((step) => (
+              <li key={step.key}>{step.text}</li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       <section id="profil-bearbeiten" className="home-section" aria-labelledby="profil-edit-title">

@@ -225,19 +225,99 @@ export function profileRelevantBereiche(profile: { heizart: HouseholdHeizart | n
   return [];
 }
 
+// Bereiche, die ein privater Haushalt direkt im Alltag spürt (vs. vorgelagerte
+// Bereiche wie Industrie/Logistik/Infrastruktur). Quelle der Haushaltsrelevanz.
+const HOUSEHOLD_CORE_BEREICHE = new Set(["energie", "lebensmittel", "mobilitaet", "finanzen", "gesundheit"]);
+
 /**
- * Ruhige Sortierung von Maßnahmen nach Profil: profil-relevante Bereiche zuerst,
- * dann niedrigerer Aufwand. Reine Reihenfolge, kein Urteil und keine Filterung von Fakten.
+ * Haushaltsrelevanz eines Bereichs als Tier: 0 = profil-spitz (Energie bei
+ * gesetzter Heizart), 1 = Haushalts-Kernbereich, 2 = Rest. Reine Reihenfolge-
+ * Gewichtung — verändert nie Fakten, filtert nichts weg.
+ */
+export function householdRelevanceTier(
+  bereich: string,
+  profile: { heizart: HouseholdHeizart | null },
+): number {
+  if (bereich === "energie" && profile.heizart && profile.heizart !== "unbekannt") return 0;
+  return HOUSEHOLD_CORE_BEREICHE.has(bereich) ? 1 : 2;
+}
+
+/**
+ * Ruhige Sortierung von Maßnahmen nach Profil: nach Haushaltsrelevanz-Tier
+ * (profil-spitz, dann Kernbereich, dann Rest), innerhalb gleicher Relevanz nach
+ * niedrigerem Aufwand. Reine Reihenfolge, kein Urteil und keine Filterung von Fakten.
  */
 export function prioritizeActionsForProfile<T extends { aufwand: string; bezugZuBereich: string[] }>(
   actions: T[],
   profile: { heizart: HouseholdHeizart | null },
   limit?: number,
 ): T[] {
-  const relevant = new Set(profileRelevantBereiche(profile));
-  const relevanceScore = (action: T) => (action.bezugZuBereich.some((bereich) => relevant.has(bereich)) ? 0 : 1);
+  const tier = (action: T) =>
+    action.bezugZuBereich.length
+      ? Math.min(...action.bezugZuBereich.map((bereich) => householdRelevanceTier(bereich, profile)))
+      : 2;
   const sorted = [...actions].sort(
-    (a, b) => relevanceScore(a) - relevanceScore(b) || aufwandRank(a.aufwand) - aufwandRank(b.aufwand),
+    (a, b) => tier(a) - tier(b) || aufwandRank(a.aufwand) - aufwandRank(b.aufwand),
   );
   return limit != null ? sorted.slice(0, limit) : sorted;
+}
+
+/**
+ * Persönliche Priorisierung der Signalketten für den Member-Bereich: nach
+ * Haushaltsrelevanz-Tier, dann höherer Severity, dann steigendem Trend zuerst.
+ * Reine Reihenfolge — keine Filterung, keine Veränderung der Fakten.
+ */
+export function prioritizeSignalsForProfile<
+  T extends { signal: { bereich: string; severity: string; trend: string } },
+>(chains: T[], profile: { heizart: HouseholdHeizart | null }, limit?: number): T[] {
+  const sorted = [...chains].sort(
+    (a, b) =>
+      householdRelevanceTier(a.signal.bereich, profile) - householdRelevanceTier(b.signal.bereich, profile) ||
+      severityRank(b.signal.severity) - severityRank(a.signal.severity) ||
+      Number(isRising(b.signal.trend)) - Number(isRising(a.signal.trend)),
+  );
+  return limit != null ? sorted.slice(0, limit) : sorted;
+}
+
+// --- Member-Bereich: ruhige Prüf-Checkliste (ohne Speicherung) ----------------
+
+export type CheckStep = { key: string; text: string };
+
+const HEIZART_CHECK: Record<HouseholdHeizart, CheckStep | null> = {
+  gas: { key: "heiz-gas", text: "Gas-Abschlag mit dem aktuellen Gaspreis und deinem Vorjahresverbrauch abgleichen." },
+  oel: { key: "heiz-oel", text: "Heizöl-Bestellung am Brent-gekoppelten Heizölpreis ausrichten statt spontan." },
+  fernwaerme: { key: "heiz-fw", text: "Fernwärme-Abrechnung auf die zeitverzögerte Preisanpassung deines Versorgers prüfen." },
+  waermepumpe: { key: "heiz-wp", text: "Stromtarif für die Wärmepumpe vergleichen — Heizstrom-Tarife lohnen den Check." },
+  strom: { key: "heiz-strom", text: "Stromtarif vergleichen — beim Heizen mit Strom ist der Tarif der größte Hebel." },
+  unbekannt: null,
+};
+
+const MODUS_CHECK: Record<HouseholdModus, CheckStep> = {
+  single: { key: "modus-single", text: "Feste Einzelkosten (Strom, Internet, Versicherungen) einmal jährlich auf Anpassungen prüfen." },
+  familie: { key: "modus-familie", text: "Wocheneinkauf grob planen, um Preisspitzen bei Grundnahrungsmitteln auszuweichen." },
+  selbststaendig: { key: "modus-sst", text: "Private und betriebliche Fixkosten getrennt im Blick behalten — beide reagieren auf Preissignale." },
+  rentner: { key: "modus-rentner", text: "Planbare Monatsbelastungen (Energie, Miete, Versicherungen) auf angekündigte Erhöhungen prüfen." },
+};
+
+const UNIVERSAL_CHECKS: CheckStep[] = [
+  { key: "uni-abschlag", text: "Aktuelle Abschläge mit dem tatsächlichen Verbrauch des letzten Jahres abgleichen." },
+];
+
+/**
+ * Ruhige, aus dem Profil abgeleitete Prüfschritte — reine Orientierung, keine
+ * Beratung, ohne neue Speicherung. Heizart-/modus-spezifische Schritte (wenn
+ * vorhanden) plus universelle. Bewusst knapp gehalten.
+ */
+export function householdCheckSteps(profile: {
+  modus: HouseholdModus | null;
+  heizart: HouseholdHeizart | null;
+}): CheckStep[] {
+  const steps: CheckStep[] = [];
+  if (profile.heizart) {
+    const heiz = HEIZART_CHECK[profile.heizart];
+    if (heiz) steps.push(heiz);
+  }
+  if (profile.modus) steps.push(MODUS_CHECK[profile.modus]);
+  steps.push(...UNIVERSAL_CHECKS);
+  return steps;
 }

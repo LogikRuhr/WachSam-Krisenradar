@@ -243,6 +243,9 @@ strong { color: var(--on-surface); font-weight: 700; }
 .auth-side-block p { margin-top: 8px; font-size: 14px; }
 .profile-scope-note { margin: 20px 0; border: 1px solid var(--outline); border-left: 3px solid var(--info); border-radius: 0 4px 4px 0; background: rgba(76,215,246,.06); padding: 14px 16px; }
 .profile-scope-note p { margin: 0; font-size: 14px; }
+.check-steps { margin: 0; padding-left: 20px; list-style: disc; }
+.check-steps li { color: var(--on-surface); line-height: 1.6; margin-bottom: 8px; }
+.check-steps li:last-child { margin-bottom: 0; }
 .auth-chip { display: inline-flex; align-items: center; gap: 8px; max-width: 280px; border: 1px solid var(--outline); border-radius: 999px; background: #141414; color: var(--on-surface); padding: 8px 10px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 .auth-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .auth-chip a, .auth-chip button, .auth-chip-link {
