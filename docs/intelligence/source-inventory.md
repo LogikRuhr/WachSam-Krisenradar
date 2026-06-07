@@ -1,6 +1,6 @@
 # WachSam — Source- & Python-Inventur (Welle 1)
 
-**Stand:** 2026-06-06 (Status-Update + EIA-Härtung in §11; Basis-Inventur 2026-06-03) · **Methode:** read-only Bestandsaufnahme (kein DB-Zugriff, keine externen Crawls, keine Writes) · **Verifiziert:** kritische Befunde (Indikator-Publish-Pfad, Public-UI-Gate) gegen den realen Code geprüft, nicht nur referenziert.
+**Stand:** 2026-06-06 (EIA/FRED-Härtung in §11; Test-/CI-Live-Isolierung + offene Daten-Tasks in §12; Basis-Inventur 2026-06-03) · **Methode:** read-only Bestandsaufnahme (kein DB-Zugriff, keine externen Crawls, keine Writes) · **Verifiziert:** kritische Befunde (Indikator-Publish-Pfad, Public-UI-Gate) gegen den realen Code geprüft, nicht nur referenziert.
 
 > Zweck dieses Dokuments: vollständige Sichtbarkeit aller bestehenden Datenbeschaffungs-, Ingestion-, Adapter-, Analyse- und Quellen-Bausteine, **bevor** ein Fact-to-Impact-Layer geplant wird. Bestehende Skripte sind potenzielle Source-of-Truth-Ingestion, keine Altlast.
 
@@ -241,10 +241,40 @@ W6b bleibt gesperrt. Unabhängig von der Freigabe fehlt für ein sinnvolles Scha
 
 ### 11.5 Empfehlungen (bewusst NICHT in diesem PR umgesetzt)
 
-- **CI-Härtung:** die 5 Live-API-Tests (`test_adapters.py`, `test_integration.py`) mit `@pytest.mark.live` markieren und aus der PR-CI nehmen (separater, nicht-blockierender Lauf) → entschärft die `intelligence-verify`-Flakiness. *(eigener Test-/CI-PR)*
+- **CI-Härtung:** ✅ **erledigt (siehe §12)** — Live-API-Tests mit `@pytest.mark.live` markiert und per `addopts = -m "not live"` aus der Default-/PR-CI genommen.
 - **Public-Transparenz** (risikoarm, vorhandene Felder, **kein Alarm**): `current_value_date`/`last_ingested_at` je Indikator als ruhiges „Stand"-Label sichtbarer; optional dezenter Trend-Hinweis aus `current_value` vs. `previous_value`. *(eigener kleiner Web-PR — Scope-Trennung, nicht hier)*
 - **FAO-Robustheit:** statische `sfvrsn`-URL gegen stabilere Bezugsquelle/Parameter prüfen.
 - **Destatis/FRED-Reparatur:** Key-Guard ist erledigt; offen bleibt die eigentliche Endpoint/Parameter-Klärung (FRED 400 mit Key, Destatis 404) in separatem Daten-Task (Risikogate: ggf. Keys/Credentials).
 
 **Bewusst nicht angefasst (Risikogate/Freigabe):** `source_health`-Tabelle, UI-Anomaly-Badge, W6b/Active Gate, Tankerkönig-Historisierung, Destatis/FRED-API-Reparatur mit Secrets.
+
+---
+
+## 12. Test-/CI-Strategie & offene Daten-Tasks (Update 2026-06-06, PR G)
+
+Fokus: Test- und Datenfundament stabilisieren — **kein** W6b, **kein** Active Gate, **keine** `source_health`-Logik, **keine** Migration. Reine Test-Isolierung + Doku.
+
+### 12.1 Gemockt vs. live — saubere Trennung
+
+Die Adapter-/Integrationstests, die **echte externe APIs** rufen, waren in der CI die Flakiness-Quelle (`intelligence-verify`-Timeouts, vgl. CI-Live-API-Notiz). Sie sind jetzt isoliert:
+
+- **Marker:** `@pytest.mark.live` an genau den 7 Live-Tests:
+  - `test_adapters.py`: `test_destatis_adapter`, `test_bnetza_adapter`, `test_fao_adapter`, `test_eurostat_adapter`, `test_warning_indicators_adapter` (echter API-Call, kein Mock).
+  - `test_integration.py`: `TestFullPipeline::test_all_adapters_produce_items`, `::test_adapter_items_persist_as_drafts` (rufen echte Adapter; zusätzlich `@skipdb`).
+- **Default-Ausschluss:** `pyproject.toml` → `[tool.pytest.ini_options]` mit `addopts = "-m 'not live'"`. Die CI (`python -m pytest tests/ -q`) und jeder lokale Default-Lauf überspringen Live damit automatisch.
+- **Wichtig — NICHT live:** die gemockten Tests mit „live" im Namen (`test_*_maps_*_to_indicator_live_value`) bleiben **un**markiert (sie mocken `requests` und gehören in die CI).
+- **Manuell live prüfen:** `python -m pytest -m live` (überschreibt das Default-Filter). Empfohlen vor Adapter-Releases / bei Quell-Verdacht — bewusst außerhalb der PR-CI.
+
+Verifiziert: Default-Lauf **115 passed, 3 skipped (DB-Integration), 7 deselected (live)**; `-m live` sammelt exakt diese 7. Kein Unknown-Marker-Warning.
+
+### 12.2 Offene Daten-Tasks (separat, nicht in PR G)
+
+| Task | Status / Befund | Nächster Schritt | Risikogate |
+|------|-----------------|------------------|------------|
+| **Destatis VPI 404** | Endpoint/Tabelle liefert 404; Fallback + C4-Shadow greifen, Live-Wert evtl. veraltet | GENESIS-Endpoint/Tabelle 61111-0002 + Credentials prüfen | ggf. Credentials |
+| **FRED 400 (mit Key)** | Key-Guard erledigt; 400 mit gesetztem Key = Parameter/Serie offen | `PNGASEUUSDM`-Parameter/`api_key` gegen FRED-Doku verifizieren | ggf. Key |
+| **Tankerkönig `previous_value`** | bewusst `✗` (Tagesstichprobe über 16 PLZ, keine Historie) → **C2-Delta für Sprit nicht prüfbar** | Historisierung = DB/Schema → **Freigabe nötig** | DB-Schema/Migration |
+| **C3 DB-Schwellen** | Schwellen sind `None` → C3 (Schwellenriss) ohne DB-Werte **nicht prüfbar** | als **W6b-Voraussetzung** vormerken; Schwellen-Quelle/Seed klären | DB/Schema, W6b |
+
+→ Alle vier sind **Voraussetzungen/Vorarbeiten**, kein Code-Blocker in PR G. Ein Active Gate (W6b) bliebe ohne C2 (Sprit) und C3 (Schwellen) teilweise blind — daher bleibt W6b gesperrt, bis diese Punkte beobachtbar sind.
 

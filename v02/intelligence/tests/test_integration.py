@@ -113,6 +113,7 @@ class TestDBIntegration:
             conn.close()
 
 
+@pytest.mark.live
 @skipdb
 class TestFullPipeline:
     def test_all_adapters_produce_items(self):
