@@ -29,6 +29,11 @@ export default async function HomePage() {
     .map((chain) => chain.signal.publishedAt ?? chain.signal.retrievedAt)
     .filter((value): value is Date => value instanceof Date)
     .sort((a, b) => b.getTime() - a.getTime())[0];
+  const sourceCount = new Set(
+    signals.rows.flatMap((chain) =>
+      chain.signal.sources.map((source) => `${source.sourceName}-${source.sourceUrl}`),
+    ),
+  ).size;
 
   return (
     <main className="page-shell" aria-labelledby="page-title">
@@ -51,6 +56,26 @@ export default async function HomePage() {
       {!signals.connected ? <DbNotice error={signals.error} /> : null}
 
       {signals.connected ? <Verdict verdict={verdict} stand={formatStand(latestStand)} /> : null}
+
+      {signals.connected ? (
+        <section className="app-state-band" aria-label="Quellen, Datenstand und Qualität dieser Lageeinordnung">
+          <div className="app-state-item">
+            <span className="mono-label">Quellenbasis</span>
+            <strong>{sourceCount > 0 ? `${sourceCount} verbundene Quellen` : "Quellen in Prüfung"}</strong>
+            <p>Jede öffentliche Lagekarte zeigt benannte Quellen mit Stand-Datum statt anonymer Rohmeldungen.</p>
+          </div>
+          <div className="app-state-item">
+            <span className="mono-label">Datenstand</span>
+            <strong>{formatStand(latestStand) ?? "noch kein Stand"}</strong>
+            <p>WachSam markiert Aktualität sichtbar und vermeidet Fake-Live-Optik.</p>
+          </div>
+          <div className="app-state-item">
+            <span className="mono-label">Qualität</span>
+            <strong>Einordnung mit Unsicherheit</strong>
+            <p>Confidence, Quellenlage und Haushaltsauswirkung werden getrennt angezeigt.</p>
+          </div>
+        </section>
+      ) : null}
 
       {chainsWithImpact.length > 0 ? (
         <section className="home-section" id="aktuelle-lage" aria-labelledby="aktuelle-lage-title">
