@@ -1,3 +1,4 @@
+import { CardMethodology } from "@/components/CardMethodology";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { DbNotice } from "@/components/DbNotice";
 import { PainCard } from "@/components/PainCard";
@@ -33,6 +34,12 @@ export default async function KostenPage() {
                   stand={item.sources[0]?.sourceStand ?? null}
                 />
                 <SourcePills sources={item.sources} />
+                <CardMethodology
+                  variant="kosten"
+                  sources={item.sources}
+                  confidence={item.confidence}
+                  stand={item.sources[0]?.sourceStand ?? null}
+                />
               </>
             }
           >

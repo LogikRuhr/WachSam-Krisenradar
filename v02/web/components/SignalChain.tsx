@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CardMethodology } from "./CardMethodology";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { QualityStrip } from "./QualityStrip";
 import { SeverityBadge } from "./SeverityBadge";
@@ -63,6 +64,12 @@ export function SignalChain({ chain, note, stand }: SignalChainProps) {
           stand={stand}
         />
         <SourcePills sources={signal.sources} />
+        <CardMethodology
+          variant="lage"
+          sources={signal.sources}
+          confidence={impact?.confidence}
+          stand={stand}
+        />
         <Link className="cross-link" href="/lagebild">
           Mehr im Lagebild
         </Link>
