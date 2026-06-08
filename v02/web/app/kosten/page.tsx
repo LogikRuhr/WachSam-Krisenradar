@@ -1,6 +1,7 @@
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { DbNotice } from "@/components/DbNotice";
 import { PainCard } from "@/components/PainCard";
+import { QualityStrip } from "@/components/QualityStrip";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SourcePills } from "@/components/SourcePill";
 import { bereichLabel } from "@/lib/personalization";
@@ -18,7 +19,23 @@ export default async function KostenPage() {
       {!state.connected ? <DbNotice error={state.error} /> : null}
       <section className="single-list">
         {state.rows.map((item, index) => (
-          <PainCard key={item.id} number={formatIndex(index)} title={item.titel} meta={<ConfidenceBadge value={item.confidence} />} footer={<SourcePills sources={item.sources} />}>
+          <PainCard
+            key={item.id}
+            number={formatIndex(index)}
+            title={item.titel}
+            meta={<ConfidenceBadge value={item.confidence} />}
+            footer={
+              <>
+                <QualityStrip
+                  context={`Kostenkarte ${item.titel}`}
+                  sources={item.sources}
+                  confidence={item.confidence}
+                  stand={item.sources[0]?.sourceStand ?? null}
+                />
+                <SourcePills sources={item.sources} />
+              </>
+            }
+          >
             <p>{item.beschreibung}</p>
             <p><strong>Bereich:</strong> {bereichLabel(item.bereich)} · <strong>Zeithorizont:</strong> {item.zeithorizont}</p>
             <p><strong>Unsicherheit:</strong> {item.unsicherheit}</p>

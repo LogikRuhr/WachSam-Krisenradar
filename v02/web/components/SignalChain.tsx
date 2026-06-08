@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ConfidenceBadge } from "./ConfidenceBadge";
+import { QualityStrip } from "./QualityStrip";
 import { SeverityBadge } from "./SeverityBadge";
 import { SourcePills } from "./SourcePill";
 import { aufwandLabel, bereichLabel, isRising, trendLabel } from "@/lib/personalization";
@@ -55,6 +56,12 @@ export function SignalChain({ chain, note, stand }: SignalChainProps) {
 
       <div className="signal-foot">
         <span className="chain-label">Quellenhinweis</span>
+        <QualityStrip
+          context={`Lagekarte ${bereichLabel(signal.bereich)}`}
+          sources={signal.sources}
+          confidence={impact?.confidence}
+          stand={stand}
+        />
         <SourcePills sources={signal.sources} />
         <Link className="cross-link" href="/lagebild">
           Mehr im Lagebild
