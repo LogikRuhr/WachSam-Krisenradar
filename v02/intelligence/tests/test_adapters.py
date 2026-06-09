@@ -12,6 +12,7 @@ from src.adapters.bnetza import BNetzAAdapter
 from src.adapters.eia import EIAAdapter
 from src.adapters.fred import FREDAdapter
 from src.adapters.fao import FAOAdapter
+from src.adapters.pegelonline import PegelonlineAdapter
 from src.adapters.eurostat import EurostatAdapter
 from src.adapters.warning_indicators import WarningIndicatorsAdapter
 from src.adapters.tankerkoenig import (
@@ -316,6 +317,79 @@ def test_tankerkoenig_returns_empty_on_api_error(monkeypatch):
 def test_tankerkoenig_returns_empty_without_api_key(monkeypatch):
     monkeypatch.setattr("src.adapters.tankerkoenig.settings.TANKERKOENIG_API_KEY", "")
     assert TankerkoenigAdapter().fetch_latest() == []
+
+
+# ---------------------------------------------------------------------------
+# Pegelonline — Wasserstände wichtiger Wasserstraßen
+# ---------------------------------------------------------------------------
+
+def test_pegelonline_adapter_maps_current_measurements(monkeypatch):
+    payloads = {
+        "KÖLN": {
+            "timestamp": "2026-06-09T15:00:00+02:00",
+            "value": 196.0,
+            "stateMnwMhw": "normal",
+            "stateNswHsw": "normal",
+        },
+        "KAUB": {
+            "timestamp": "2026-06-09T15:00:00+02:00",
+            "value": 134.0,
+            "stateMnwMhw": "low",
+            "stateNswHsw": "unknown",
+        },
+    }
+    called = []
+
+    def fake_get(url, *args, **kwargs):
+        called.append(url)
+        station = "KÖLN" if "K%C3%96LN" in url else "KAUB"
+        response = MagicMock()
+        response.status_code = 200
+        response.json.return_value = payloads[station]
+        response.raise_for_status.return_value = None
+        return response
+
+    monkeypatch.setattr("src.adapters.pegelonline.requests.get", fake_get)
+    monkeypatch.setattr("src.adapters.pegelonline.PEGEL_STATIONS", ("KÖLN", "KAUB"))
+
+    items = PegelonlineAdapter().fetch_latest()
+    by_id = {item.indicator_id: item for item in items}
+
+    assert set(by_id) == {"wi-pegelonline-koeln", "wi-pegelonline-kaub"}
+    koeln = by_id["wi-pegelonline-koeln"]
+    kaub = by_id["wi-pegelonline-kaub"]
+    assert koeln.current_value == 196.0
+    assert koeln.current_value_date == "2026-06-09T15:00:00+02:00"
+    assert koeln.source_stand_date == "2026-06-09T15:00:00+02:00"
+    assert koeln.source_period_type == "datetime"
+    assert koeln.severity_suggestion == "stabil"
+    assert kaub.current_value == 134.0
+    assert kaub.severity_suggestion == "beobachten"
+    assert "logistik" in kaub.affected_systems
+    assert all("pegelonline.wsv.de" in url for url in called)
+    _validate_items(items)
+
+
+def test_pegelonline_records_source_error_on_http_failure(monkeypatch):
+    response = MagicMock()
+    response.status_code = 503
+    response.raise_for_status.side_effect = RuntimeError("HTTP 503")
+    monkeypatch.setattr("src.adapters.pegelonline.requests.get", lambda *args, **kwargs: response)
+    monkeypatch.setattr("src.adapters.pegelonline.PEGEL_STATIONS", ("KÖLN",))
+
+    adapter = PegelonlineAdapter()
+    assert adapter.fetch_latest() == []
+    assert adapter.source_errors == [
+        {
+            "indicator_id": "wi-pegelonline-koeln",
+            "reason": "HTTP 503",
+            "source_url": "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/K%C3%96LN/W/currentmeasurement.json",
+            "source_stand": None,
+            "observed_at": None,
+            "raw_value": None,
+            "keep_previous": True,
+        }
+    ]
 
 
 # ---------------------------------------------------------------------------

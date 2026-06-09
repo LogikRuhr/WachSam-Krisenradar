@@ -172,16 +172,20 @@ sources:
     layer: weather_water
     operator: Wasserstraßen- und Schifffahrtsverwaltung des Bundes
     source_url: https://www.pegelonline.wsv.de/webservice/guideRestapi
-    adapter: null
-    indicator_ids: []
-    status: adapter-ready
+    adapter: src.adapters.pegelonline.PegelonlineAdapter
+    indicator_ids:
+      - wi-pegelonline-koeln
+      - wi-pegelonline-kaub
+      - wi-pegelonline-duisburg-ruhrort
+      - wi-pegelonline-magdeburg-strombruecke
+    status: active
     format: rest-json
     auth_required: none
     freshness_expectation: near-real-time
     household_relevance: hoch
-    current_quality: api-docs-verified-http-200
-    risk_notes: Needs station selection and regional household relevance mapping.
-    next_step: Build first narrow adapter for a small station set.
+    current_quality: live-adapter-added-current-measurements
+    risk_notes: Narrow station basket; water-level interpretation remains station-specific and must not be treated as national flood forecast.
+    next_step: Add thresholds or station baselines before strong severity claims.
   - id: smard
     name: SMARD Strommarktdaten
     layer: energy

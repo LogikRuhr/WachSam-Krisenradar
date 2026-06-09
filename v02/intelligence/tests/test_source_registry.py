@@ -63,7 +63,8 @@ def test_source_registry_tracks_current_and_candidate_basis():
     ]:
         assert required in sources
 
-    assert sources["pegelonline"]["status"] == "adapter-ready"
+    assert sources["pegelonline"]["status"] == "active"
+    assert sources["pegelonline"]["adapter"] == "src.adapters.pegelonline.PegelonlineAdapter"
     assert sources["dwd-open-data"]["status"] == "adapter-ready"
     assert sources["smard"]["status"] == "blocked-until-docs"
     assert sources["destatis-vpi"]["current_quality"] == "live-dry-run-ok-with-credentials-zip-csv"
