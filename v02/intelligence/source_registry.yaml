@@ -1,0 +1,289 @@
+version: 1
+updated_at: "2026-06-08"
+status_values:
+  - active
+  - adapter-ready
+  - adapter-candidate
+  - research-needed
+  - editorial-only
+  - blocked-until-docs
+  - disabled
+  - deprecated
+layers:
+  - id: energy
+    label: Energie
+    household_relevance: hoch
+  - id: prices_finance
+    label: Preise und Finanzen
+    household_relevance: hoch
+  - id: mobility
+    label: Mobilität
+    household_relevance: mittel
+  - id: weather_water
+    label: Wetter und Wasser
+    household_relevance: hoch
+  - id: health_supply
+    label: Gesundheit und Versorgung
+    household_relevance: hoch
+  - id: labour_industry
+    label: Arbeit und Industrie
+    household_relevance: mittel
+  - id: society_infrastructure
+    label: Gesellschaft und Infrastruktur
+    household_relevance: mittel
+sources:
+  - id: destatis-vpi
+    name: Destatis Verbraucherpreisindex
+    layer: prices_finance
+    operator: Statistisches Bundesamt
+    source_url: https://www.destatis.de/DE/Themen/Wirtschaft/Preise/Verbraucherpreisindex/_inhalt.html
+    adapter: src.adapters.destatis.DestatisAdapter
+    indicator_ids: [wi-inflation-vpi-de]
+    status: active
+    format: datencsv via GENESIS REST
+    auth_required: optional-credentials
+    freshness_expectation: monthly
+    household_relevance: hoch
+    current_quality: unstable-live-dry-run-http-401
+    risk_notes: GENESIS endpoint/auth needs repair; fallback currently masks fetch failures.
+    next_step: Verify current GENESIS endpoint and credential strategy before relying on live values.
+  - id: gie-agsi-gas-storage
+    name: GIE AGSI+ Gasspeicher Deutschland
+    layer: energy
+    operator: Gas Infrastructure Europe
+    source_url: https://agsi.gie.eu/
+    adapter: src.adapters.bnetza.BNetzAAdapter
+    indicator_ids: [wi-gasspeicher-fuellstand]
+    status: active
+    format: json
+    auth_required: optional-api-key
+    freshness_expectation: daily
+    household_relevance: hoch
+    current_quality: unstable-live-dry-run-timeout
+    risk_notes: Timeout produced fallback item; needs retry/stale handling and source health.
+    next_step: Add health-check timeout/retry strategy and verify current AGSI API behavior.
+  - id: eia-brent
+    name: EIA Brent Rohölpreis
+    layer: energy
+    operator: U.S. Energy Information Administration
+    source_url: https://www.eia.gov/dnav/pet/hist/rbrted.htm
+    adapter: src.adapters.eia.EIAAdapter
+    indicator_ids: [wi-oel-brent]
+    status: active
+    format: json
+    auth_required: api-key
+    freshness_expectation: daily-market-days
+    household_relevance: mittel
+    current_quality: live-dry-run-ok-with-key
+    risk_notes: Indirect Germany relevance; missing DB thresholds trigger shadow warnings.
+    next_step: Add source_stand and thresholds before public overinterpretation.
+  - id: fred-eu-gas
+    name: FRED EU Natural Gas Price
+    layer: energy
+    operator: Federal Reserve Bank of St. Louis
+    source_url: https://fred.stlouisfed.org/series/PNGASEUUSDM
+    adapter: src.adapters.fred.FREDAdapter
+    indicator_ids: [wi-gaspreis-europa]
+    status: active
+    format: json
+    auth_required: api-key
+    freshness_expectation: monthly
+    household_relevance: mittel
+    current_quality: missing-key-in-local-dry-run
+    risk_notes: Without FRED_API_KEY adapter falls back; endpoint/key behavior must be verified with configured prod secret.
+    next_step: Verify secret presence and current endpoint response in production-safe dry-run.
+  - id: fao-food-price-index
+    name: FAO Food Price Index
+    layer: prices_finance
+    operator: Food and Agriculture Organization
+    source_url: https://www.fao.org/worldfoodsituation/foodpricesindex/en
+    adapter: src.adapters.fao.FAOAdapter
+    indicator_ids: [wi-fao-food-price-index]
+    status: active
+    format: csv
+    auth_required: none
+    freshness_expectation: monthly
+    household_relevance: hoch
+    current_quality: live-dry-run-ok-fragile-url
+    risk_notes: Static CSV URL/versioning may break after FAO updates; User-Agent workaround exists.
+    next_step: Replace fragile download URL with discoverable stable source path if possible.
+  - id: tankerkoenig-fuel
+    name: Tankerkönig MTS-K Kraftstoffpreise
+    layer: mobility
+    operator: Tankerkönig / Markttransparenzstelle Kraftstoffe
+    source_url: https://creativecommons.tankerkoenig.de/
+    adapter: src.adapters.tankerkoenig.TankerkoenigAdapter
+    indicator_ids: [wi-kraftstoffpreis-super-e10, wi-kraftstoffpreis-diesel]
+    status: active
+    format: json
+    auth_required: api-key
+    freshness_expectation: daily-sample
+    household_relevance: hoch
+    current_quality: live-dry-run-ok
+    risk_notes: 16-PLZ sample is not a national average; no previous_value by design.
+    next_step: Keep sample wording explicit and add source_stand/current_value_date display.
+  - id: rss-tagesschau
+    name: Tagesschau RSS
+    layer: society_infrastructure
+    operator: ARD/tagesschau.de
+    source_url: https://www.tagesschau.de/infoservices/alle-meldungen-100.html
+    adapter: src.crawler.rss_crawler.RSSCrawler
+    indicator_ids: []
+    status: active
+    format: rss
+    auth_required: none
+    freshness_expectation: continuous-editorial
+    household_relevance: mittel
+    current_quality: live-dry-run-ok-needs-timeout
+    risk_notes: RSS path lacks robust timeout/retry and requires LLM/editorial review.
+    next_step: Add crawler tests and explicit timeouts.
+  - id: rss-handelsblatt
+    name: Handelsblatt RSS
+    layer: labour_industry
+    operator: Handelsblatt
+    source_url: https://www.handelsblatt.com/
+    adapter: src.crawler.rss_crawler.RSSCrawler
+    indicator_ids: []
+    status: active
+    format: rss
+    auth_required: none
+    freshness_expectation: continuous-editorial
+    household_relevance: mittel
+    current_quality: live-dry-run-returned-zero-items
+    risk_notes: Feed path or parser may be stale; requires endpoint verification.
+    next_step: Verify current RSS URL and add tests.
+  - id: dwd-open-data
+    name: DWD Open Data
+    layer: weather_water
+    operator: Deutscher Wetterdienst
+    source_url: https://opendata.dwd.de/
+    adapter: null
+    indicator_ids: []
+    status: adapter-ready
+    format: open-data-directory
+    auth_required: none
+    freshness_expectation: product-dependent
+    household_relevance: hoch
+    current_quality: source-url-verified-http-200
+    risk_notes: Many products; choose one product path first to avoid scope explosion.
+    next_step: Select concrete weather/warning product and write adapter tests.
+  - id: pegelonline
+    name: Pegelonline WSV
+    layer: weather_water
+    operator: Wasserstraßen- und Schifffahrtsverwaltung des Bundes
+    source_url: https://www.pegelonline.wsv.de/webservice/guideRestapi
+    adapter: null
+    indicator_ids: []
+    status: adapter-ready
+    format: rest-json
+    auth_required: none
+    freshness_expectation: near-real-time
+    household_relevance: hoch
+    current_quality: api-docs-verified-http-200
+    risk_notes: Needs station selection and regional household relevance mapping.
+    next_step: Build first narrow adapter for a small station set.
+  - id: smard
+    name: SMARD Strommarktdaten
+    layer: energy
+    operator: Bundesnetzagentur
+    source_url: https://www.smard.de/
+    adapter: null
+    indicator_ids: []
+    status: blocked-until-docs
+    format: unknown
+    auth_required: unknown
+    freshness_expectation: product-dependent
+    household_relevance: hoch
+    current_quality: old-doc-path-returned-404
+    risk_notes: Do not build until current API docs and terms are verified.
+    next_step: Research current SMARD API docs and usage terms.
+  - id: entsoe-transparency
+    name: ENTSO-E Transparency Platform
+    layer: energy
+    operator: ENTSO-E
+    source_url: https://transparency.entsoe.eu/
+    adapter: null
+    indicator_ids: []
+    status: research-needed
+    format: api
+    auth_required: api-key
+    freshness_expectation: product-dependent
+    household_relevance: mittel
+    current_quality: docs-head-check-inconclusive
+    risk_notes: Token, rate limits and usage terms required.
+    next_step: Verify API access and terms before adapter planning.
+  - id: bfarm-lieferengpaesse
+    name: BfArM Lieferengpässe
+    layer: health_supply
+    operator: Bundesinstitut für Arzneimittel und Medizinprodukte
+    source_url: https://www.bfarm.de/DE/Arzneimittel/Arzneimittelinformationen/Lieferengpaesse/_node.html
+    adapter: null
+    indicator_ids: []
+    status: research-needed
+    format: unknown
+    auth_required: none
+    freshness_expectation: product-dependent
+    household_relevance: hoch
+    current_quality: head-check-returned-400
+    risk_notes: Need browser/GET/download path verification; high editorial value.
+    next_step: Find stable machine-readable download/API path.
+  - id: ba-statistik
+    name: Bundesagentur für Arbeit Statistik
+    layer: labour_industry
+    operator: Bundesagentur für Arbeit
+    source_url: https://statistik.arbeitsagentur.de/
+    adapter: null
+    indicator_ids: []
+    status: adapter-candidate
+    format: downloads-api-unknown
+    auth_required: unknown
+    freshness_expectation: monthly
+    household_relevance: mittel
+    current_quality: source-url-verified-http-200
+    risk_notes: Machine-readable stable download path needs verification.
+    next_step: Research data download/API for unemployment, short-time work, regional labour indicators.
+  - id: bundesbank-timeseries
+    name: Deutsche Bundesbank Zeitreihen
+    layer: prices_finance
+    operator: Deutsche Bundesbank
+    source_url: https://www.bundesbank.de/de/statistiken/zeitreihen-datenbanken
+    adapter: null
+    indicator_ids: []
+    status: adapter-candidate
+    format: time-series-api-unknown
+    auth_required: unknown
+    freshness_expectation: monthly-or-quarterly
+    household_relevance: mittel
+    current_quality: source-url-verified-http-200
+    risk_notes: Avoid pseudo-exact household predictions from finance indicators.
+    next_step: Identify 1-2 relevant series and API/download path.
+  - id: rki-survstat
+    name: RKI SurvStat / Gesundheitsdaten
+    layer: health_supply
+    operator: Robert Koch-Institut
+    source_url: https://survstat.rki.de/
+    adapter: null
+    indicator_ids: []
+    status: research-needed
+    format: unknown
+    auth_required: unknown
+    freshness_expectation: weekly-or-monthly
+    household_relevance: mittel
+    current_quality: checked-path-rendered-error-page
+    risk_notes: Meldeverzug and interpretation risk; do not alarmize.
+    next_step: Verify current machine-readable RKI data access path.
+  - id: bdew-strompreisanalyse
+    name: BDEW Strompreisanalyse
+    layer: energy
+    operator: BDEW
+    source_url: https://www.bdew.de/service/daten-und-grafiken/bdew-strompreisanalyse/
+    adapter: null
+    indicator_ids: []
+    status: editorial-only
+    format: web-report
+    auth_required: none
+    freshness_expectation: periodic
+    household_relevance: hoch
+    current_quality: source-url-verified-http-200
+    risk_notes: Association source; use as context, not official authority.
+    next_step: Keep editorial-only unless stable downloads and terms are found.

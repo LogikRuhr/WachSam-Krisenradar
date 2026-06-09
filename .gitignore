@@ -17,6 +17,9 @@ build/
 coverage/
 __pycache__/
 *.pyc
+*.egg-info/
+.venv/
+v02/intelligence/uv.lock
 test-results/
 playwright-report/
 
