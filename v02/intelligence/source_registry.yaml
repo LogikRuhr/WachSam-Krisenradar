@@ -1,5 +1,5 @@
 version: 1
-updated_at: "2026-06-08"
+updated_at: "2026-06-09"
 status_values:
   - active
   - adapter-ready
@@ -44,9 +44,9 @@ sources:
     auth_required: optional-credentials
     freshness_expectation: monthly
     household_relevance: hoch
-    current_quality: unstable-live-dry-run-http-401
-    risk_notes: GENESIS endpoint/auth needs repair; fallback currently masks fetch failures.
-    next_step: Verify current GENESIS endpoint and credential strategy before relying on live values.
+    current_quality: live-dry-run-ok-with-credentials-zip-csv
+    risk_notes: GENESIS may return zipped DATENCSV even with compress=false; adapter decodes ZIP and maps source_stand.
+    next_step: Add runtime source-health persistence before auto-published indicator updates.
   - id: gie-agsi-gas-storage
     name: GIE AGSI+ Gasspeicher Deutschland
     layer: energy
@@ -59,9 +59,9 @@ sources:
     auth_required: optional-api-key
     freshness_expectation: daily
     household_relevance: hoch
-    current_quality: unstable-live-dry-run-timeout
-    risk_notes: Timeout produced fallback item; needs retry/stale handling and source health.
-    next_step: Add health-check timeout/retry strategy and verify current AGSI API behavior.
+    current_quality: live-dry-run-ok-with-key
+    risk_notes: Needs retry/stale-on-error persistence so transient AGSI timeouts do not look like clean updates.
+    next_step: Add health-check timeout/retry strategy and source-health persistence.
   - id: eia-brent
     name: EIA Brent Rohölpreis
     layer: energy
@@ -76,7 +76,7 @@ sources:
     household_relevance: mittel
     current_quality: live-dry-run-ok-with-key
     risk_notes: Indirect Germany relevance; missing DB thresholds trigger shadow warnings.
-    next_step: Add source_stand and thresholds before public overinterpretation.
+    next_step: Add thresholds before public overinterpretation.
   - id: fred-eu-gas
     name: FRED EU Natural Gas Price
     layer: energy
@@ -89,9 +89,9 @@ sources:
     auth_required: api-key
     freshness_expectation: monthly
     household_relevance: mittel
-    current_quality: missing-key-in-local-dry-run
-    risk_notes: Without FRED_API_KEY adapter falls back; endpoint/key behavior must be verified with configured prod secret.
-    next_step: Verify secret presence and current endpoint response in production-safe dry-run.
+    current_quality: live-dry-run-ok-with-key
+    risk_notes: Monthly series; needs source-health persistence and threshold calibration.
+    next_step: Add thresholds before public overinterpretation.
   - id: fao-food-price-index
     name: FAO Food Price Index
     layer: prices_finance
@@ -121,7 +121,7 @@ sources:
     household_relevance: hoch
     current_quality: live-dry-run-ok
     risk_notes: 16-PLZ sample is not a national average; no previous_value by design.
-    next_step: Keep sample wording explicit and add source_stand/current_value_date display.
+    next_step: Keep sample wording explicit and add source-health persistence.
   - id: rss-tagesschau
     name: Tagesschau RSS
     layer: society_infrastructure

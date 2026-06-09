@@ -62,6 +62,9 @@ class FAOAdapter(BaseAdapter):
                 current_value_date=str(latest.get("Date")),
                 previous_value=previous_value,
                 previous_value_date=str(previous.get("Date")) if previous is not None else None,
+                source_stand_date=str(latest.get("Date")),
+                source_stand_label=str(latest.get("Date")),
+                source_period_type="month",
             )
         except Exception as e:
             self.log_error(f"FAO FPI fetch failed: {e}")

@@ -1,9 +1,12 @@
 from datetime import date
+from io import BytesIO
+from zipfile import ZipFile
 
 import pytest
 from unittest.mock import MagicMock
 
 from src.adapters.destatis import DestatisAdapter
+from src.adapters.destatis import decode_genesis_table_response
 from src.adapters.destatis import parse_vpi_table
 from src.adapters.bnetza import BNetzAAdapter
 from src.adapters.eia import EIAAdapter
@@ -61,6 +64,36 @@ def test_parse_vpi_table_extracts_latest_yoy_value():
     assert result.previous_value_date == "2026-03"
 
 
+def test_parse_vpi_table_extracts_latest_yoy_value_from_genesis_year_month_rows():
+    table = "\n".join(
+        [
+            "Tabelle: 61111-0002",
+            "Verbraucherpreisindex: Deutschland, Monate;;;;",
+            ";;Verbraucherpreisindex;Veränderung zum Vorjahresmonat;Veränderung zum Vormonat",
+            ";;2020=100;in (%);in (%)",
+            "2026;März;124,5;+2,7;+1,1",
+            "2026;April;125,2;+2,9;+0,6",
+            "2026;Mai;...;...;...",
+        ]
+    )
+
+    result = parse_vpi_table(table)
+
+    assert result.current_value == 2.9
+    assert result.current_value_date == "2026-04"
+    assert result.previous_value == 2.7
+    assert result.previous_value_date == "2026-03"
+
+
+def test_decode_genesis_table_response_reads_zipped_csv():
+    csv_text = "Monate;Veränderung zum Vorjahresmonat\n2026-04;2,9\n"
+    buffer = BytesIO()
+    with ZipFile(buffer, "w") as archive:
+        archive.writestr("61111-0002_de.csv", csv_text.encode("utf-8"))
+
+    assert decode_genesis_table_response(buffer.getvalue(), "fallback") == csv_text
+
+
 def test_destatis_adapter_maps_vpi_to_indicator_live_value(monkeypatch):
     response = MagicMock()
     response.status_code = 200
@@ -71,6 +104,7 @@ def test_destatis_adapter_maps_vpi_to_indicator_live_value(monkeypatch):
             "2026-04;120,7;2,1;0,4",
         ]
     )
+    response.content = response.text.encode("utf-8")
 
     monkeypatch.setattr("src.adapters.destatis.requests.post", lambda *args, **kwargs: response)
 
@@ -81,6 +115,8 @@ def test_destatis_adapter_maps_vpi_to_indicator_live_value(monkeypatch):
     assert item.current_value_date == "2026-04"
     assert item.previous_value == 2.2
     assert item.previous_value_date == "2026-03"
+    assert item.source_stand_date == "2026-04"
+    assert item.source_period_type == "month"
 
 
 @pytest.mark.live
@@ -112,6 +148,8 @@ def test_bnetza_adapter_parses_gie_data_envelope(monkeypatch):
     assert item.current_value_date == "2026-05-27"
     assert item.previous_value == 71.9
     assert item.previous_value_date == "2026-05-26"
+    assert item.source_stand_date == "2026-05-27"
+    assert item.source_period_type == "date"
 
 
 def test_eia_adapter_maps_brent_to_indicator_live_value(monkeypatch):
@@ -148,6 +186,8 @@ def test_eia_adapter_maps_brent_to_indicator_live_value(monkeypatch):
     assert item.current_value_date == "2026-05-24"
     assert item.previous_value == 81.9
     assert item.previous_value_date == "2026-05-23"
+    assert item.source_stand_date == "2026-05-24"
+    assert item.source_period_type == "date"
 
 
 @pytest.mark.live
@@ -183,6 +223,8 @@ def test_fao_adapter_maps_food_price_index_to_indicator_live_value(monkeypatch):
     assert item.current_value_date == "2026-04"
     assert item.previous_value == 126.4
     assert item.previous_value_date == "2026-03"
+    assert item.source_stand_date == "2026-04"
+    assert item.source_period_type == "month"
 
 
 @pytest.mark.live
@@ -260,6 +302,8 @@ def test_tankerkoenig_maps_to_indicator_live_values(monkeypatch):
     assert e10.current_value == 1.769
     assert diesel.current_value == 1.676
     assert e10.current_value_date == date.today().isoformat()
+    assert e10.source_stand_date == date.today().isoformat()
+    assert e10.source_period_type == "date"
     assert e10.previous_value is None
     _validate_items(items)
 
@@ -316,6 +360,8 @@ def test_fred_adapter_parses_two_observations(monkeypatch):
     assert item.current_value_date == "2026-04-01"
     assert item.previous_value == 11.50
     assert item.previous_value_date == "2026-03-01"
+    assert item.source_stand_date == "2026-04-01"
+    assert item.source_period_type == "month"
     _validate_items(items)
 
 

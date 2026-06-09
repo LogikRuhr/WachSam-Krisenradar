@@ -74,6 +74,9 @@ class EIAAdapter(BaseAdapter):
                         current_value_date=latest.get("period"),
                         previous_value=previous_value,
                         previous_value_date=previous.get("period"),
+                        source_stand_date=latest.get("period"),
+                        source_stand_label=latest.get("period"),
+                        source_period_type="date",
                     )]
 
             self.log_error(f"Brent fetch: Status {response.status_code}")

@@ -1,9 +1,10 @@
 import csv
 import re
 from dataclasses import dataclass
-from io import StringIO
+from io import BytesIO, StringIO
 import requests
 from typing import List
+from zipfile import BadZipFile, ZipFile
 
 from .base import BaseAdapter
 from ..models import IngestionItem, GermanyRelevance
@@ -38,6 +39,43 @@ MONTHS_DE = {
 def _parse_number(value: str) -> float:
     normalized = value.strip().replace("+", "").replace("%", "").replace(".", "").replace(",", ".")
     return float(normalized)
+
+
+def decode_genesis_table_response(content: bytes, fallback_text: str) -> str:
+    """Decode GENESIS tablefile responses.
+
+    GENESIS may return the requested DATENCSV as a ZIP payload even when
+    `compress=false` is sent. The adapter consumes the contained CSV text and
+    falls back to `response.text` for uncompressed responses/tests.
+    """
+    if content.startswith(b"PK"):
+        try:
+            with ZipFile(BytesIO(content)) as archive:
+                csv_names = [name for name in archive.namelist() if name.lower().endswith(".csv")]
+                if not csv_names:
+                    raise ValueError("GENESIS ZIP response does not contain a CSV file")
+                raw = archive.read(csv_names[0])
+        except BadZipFile as exc:
+            raise ValueError("GENESIS ZIP response is invalid") from exc
+
+        for encoding in ("utf-8-sig", "utf-8", "cp1252", "latin-1"):
+            try:
+                return raw.decode(encoding)
+            except UnicodeDecodeError:
+                continue
+        return raw.decode("utf-8", errors="replace")
+
+    return fallback_text
+
+
+def _date_label_from_row(row: list[str], date_index: int) -> str:
+    date_label = row[date_index].strip()
+    next_cell = row[date_index + 1].strip() if date_index + 1 < len(row) else ""
+    if re.fullmatch(r"20\d{2}|19\d{2}", date_label) and next_cell:
+        month = MONTHS_DE.get(next_cell.lower())
+        if month:
+            return f"{date_label}-{month:02d}"
+    return date_label
 
 
 def _period_sort_key(value: str, fallback_index: int) -> tuple[int, int, int]:
@@ -77,7 +115,7 @@ def parse_vpi_table(table_text: str) -> VPILiveValue:
             value_index = value_candidates[0]
             date_candidates = [
                 cell_index
-                for cell_index, cell in enumerate(lowered)
+                for cell_index, cell in enumerate(lowered[:value_index])
                 if "monat" in cell or "zeit" in cell
             ]
             date_index = date_candidates[0] if date_candidates else 0
@@ -90,7 +128,7 @@ def parse_vpi_table(table_text: str) -> VPILiveValue:
     for offset, row in enumerate(rows[header_index + 1 :], start=1):
         if max(date_index, value_index) >= len(row):
             continue
-        date_label = row[date_index].strip()
+        date_label = _date_label_from_row(row, date_index)
         value_label = row[value_index].strip()
         if not date_label or not value_label:
             continue
@@ -152,8 +190,9 @@ class DestatisAdapter(BaseAdapter):
                 timeout=30,
             )
 
-            if response.status_code == 200 and len(response.text) > 50:
-                live_value = parse_vpi_table(response.text)
+            if response.status_code == 200 and len(response.content) > 50:
+                table_text = decode_genesis_table_response(response.content, response.text)
+                live_value = parse_vpi_table(table_text)
                 return [self.create_item(
                     title=f"Inflation Deutschland: {live_value.current_value:.1f}% ({live_value.current_value_date})",
                     description=(
@@ -174,6 +213,9 @@ class DestatisAdapter(BaseAdapter):
                     current_value_date=live_value.current_value_date,
                     previous_value=live_value.previous_value,
                     previous_value_date=live_value.previous_value_date,
+                    source_stand_date=live_value.current_value_date,
+                    source_stand_label=live_value.current_value_date,
+                    source_period_type="month",
                 )]
 
             self.log_error(f"VPI fetch: Status {response.status_code}")

@@ -66,4 +66,5 @@ def test_source_registry_tracks_current_and_candidate_basis():
     assert sources["pegelonline"]["status"] == "adapter-ready"
     assert sources["dwd-open-data"]["status"] == "adapter-ready"
     assert sources["smard"]["status"] == "blocked-until-docs"
-    assert "unstable" in sources["destatis-vpi"]["current_quality"]
+    assert sources["destatis-vpi"]["current_quality"] == "live-dry-run-ok-with-credentials-zip-csv"
+    assert sources["fred-eu-gas"]["current_quality"] == "live-dry-run-ok-with-key"

@@ -183,6 +183,9 @@ class TankerkoenigAdapter(BaseAdapter):
                 indicator_id=indicator_id,
                 current_value=value,
                 current_value_date=value_date,
+                source_stand_date=value_date,
+                source_stand_label=value_date,
+                source_period_type="date",
             ))
 
         return items

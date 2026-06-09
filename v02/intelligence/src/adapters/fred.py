@@ -99,6 +99,9 @@ class FREDAdapter(BaseAdapter):
                         current_value_date=current_date,
                         previous_value=previous_value,
                         previous_value_date=previous_date,
+                        source_stand_date=current_date,
+                        source_stand_label=current_date,
+                        source_period_type="month",
                     )]
 
             self.log_error(f"Gas price fetch: Status {response.status_code}")

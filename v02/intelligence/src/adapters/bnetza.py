@@ -74,6 +74,9 @@ class BNetzAAdapter(BaseAdapter):
                         current_value_date=gas_date,
                         previous_value=prev_val,
                         previous_value_date=prev_date,
+                        source_stand_date=gas_date,
+                        source_stand_label=gas_date,
+                        source_period_type="date",
                     )]
 
             self.log_error(f"GIE API: Status {response.status_code}")
