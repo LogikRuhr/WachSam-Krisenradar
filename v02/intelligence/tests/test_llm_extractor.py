@@ -1,5 +1,8 @@
 import pytest
 from unittest.mock import patch, MagicMock
+from google.api_core.exceptions import ResourceExhausted
+
+import src.extractors.llm_extractor as llm_module
 from src.extractors.llm_extractor import extract_with_llm
 
 
@@ -73,3 +76,83 @@ async def test_extract_handles_invalid_json(mock_init, mock_settings):
         result = await extract_with_llm("Content", "https://example.com", "medien")
 
     assert result is None
+
+
+@pytest.mark.asyncio
+@patch("src.extractors.llm_extractor.settings")
+@patch("src.extractors.llm_extractor._init_vertex")
+async def test_extract_retries_resource_exhausted_then_returns_item(mock_init, mock_settings, monkeypatch):
+    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    sleep_calls = []
+
+    async def fake_sleep(seconds):
+        sleep_calls.append(seconds)
+
+    monkeypatch.setattr(llm_module, "asyncio", MagicMock(sleep=fake_sleep), raising=False)
+
+    mock_response = MagicMock()
+    mock_response.text = MOCK_LLM_RESPONSE
+    mock_model = MagicMock()
+    mock_model.generate_content.side_effect = [ResourceExhausted("quota"), mock_response]
+
+    mock_gm_module = MagicMock()
+    mock_gm_module.GenerativeModel.return_value = mock_model
+
+    with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
+        result = await extract_with_llm("Content", "https://example.com", "medien")
+
+    assert result is not None
+    assert result.title == "Gaspreise steigen erneut"
+    assert mock_model.generate_content.call_count == 2
+    assert sleep_calls == [2]
+
+
+@pytest.mark.asyncio
+@patch("src.extractors.llm_extractor.settings")
+@patch("src.extractors.llm_extractor._init_vertex")
+async def test_extract_returns_none_after_repeated_resource_exhausted(
+    mock_init, mock_settings, monkeypatch, caplog
+):
+    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    sleep_calls = []
+
+    async def fake_sleep(seconds):
+        sleep_calls.append(seconds)
+
+    monkeypatch.setattr(llm_module, "asyncio", MagicMock(sleep=fake_sleep), raising=False)
+
+    mock_model = MagicMock()
+    mock_model.generate_content.side_effect = ResourceExhausted("quota")
+
+    mock_gm_module = MagicMock()
+    mock_gm_module.GenerativeModel.return_value = mock_model
+
+    with caplog.at_level("WARNING"):
+        with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
+            result = await extract_with_llm("Content", "https://example.com", "medien")
+
+    assert result is None
+    assert mock_model.generate_content.call_count == 3
+    assert sleep_calls == [2, 4]
+    assert "LLM unavailable after retries" in caplog.text
+
+
+@pytest.mark.asyncio
+@patch("src.extractors.llm_extractor.settings")
+@patch("src.extractors.llm_extractor._init_vertex")
+async def test_extract_handles_json_fenced_response(mock_init, mock_settings):
+    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+
+    mock_response = MagicMock()
+    mock_response.text = f"```json\n{MOCK_LLM_RESPONSE}\n```"
+    mock_model = MagicMock()
+    mock_model.generate_content.return_value = mock_response
+
+    mock_gm_module = MagicMock()
+    mock_gm_module.GenerativeModel.return_value = mock_model
+
+    with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
+        result = await extract_with_llm("Content", "https://example.com", "medien")
+
+    assert result is not None
+    assert result.title == "Gaspreise steigen erneut"

@@ -1,4 +1,6 @@
 from datetime import datetime
+import logging
+import socket
 from typing import List, Dict
 
 import feedparser
@@ -6,16 +8,21 @@ import feedparser
 from ..models import IngestionItem, GermanyRelevance
 
 
+logger = logging.getLogger(__name__)
+
+
 class RSSCrawler:
     """RSS Crawler für Nachrichtenquellen (Tagesschau, Handelsblatt etc.)."""
 
-    def __init__(self):
+    def __init__(self, timeout_seconds: int = 10):
+        self.timeout_seconds = timeout_seconds
         self.sources = [
             {"name": "Tagesschau", "url": "https://www.tagesschau.de/xml/rss2/"},
             {"name": "Handelsblatt", "url": "https://www.handelsblatt.com/rss/"},
         ]
 
     def fetch_feed(self, source: Dict) -> List[IngestionItem]:
+        socket.setdefaulttimeout(self.timeout_seconds)
         feed = feedparser.parse(source["url"])
         items = []
 
@@ -47,7 +54,9 @@ class RSSCrawler:
             try:
                 result = self.fetch_feed(source)
                 items.extend(result)
+                logger.info("RSS feed fetched", extra={"source": source["name"], "items": len(result)})
                 print(f"[RSS] {source['name']}: {len(result)} Items")
             except Exception as e:
+                logger.warning("RSS feed failed: %s — %s", source["name"], e)
                 print(f"[RSS] {source['name']} FEHLER: {e}")
         return items

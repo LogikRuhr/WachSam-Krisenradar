@@ -1,10 +1,20 @@
+import asyncio
 import json
+import logging
+import re
 from datetime import datetime
 from typing import Optional
+
+from google.api_core.exceptions import ResourceExhausted
 
 from ..models import IngestionItem, GermanyRelevance
 from ..config import settings
 from .prompts import SYSTEM_PROMPT, build_extraction_prompt
+
+
+logger = logging.getLogger(__name__)
+MAX_LLM_ATTEMPTS = 3
+LLM_RETRY_DELAYS_SECONDS = (2, 4)
 
 
 def _init_vertex():
@@ -38,13 +48,35 @@ async def extract_with_llm(
         )
 
         prompt = build_extraction_prompt(raw_content, source_url)
-        response = model.generate_content(prompt)
+        response = None
+        for attempt in range(1, MAX_LLM_ATTEMPTS + 1):
+            try:
+                response = model.generate_content(prompt)
+                break
+            except ResourceExhausted as e:
+                if attempt >= MAX_LLM_ATTEMPTS:
+                    logger.warning(
+                        "LLM unavailable after retries",
+                        extra={"source_url": source_url, "attempts": attempt, "error": str(e)},
+                    )
+                    print(f"[LLM] Extraction failed: llm_unavailable after {attempt} attempts")
+                    return None
+
+                delay = LLM_RETRY_DELAYS_SECONDS[attempt - 1]
+                logger.warning(
+                    "LLM quota exhausted; retrying",
+                    extra={"source_url": source_url, "attempt": attempt, "delay_seconds": delay},
+                )
+                await asyncio.sleep(delay)
+
+        if response is None:
+            return None
+
         text = response.text.strip()
 
         if text.startswith("```"):
-            text = text.split("```")[1]
-            if text.startswith("json"):
-                text = text[4:]
+            match = re.search(r"\{.*\}", text, re.DOTALL)
+            text = match.group(0) if match else text
 
         data = json.loads(text)
 
@@ -71,8 +103,10 @@ async def extract_with_llm(
         )
 
     except json.JSONDecodeError as e:
+        logger.warning("LLM JSON parse error", extra={"source_url": source_url, "error": str(e)})
         print(f"[LLM] JSON parse error: {e}")
         return None
     except Exception as e:
+        logger.warning("LLM extraction failed", extra={"source_url": source_url, "error": str(e)})
         print(f"[LLM] Extraction failed: {e}")
         return None
