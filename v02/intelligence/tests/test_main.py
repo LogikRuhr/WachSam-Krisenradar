@@ -1,6 +1,7 @@
 import asyncio
 import json
 from datetime import datetime
+from types import SimpleNamespace
 
 from src import main
 from src.models import GermanyRelevance, IngestionItem
@@ -223,6 +224,61 @@ def test_non_indicator_item_skips_shadow_gate(monkeypatch, capsys):
             shadow_lines.append(obj)
 
     assert shadow_lines == []
+
+
+def test_rss_items_use_article_evidence_before_llm(monkeypatch):
+    """RSS ist nur Discovery: LLM bekommt Artikel-Evidence, nicht RSS-Rohobjekt."""
+    raw = _lagebild_item()
+    raw.raw_content = "RSS summary only"
+
+    class FakeCrawler:
+        def fetch_all(self):
+            return [raw]
+
+    class FakeArticleFetcher:
+        def fetch_article_evidence(self, **kwargs):
+            return SimpleNamespace(
+                evidence_status="evidence_ready",
+                excerpt="Artikel-Excerpt mit belegtem Fakt.",
+                raw_text="Artikel-Body mit belegtem Fakt und zusätzlichem Kontext.",
+                content_hash="abc123",
+            )
+
+    async def fake_extract(content, source_url, source_class):
+        assert content == "Artikel-Body mit belegtem Fakt und zusätzlichem Kontext."
+        return IngestionItem(
+            title="Extrahierter Evidence-Draft",
+            description="Aus Artikel-Evidence extrahiert.",
+            source_url=source_url,
+            source_class=source_class,
+            last_ingested_at=datetime.utcnow(),
+            germany_relevance=GermanyRelevance(
+                direct=True,
+                systems_affected=["gesellschaft"],
+                time_to_impact="wochen",
+                description="Evidence-basierte Einordnung.",
+            ),
+            methodology_tag="steep",
+            affected_systems=["gesellschaft"],
+            raw_content=content,
+            status="extracted",
+        )
+
+    for attr in ("DestatisAdapter", "BNetzAAdapter", "EIAAdapter", "FREDAdapter",
+                 "FAOAdapter", "TankerkoenigAdapter", "EurostatAdapter", "WarningIndicatorsAdapter"):
+        monkeypatch.setattr(main, attr, EmptyAdapter)
+    monkeypatch.setattr(main, "RSSCrawler", FakeCrawler)
+    monkeypatch.setattr(main, "ArticleFetcher", FakeArticleFetcher)
+    monkeypatch.setattr(main, "extract_with_llm", fake_extract)
+
+    inserted = []
+    monkeypatch.setattr(main, "insert_draft", lambda item, item_type: inserted.append((item, item_type)) or "draft")
+
+    asyncio.run(main.run_ingestion())
+
+    assert len(inserted) == 1
+    assert inserted[0][0].raw_content == "Artikel-Body mit belegtem Fakt und zusätzlichem Kontext."
+    assert inserted[0][1] == "lagebild_items"
 
 
 # --- W6a.1: C4-Quellfehler-Sichtbarkeit im Ingestion-Fluss -------------------

@@ -20,6 +20,7 @@ from .adapters.tankerkoenig import TankerkoenigAdapter
 from .adapters.eurostat import EurostatAdapter
 from .adapters.warning_indicators import WarningIndicatorsAdapter
 from .crawler.rss_crawler import RSSCrawler
+from .fetchers.article_fetcher import ArticleFetcher
 from .extractors.llm_extractor import extract_with_llm
 from .db import insert_draft, set_dry_run, fetch_indicator_thresholds
 from .validation import validate_draft
@@ -107,11 +108,23 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
             source_errors.extend(getattr(adapter, "source_errors", []))
 
         crawler = RSSCrawler()
+        article_fetcher = ArticleFetcher()
         try:
             raw_items = crawler.fetch_all()
             for raw in raw_items[:5]:
+                evidence = article_fetcher.fetch_article_evidence(
+                    source_id=raw.source_url,
+                    source_name=raw.source_class,
+                    source_url=raw.source_url,
+                    published_at=raw.published_at.isoformat() if raw.published_at else None,
+                )
+                if evidence.evidence_status != "evidence_ready":
+                    print(f"  [RSS] Evidence fehlt: {raw.source_url}")
+                    continue
+
+                evidence_text = evidence.raw_text or evidence.excerpt
                 extracted = await extract_with_llm(
-                    raw.raw_content or raw.description,
+                    evidence_text,
                     raw.source_url,
                     raw.source_class,
                 )
