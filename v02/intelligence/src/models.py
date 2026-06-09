@@ -3,6 +3,24 @@ from datetime import datetime
 from typing import List, Optional, Dict
 
 
+SYSTEM_AFFECTED_VALUES = (
+    "energie",
+    "lebensmittel",
+    "mobilitaet",
+    "gesundheit",
+    "infrastruktur",
+    "industrie",
+    "logistik",
+    "finanzen",
+    "arbeit",
+    "gesellschaft",
+)
+TIME_TO_IMPACT_VALUES = ("kurzfristig", "wochen", "monate", "langfristig")
+METHODOLOGY_TAG_VALUES = ("steep", "rca", "bia", "fmea", "scenario")
+SEVERITY_SUGGESTION_VALUES = ("stabil", "beobachten", "erhöht", "kritisch", "eskalierend")
+CONFIDENCE_SUGGESTION_VALUES = ("niedrig", "mittel", "hoch")
+
+
 class GermanyRelevance(BaseModel):
     direct: bool
     systems_affected: List[str]

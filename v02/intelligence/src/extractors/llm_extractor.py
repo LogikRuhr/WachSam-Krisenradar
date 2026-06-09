@@ -7,7 +7,15 @@ from typing import Optional
 
 from google.api_core.exceptions import ResourceExhausted
 
-from ..models import IngestionItem, GermanyRelevance
+from ..models import (
+    CONFIDENCE_SUGGESTION_VALUES,
+    IngestionItem,
+    GermanyRelevance,
+    METHODOLOGY_TAG_VALUES,
+    SEVERITY_SUGGESTION_VALUES,
+    SYSTEM_AFFECTED_VALUES,
+    TIME_TO_IMPACT_VALUES,
+)
 from ..config import settings
 from .prompts import SYSTEM_PROMPT, build_extraction_prompt
 
@@ -15,6 +23,37 @@ from .prompts import SYSTEM_PROMPT, build_extraction_prompt
 logger = logging.getLogger(__name__)
 MAX_LLM_ATTEMPTS = 3
 LLM_RETRY_DELAYS_SECONDS = (2, 4)
+
+
+def _validate_llm_payload(data: dict, source_url: str) -> bool:
+    gr = data.get("germany_relevance", {})
+    errors = []
+
+    systems = gr.get("systems_affected", [])
+    if not isinstance(systems, list) or any(system not in SYSTEM_AFFECTED_VALUES for system in systems):
+        errors.append("germany_relevance.systems_affected")
+
+    if gr.get("time_to_impact") not in TIME_TO_IMPACT_VALUES:
+        errors.append("germany_relevance.time_to_impact")
+
+    if data.get("methodology_tag") not in METHODOLOGY_TAG_VALUES:
+        errors.append("methodology_tag")
+
+    if data.get("severity_suggestion") not in SEVERITY_SUGGESTION_VALUES:
+        errors.append("severity_suggestion")
+
+    if data.get("confidence_suggestion") not in CONFIDENCE_SUGGESTION_VALUES:
+        errors.append("confidence_suggestion")
+
+    if not errors:
+        return True
+
+    logger.warning(
+        "LLM schema validation failed",
+        extra={"source_url": source_url, "invalid_fields": errors},
+    )
+    print(f"[LLM] Schema validation failed: {', '.join(errors)}")
+    return False
 
 
 def _init_vertex():
@@ -79,6 +118,8 @@ async def extract_with_llm(
             text = match.group(0) if match else text
 
         data = json.loads(text)
+        if not _validate_llm_payload(data, source_url):
+            return None
 
         gr = data.get("germany_relevance", {})
         return IngestionItem(

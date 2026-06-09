@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from unittest.mock import patch, MagicMock
 from google.api_core.exceptions import ResourceExhausted
@@ -156,3 +158,83 @@ async def test_extract_handles_json_fenced_response(mock_init, mock_settings):
 
     assert result is not None
     assert result.title == "Gaspreise steigen erneut"
+
+
+@pytest.mark.asyncio
+@patch("src.extractors.llm_extractor.settings")
+@patch("src.extractors.llm_extractor._init_vertex")
+async def test_extract_rejects_invalid_severity_from_llm(mock_init, mock_settings, caplog):
+    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    payload = json.loads(MOCK_LLM_RESPONSE)
+    payload["severity_suggestion"] = "panik"
+
+    mock_response = MagicMock()
+    mock_response.text = json.dumps(payload)
+    mock_model = MagicMock()
+    mock_model.generate_content.return_value = mock_response
+
+    mock_gm_module = MagicMock()
+    mock_gm_module.GenerativeModel.return_value = mock_model
+
+    with caplog.at_level("WARNING"):
+        with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
+            result = await extract_with_llm("Content", "https://example.com", "medien")
+
+    assert result is None
+    assert "LLM schema validation failed" in caplog.text
+
+
+@pytest.mark.asyncio
+@patch("src.extractors.llm_extractor.settings")
+@patch("src.extractors.llm_extractor._init_vertex")
+async def test_extract_rejects_unknown_system_from_llm(mock_init, mock_settings, caplog):
+    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    payload = json.loads(MOCK_LLM_RESPONSE)
+    payload["germany_relevance"]["systems_affected"] = ["weltraum"]
+
+    mock_response = MagicMock()
+    mock_response.text = json.dumps(payload)
+    mock_model = MagicMock()
+    mock_model.generate_content.return_value = mock_response
+
+    mock_gm_module = MagicMock()
+    mock_gm_module.GenerativeModel.return_value = mock_model
+
+    with caplog.at_level("WARNING"):
+        with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
+            result = await extract_with_llm("Content", "https://example.com", "medien")
+
+    assert result is None
+    assert "LLM schema validation failed" in caplog.text
+
+
+@pytest.mark.asyncio
+@patch("src.extractors.llm_extractor.settings")
+@patch("src.extractors.llm_extractor._init_vertex")
+async def test_extract_never_accepts_published_status_from_llm(mock_init, mock_settings):
+    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    payload = json.loads(MOCK_LLM_RESPONSE)
+    payload["status"] = "published"
+
+    mock_response = MagicMock()
+    mock_response.text = json.dumps(payload)
+    mock_model = MagicMock()
+    mock_model.generate_content.return_value = mock_response
+
+    mock_gm_module = MagicMock()
+    mock_gm_module.GenerativeModel.return_value = mock_model
+
+    with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
+        result = await extract_with_llm("Content", "https://example.com", "medien")
+
+    assert result is not None
+    assert result.status == "extracted"
+
+
+def test_prompt_declares_version_and_exact_kanon_values():
+    from src.extractors.prompts import SYSTEM_PROMPT, WACHSAM_EXTRACT_PROMPT_VERSION
+
+    assert WACHSAM_EXTRACT_PROMPT_VERSION == "rss-evidence-v1"
+    assert "rss-evidence-v1" in SYSTEM_PROMPT
+    assert '"beobachten"' in SYSTEM_PROMPT
+    assert '"gesellschaft"' in SYSTEM_PROMPT
