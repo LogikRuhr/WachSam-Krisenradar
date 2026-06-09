@@ -26,6 +26,7 @@ from .db import insert_draft, set_dry_run, fetch_indicator_thresholds
 from .validation import validate_draft
 from .gate import evaluate_plausibility, source_error_verdict, build_shadow_log
 from .plausibility_rules import get_rules
+from .source_health import build_source_health, persist_source_health
 
 
 ADAPTER_TYPE_MAP = {
@@ -95,17 +96,30 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
 
     items = []
     source_errors = []
+    source_health_records = []
     if allow_fetch:
         for adapter in adapters:
+            result = []
+            adapter_errors = []
             try:
                 result = adapter.fetch_latest()
                 items.extend(result)
                 print(f"  [{adapter.name}] {len(result)} Items")
             except Exception as e:
+                adapter_errors.append({"reason": str(e)})
                 print(f"  [{adapter.name}] FEHLER: {e}")
             # W6a.1: gemeldete Quell-/Fetch-/Parsingfehler einsammeln (rein
             # additiv; getattr-defensiv für Adapter/Fakes ohne das Attribut).
-            source_errors.extend(getattr(adapter, "source_errors", []))
+            adapter_errors.extend(getattr(adapter, "source_errors", []))
+            source_errors.extend(adapter_errors)
+            source_health_records.append(
+                build_source_health(adapter, item_count=len(result), source_errors=adapter_errors)
+            )
+
+        health_path = os.environ.get("WACHSAM_SOURCE_HEALTH_PATH")
+        if health_path:
+            persist_source_health(source_health_records, health_path)
+            print(f"  [SOURCE_HEALTH] {len(source_health_records)} Records persistiert: {health_path}")
 
         crawler = RSSCrawler()
         article_fetcher = ArticleFetcher()

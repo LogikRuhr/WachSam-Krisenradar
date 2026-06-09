@@ -10,6 +10,15 @@ from src.models import GermanyRelevance, IngestionItem
 class EmptyAdapter:
     name = "Empty"
 
+    def describe(self):
+        return {
+            "name": self.name,
+            "source": "empty fake",
+            "requires_api_key": False,
+            "writes_db": False,
+            "output_target": "facts",
+        }
+
     def fetch_latest(self):
         return []
 
@@ -279,6 +288,56 @@ def test_rss_items_use_article_evidence_before_llm(monkeypatch):
     assert len(inserted) == 1
     assert inserted[0][0].raw_content == "Artikel-Body mit belegtem Fakt und zusätzlichem Kontext."
     assert inserted[0][1] == "lagebild_items"
+
+
+def test_run_ingestion_persists_source_health_when_path_is_explicit(monkeypatch, tmp_path):
+    item = _bnetza_item()
+
+    class FakeBNetzAAdapter:
+        name = "BNetzA"
+
+        def __init__(self):
+            self.source_errors = []
+
+        def describe(self):
+            return {
+                "name": "BNetzA",
+                "source": "GIE AGSI+",
+                "requires_api_key": False,
+                "writes_db": True,
+                "output_target": "indicators",
+            }
+
+        def fetch_latest(self):
+            return [item]
+
+    for attr in ("DestatisAdapter", "EIAAdapter", "FREDAdapter", "FAOAdapter",
+                 "TankerkoenigAdapter", "EurostatAdapter", "WarningIndicatorsAdapter"):
+        monkeypatch.setattr(main, attr, EmptyAdapter)
+    monkeypatch.setattr(main, "BNetzAAdapter", FakeBNetzAAdapter)
+    monkeypatch.setattr(main, "RSSCrawler", EmptyCrawler)
+    monkeypatch.setattr(main, "insert_draft", lambda item, item_type: "draft")
+    monkeypatch.setattr(main, "fetch_indicator_thresholds", lambda _id: None)
+    health_path = tmp_path / "source-health.jsonl"
+    monkeypatch.setenv("WACHSAM_SOURCE_HEALTH_PATH", str(health_path))
+
+    asyncio.run(main.run_ingestion(dry_run=True, allow_fetch=True))
+
+    records = [json.loads(line) for line in health_path.read_text(encoding="utf-8").splitlines()]
+    bnetza_records = [record for record in records if record["source_id"] == "bnetza"]
+    assert bnetza_records == [
+        {
+            "source_id": "bnetza",
+            "source_name": "BNetzA",
+            "target": "indicators",
+            "status": "ok",
+            "last_checked_at": bnetza_records[0]["last_checked_at"],
+            "last_success_at": bnetza_records[0]["last_success_at"],
+            "item_count": 1,
+            "error_count": 0,
+            "error_messages": [],
+        }
+    ]
 
 
 # --- W6a.1: C4-Quellfehler-Sichtbarkeit im Ingestion-Fluss -------------------
