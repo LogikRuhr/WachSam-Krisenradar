@@ -1,8 +1,9 @@
 import pytest
 from datetime import datetime
 from unittest.mock import patch, MagicMock, call
-from src.db import insert_draft
+from src.db import insert_draft, set_dry_run, upsert_source_health
 from src.models import IngestionItem, GermanyRelevance
+from src.source_health import SourceHealthRecord
 
 
 def _make_indicator_item(**kwargs):
@@ -144,3 +145,70 @@ def test_indicator_ingest_bad_date_does_not_crash(mock_get_conn):
     # Kein Observation-Insert erwartet
     obs_sqls = _observation_sqls(mock_cursor)
     assert len(obs_sqls) == 0, f"Unerwarteter Observation-Insert bei ungültigem Datum: {obs_sqls}"
+
+
+# ---------------------------------------------------------------------------
+# source_health DB persistence Tests
+# ---------------------------------------------------------------------------
+
+def _source_health_record(**kwargs):
+    base = dict(
+        source_id="dwd",
+        source_name="DWD",
+        target="indicators",
+        status="ok",
+        last_checked_at="2026-06-10T03:30:00+00:00",
+        last_success_at="2026-06-10T03:30:00+00:00",
+        item_count=1,
+        error_count=0,
+        error_messages=[],
+    )
+    base.update(kwargs)
+    return SourceHealthRecord(**base)
+
+
+@patch("src.db.get_connection")
+def test_upsert_source_health_writes_current_status(mock_get_conn):
+    mock_conn, mock_cursor = _setup_mock_conn()
+    mock_get_conn.return_value = mock_conn
+
+    result = upsert_source_health([_source_health_record()])
+
+    assert result == 1
+    sqls = [str(c.args[0]) for c in mock_cursor.execute.call_args_list]
+    assert any("INSERT INTO source_health" in sql for sql in sqls)
+    assert any("ON CONFLICT (source_id) DO UPDATE" in sql for sql in sqls)
+    args = mock_cursor.execute.call_args_list[0].args[1]
+    assert args[0] == "dwd"
+    assert args[3] == "fresh"
+    assert args[8] == "[]"
+    assert mock_conn.commit.called
+    mock_conn.close.assert_called_once()
+
+
+@patch("src.db.get_connection")
+def test_upsert_source_health_maps_failed_to_error_and_rolls_back(mock_get_conn):
+    mock_conn, mock_cursor = _setup_mock_conn()
+    mock_cursor.execute.side_effect = Exception("DB error")
+    mock_get_conn.return_value = mock_conn
+
+    result = upsert_source_health([
+        _source_health_record(status="failed", error_count=1, error_messages=["HTTP 503"])
+    ])
+
+    assert result == 0
+    args = mock_cursor.execute.call_args_list[0].args[1]
+    assert args[3] == "error"
+    assert mock_conn.rollback.called
+    mock_conn.close.assert_called_once()
+
+
+@patch("src.db.get_connection")
+def test_upsert_source_health_dry_run_does_not_open_db(mock_get_conn):
+    set_dry_run(True)
+    try:
+        assert upsert_source_health([_source_health_record()]) == 0
+    finally:
+        set_dry_run(False)
+
+    mock_get_conn.assert_not_called()

@@ -7,6 +7,7 @@ import psycopg2
 
 from .config import settings
 from .models import IngestionItem
+from .source_health import SourceHealthRecord
 from .validation import validate_draft, format_validation_reason
 
 
@@ -142,6 +143,75 @@ def set_dry_run(value: bool) -> None:
 
 def is_dry_run() -> bool:
     return _DRY_RUN
+
+
+SOURCE_HEALTH_STATUS_MAP = {
+    "ok": "fresh",
+    "degraded": "stale",
+    "failed": "error",
+}
+
+
+def upsert_source_health(records: list[SourceHealthRecord]) -> int:
+    """Persistiert aktuellen Source-Health-Zustand additiv in `source_health`.
+
+    Dry-run-safe: im Dry-Run wird keine DB-Verbindung geöffnet. Die JSONL-
+    Snapshot-Persistenz bleibt davon getrennt und kann weiterhin genutzt werden.
+    """
+    if not records:
+        return 0
+    if _DRY_RUN:
+        print(f"[DRY-RUN] source_health upsert übersprungen ({len(records)} Records)")
+        return 0
+
+    try:
+        conn = get_connection()
+    except Exception as e:
+        print(f"[DB] source_health upsert failed: {e}")
+        return 0
+
+    written = 0
+    try:
+        with conn.cursor() as cur:
+            for record in records:
+                status = SOURCE_HEALTH_STATUS_MAP.get(record.status, "unknown")
+                cur.execute(
+                    """INSERT INTO source_health
+                       (source_id, source_name, target, status, last_checked_at,
+                        last_success_at, item_count, error_count, error_messages,
+                        updated_at)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, now())
+                       ON CONFLICT (source_id) DO UPDATE
+                       SET source_name = EXCLUDED.source_name,
+                           target = EXCLUDED.target,
+                           status = EXCLUDED.status,
+                           last_checked_at = EXCLUDED.last_checked_at,
+                           last_success_at = EXCLUDED.last_success_at,
+                           item_count = EXCLUDED.item_count,
+                           error_count = EXCLUDED.error_count,
+                           error_messages = EXCLUDED.error_messages,
+                           updated_at = now()""",
+                    (
+                        record.source_id,
+                        record.source_name,
+                        record.target,
+                        status,
+                        record.last_checked_at,
+                        record.last_success_at,
+                        record.item_count,
+                        record.error_count,
+                        json.dumps(record.error_messages, ensure_ascii=False),
+                    ),
+                )
+                written += 1
+        conn.commit()
+        return written
+    except Exception as e:
+        conn.rollback()
+        print(f"[DB] source_health upsert failed: {e}")
+        return 0
+    finally:
+        conn.close()
 
 
 def insert_draft(item: IngestionItem, item_type: str = "lagebild_items") -> Optional[str]:

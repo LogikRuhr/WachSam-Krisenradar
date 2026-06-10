@@ -24,7 +24,7 @@ from .adapters.warning_indicators import WarningIndicatorsAdapter
 from .crawler.rss_crawler import RSSCrawler
 from .fetchers.article_fetcher import ArticleFetcher
 from .extractors.llm_extractor import extract_with_llm
-from .db import insert_draft, set_dry_run, fetch_indicator_thresholds
+from .db import insert_draft, set_dry_run, fetch_indicator_thresholds, upsert_source_health
 from .validation import validate_draft
 from .gate import evaluate_plausibility, source_error_verdict, build_shadow_log
 from .plausibility_rules import get_rules
@@ -126,6 +126,9 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
         if health_path:
             persist_source_health(source_health_records, health_path)
             print(f"  [SOURCE_HEALTH] {len(source_health_records)} Records persistiert: {health_path}")
+        written_health_records = upsert_source_health(source_health_records)
+        if written_health_records:
+            print(f"  [SOURCE_HEALTH] {written_health_records} Records in DB upserted")
 
         crawler = RSSCrawler()
         article_fetcher = ArticleFetcher()

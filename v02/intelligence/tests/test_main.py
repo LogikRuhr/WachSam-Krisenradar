@@ -342,6 +342,46 @@ def test_run_ingestion_persists_source_health_when_path_is_explicit(monkeypatch,
     ]
 
 
+def test_run_ingestion_upserts_source_health_in_normal_mode(monkeypatch):
+    item = _bnetza_item()
+
+    class FakeBNetzAAdapter:
+        name = "BNetzA"
+
+        def __init__(self):
+            self.source_errors = []
+
+        def describe(self):
+            return {
+                "name": "BNetzA",
+                "source": "GIE AGSI+",
+                "requires_api_key": False,
+                "writes_db": True,
+                "output_target": "indicators",
+            }
+
+        def fetch_latest(self):
+            return [item]
+
+    for attr in ("DestatisAdapter", "EIAAdapter", "FREDAdapter", "FAOAdapter",
+                 "TankerkoenigAdapter", "PegelonlineAdapter", "DWDAdapter", "EurostatAdapter", "WarningIndicatorsAdapter"):
+        monkeypatch.setattr(main, attr, EmptyAdapter)
+    monkeypatch.setattr(main, "BNetzAAdapter", FakeBNetzAAdapter)
+    monkeypatch.setattr(main, "RSSCrawler", EmptyCrawler)
+    monkeypatch.setattr(main, "insert_draft", lambda item, item_type: "draft")
+    monkeypatch.setattr(main, "fetch_indicator_thresholds", lambda _id: None)
+
+    captured = []
+    monkeypatch.setattr(main, "upsert_source_health", lambda records: captured.extend(records) or len(records))
+
+    asyncio.run(main.run_ingestion(dry_run=False, allow_fetch=True))
+
+    assert [record.source_id for record in captured] == [
+        "empty", "bnetza", "empty", "empty", "empty", "empty", "empty", "empty"
+    ]
+    assert captured[1].status == "ok"
+
+
 # --- W6a.1: C4-Quellfehler-Sichtbarkeit im Ingestion-Fluss -------------------
 
 def _collect_shadow_lines(capsys):

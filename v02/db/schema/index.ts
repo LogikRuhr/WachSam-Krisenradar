@@ -28,6 +28,14 @@ export const editorialActionEnum = pgEnum("editorial_action", [
   "unpublish",
   "ingest_value",
 ]);
+export const sourceHealthStatusEnum = pgEnum("source_health_status", [
+  "fresh",
+  "stale",
+  "error",
+  "disabled",
+  "unknown",
+  "anomaly",
+]);
 
 const createdAt = timestamp("created_at", { withTimezone: true }).defaultNow().notNull();
 const updatedAt = timestamp("updated_at", { withTimezone: true }).defaultNow().notNull();
@@ -401,6 +409,20 @@ export const indicatorObservations = pgTable(
   },
   (table) => [primaryKey({ columns: [table.indicatorId, table.observedAt] })],
 );
+
+export const sourceHealth = pgTable("source_health", {
+  sourceId: text("source_id").primaryKey(),
+  sourceName: text("source_name").notNull(),
+  target: text("target").notNull(),
+  status: sourceHealthStatusEnum("status").notNull().default("unknown"),
+  lastCheckedAt: timestamp("last_checked_at", { withTimezone: true }).notNull(),
+  lastSuccessAt: timestamp("last_success_at", { withTimezone: true }),
+  itemCount: integer("item_count").notNull().default(0),
+  errorCount: integer("error_count").notNull().default(0),
+  errorMessages: jsonb("error_messages").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+  createdAt,
+  updatedAt,
+});
 
 export const indicatorsRelations = relations(indicators, ({ one, many }) => ({
   cascade: one(cascades, {

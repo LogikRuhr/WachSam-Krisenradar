@@ -71,6 +71,13 @@
       "when": 1780386184357,
       "tag": "0009_powerful_jack_flag",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1781066194972,
+      "tag": "0010_reflective_absorbing_man",
+      "breakpoints": true
     }
   ]
 }
