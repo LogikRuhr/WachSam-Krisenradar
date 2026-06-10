@@ -65,7 +65,9 @@ def test_source_registry_tracks_current_and_candidate_basis():
 
     assert sources["pegelonline"]["status"] == "active"
     assert sources["pegelonline"]["adapter"] == "src.adapters.pegelonline.PegelonlineAdapter"
-    assert sources["dwd-open-data"]["status"] == "adapter-ready"
+    assert sources["dwd-open-data"]["status"] == "active"
+    assert sources["dwd-open-data"]["adapter"] == "src.adapters.dwd.DWDAdapter"
+    assert sources["dwd-open-data"]["indicator_ids"] == ["wi-dwd-warnings-de"]
     assert sources["smard"]["status"] == "blocked-until-docs"
     assert sources["destatis-vpi"]["current_quality"] == "live-dry-run-ok-with-credentials-zip-csv"
     assert sources["fred-eu-gas"]["current_quality"] == "live-dry-run-ok-with-key"

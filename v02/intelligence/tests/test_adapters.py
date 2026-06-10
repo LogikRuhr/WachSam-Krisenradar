@@ -13,6 +13,7 @@ from src.adapters.eia import EIAAdapter
 from src.adapters.fred import FREDAdapter
 from src.adapters.fao import FAOAdapter
 from src.adapters.pegelonline import PegelonlineAdapter
+from src.adapters.dwd import DWDAdapter, decode_warnwetter_response, summarize_warnings
 from src.adapters.eurostat import EurostatAdapter
 from src.adapters.warning_indicators import WarningIndicatorsAdapter
 from src.adapters.tankerkoenig import (
@@ -384,6 +385,72 @@ def test_pegelonline_records_source_error_on_http_failure(monkeypatch):
             "indicator_id": "wi-pegelonline-koeln",
             "reason": "HTTP 503",
             "source_url": "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/K%C3%96LN/W/currentmeasurement.json",
+            "source_stand": None,
+            "observed_at": None,
+            "raw_value": None,
+            "keep_previous": True,
+        }
+    ]
+
+
+def test_dwd_adapter_maps_warnwetter_jsonp_to_indicator(monkeypatch):
+    payload = (
+        'warnWetter.loadWarnings({"time":1781059980000,"warnings":{'
+        '"109172000":[{"state":"Bayern","type":2,"level":3,'
+        '"start":1780977600000,"regionName":"Kreis Berchtesgadener Land",'
+        '"end":1781128800000,"description":"Dauerregen",'
+        '"event":"DAUERREGEN","headline":"Amtliche WARNUNG vor DAUERREGEN",'
+        '"instruction":"Straßenverkehr anpassen","stateShort":"BY"}],'
+        '"105154000":[{"state":"Niedersachsen","type":2,"level":4,'
+        '"start":1780977600000,"regionName":"Kreis Friesland",'
+        '"end":1781128800000,"description":"Gewitter",'
+        '"event":"GEWITTER","headline":"Amtliche WARNUNG vor GEWITTER",'
+        '"instruction":"Aufenthalt im Freien vermeiden","stateShort":"NI"}]},'
+        '"vorabInformation":{},"copyright":"DWD"});'
+    )
+    response = MagicMock()
+    response.status_code = 200
+    response.text = payload
+    response.raise_for_status.return_value = None
+    monkeypatch.setattr("src.adapters.dwd.requests.get", lambda *args, **kwargs: response)
+
+    items = DWDAdapter().fetch_latest()
+
+    assert len(items) == 1
+    item = items[0]
+    assert item.indicator_id == "wi-dwd-warnings-de"
+    assert item.current_value == 4.0
+    assert item.severity_suggestion == "kritisch"
+    assert item.current_value_date == "2026-06-10T02:53:00+00:00"
+    assert item.source_stand_date == "2026-06-10T02:53:00+00:00"
+    assert item.source_period_type == "datetime"
+    assert "aktive Warnungen" in item.title
+    assert "infrastruktur" in item.affected_systems
+    _validate_items(items)
+
+
+def test_dwd_decode_accepts_plain_json_and_summarizes_empty_warning_set():
+    payload = decode_warnwetter_response('{"time":1781059980000,"warnings":{}}')
+    summary = summarize_warnings(payload)
+
+    assert summary["generated_at"] == "2026-06-10T02:53:00+00:00"
+    assert summary["warning_count"] == 0
+    assert summary["max_level"] == 0
+
+
+def test_dwd_adapter_records_source_error_on_http_failure(monkeypatch):
+    response = MagicMock()
+    response.status_code = 503
+    response.raise_for_status.side_effect = RuntimeError("HTTP 503")
+    monkeypatch.setattr("src.adapters.dwd.requests.get", lambda *args, **kwargs: response)
+
+    adapter = DWDAdapter()
+    assert adapter.fetch_latest() == []
+    assert adapter.source_errors == [
+        {
+            "indicator_id": "wi-dwd-warnings-de",
+            "reason": "HTTP 503",
+            "source_url": "https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json",
             "source_stand": None,
             "observed_at": None,
             "raw_value": None,

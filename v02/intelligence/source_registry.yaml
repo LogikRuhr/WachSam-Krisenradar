@@ -153,20 +153,20 @@ sources:
     risk_notes: Feed path or parser may be stale; requires endpoint verification.
     next_step: Verify current RSS URL and add tests.
   - id: dwd-open-data
-    name: DWD Open Data
+    name: DWD WarnWetter Warnlage
     layer: weather_water
     operator: Deutscher Wetterdienst
-    source_url: https://opendata.dwd.de/
-    adapter: null
-    indicator_ids: []
-    status: adapter-ready
-    format: open-data-directory
+    source_url: https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json
+    adapter: src.adapters.dwd.DWDAdapter
+    indicator_ids: [wi-dwd-warnings-de]
+    status: active
+    format: jsonp-json
     auth_required: none
-    freshness_expectation: product-dependent
+    freshness_expectation: near-real-time
     household_relevance: hoch
-    current_quality: source-url-verified-http-200
-    risk_notes: Many products; choose one product path first to avoid scope explosion.
-    next_step: Select concrete weather/warning product and write adapter tests.
+    current_quality: live-adapter-added-warnwetter-summary
+    risk_notes: Warning summary is regional and event-level; do not treat as local user-specific weather forecast.
+    next_step: Add regional filters and baselines before strong household-specific guidance.
   - id: pegelonline
     name: Pegelonline WSV
     layer: weather_water

@@ -16,6 +16,7 @@ from .adapters.fred import FREDAdapter
 from .adapters.fao import FAOAdapter
 from .adapters.tankerkoenig import TankerkoenigAdapter
 from .adapters.pegelonline import PegelonlineAdapter
+from .adapters.dwd import DWDAdapter
 # Imports bleiben erhalten
 # nicht aktiv (siehe run_ingestion / docs/intelligence/source-inventory.md):
 from .adapters.eurostat import EurostatAdapter
@@ -37,6 +38,7 @@ ADAPTER_TYPE_MAP = {
     "FRED": "indicators",
     "FAO": "facts",
     "Pegelonline": "indicators",
+    "DWD": "indicators",
     "Eurostat": "facts",
     "WarningIndicators": "facts",
 }
@@ -81,6 +83,7 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
         FAOAdapter(),
         TankerkoenigAdapter(),
         PegelonlineAdapter(),
+        DWDAdapter(),
         # Deaktiviert
         #   EurostatAdapter()          — Stub, parst Response nicht
         #   WarningIndicatorsAdapter() — redundant zu EIAAdapter (Brent)
