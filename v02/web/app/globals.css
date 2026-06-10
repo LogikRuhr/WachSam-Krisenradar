@@ -74,7 +74,7 @@ strong { color: var(--on-surface); font-weight: 700; }
 .section-header { margin-bottom: 32px; }
 .strich { width: 40px; height: 3px; margin: 0 0 16px; background: var(--primary); }
 .mono-label { color: var(--on-surface-variant); font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-.bebas-title, .focus-title { max-width: 850px; margin: 12px 0 20px; color: var(--on-surface); font-family: var(--font-display); font-size: clamp(42px, 8vw, 80px); font-weight: 400; letter-spacing: .02em; line-height: .95; text-transform: uppercase; }
+.bebas-title, .focus-title { max-width: 850px; margin: 12px 0 20px; color: var(--on-surface); font-family: var(--font-display); font-size: clamp(42px, 8vw, 80px); font-weight: 400; letter-spacing: .02em; line-height: .95; text-transform: uppercase; overflow-wrap: anywhere; }
 .focus-title { font-size: clamp(36px, 6vw, 64px); }
 .section-sub p, .lead { color: var(--on-surface); font-size: 18px; line-height: 1.65; }
 
