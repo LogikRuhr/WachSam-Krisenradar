@@ -176,10 +176,11 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
         if result.warnings:
             print(f"  [VALIDIERUNG] '{item.title}': {len(result.warnings)} Hinweise — {result.warnings}")
 
-        # --- W6a Plausibilitäts-Gate (SHADOW / Log-only) ----------------------
-        # Bewertet nur, was das Gate TUN würde, und loggt strukturiertes JSON.
-        # KEIN Eingriff in den Live-/DB-Pfad: kein Block, kein Stale-on-error,
-        # kein current_value-Overwrite, kein Write. Nur Indikator-Pfad.
+        # --- Plausibilitäts-Gate / Stale-on-error -----------------------------
+        # C1/C4 halten den letzten guten Wert: kein Indicator-UPDATE und kein
+        # Observation-Append für kaputte/unmögliche Messwerte. C2/C3 bleiben
+        # sichtbar, aber mit Review-Log.
+        skip_write = False
         if item_type == "indicators" and item.indicator_id:
             thresholds = fetch_indicator_thresholds(item.indicator_id)
             verdict = evaluate_plausibility(
@@ -192,6 +193,11 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
             )
             print(json.dumps(build_shadow_log(item, verdict), ensure_ascii=False))
             shadow_logged_ids.add(item.indicator_id)
+            skip_write = verdict.would_action in ("keep_previous_value", "parsing_error")
+
+        if skip_write:
+            print(f"  [STALE] '{item.title}': letzter gültiger Wert bleibt erhalten")
+            continue
 
         draft_id = insert_draft(item, item_type)
         if draft_id:

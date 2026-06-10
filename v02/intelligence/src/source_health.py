@@ -47,6 +47,8 @@ def build_source_health(
         status: SourceHealthStatus = "ok"
     elif item_count > 0:
         status = "degraded"
+    elif error_count and all(err.get("keep_previous") is True for err in source_errors):
+        status = "degraded"
     else:
         status = "failed" if error_count else "degraded"
 

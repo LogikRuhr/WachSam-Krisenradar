@@ -36,11 +36,25 @@ def test_build_source_health_failed_when_errors_and_no_items():
     record = build_source_health(
         FakeAdapter(),
         item_count=0,
-        source_errors=[{"reason": "HTTP 503"}],
+        source_errors=[{"reason": "HTTP 503", "keep_previous": False}],
         checked_at=datetime(2026, 6, 9, 12, 0, 0),
     )
 
     assert record.status == "failed"
+    assert record.error_count == 1
+    assert record.error_messages == ["HTTP 503"]
+    assert record.last_success_at is None
+
+
+def test_build_source_health_degraded_when_keep_previous_errors_and_no_items():
+    record = build_source_health(
+        FakeAdapter(),
+        item_count=0,
+        source_errors=[{"reason": "HTTP 503", "keep_previous": True}],
+        checked_at=datetime(2026, 6, 9, 12, 0, 0),
+    )
+
+    assert record.status == "degraded"
     assert record.error_count == 1
     assert record.error_messages == ["HTTP 503"]
     assert record.last_success_at is None

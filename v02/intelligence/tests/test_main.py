@@ -81,8 +81,8 @@ def test_run_ingestion_routes_bnetza_indicator_items_to_indicator_updates(monkey
     assert inserted == [(bnetza_item, "indicators")]
 
 
-def _bnetza_item():
-    return IngestionItem(
+def _bnetza_item(**kwargs):
+    base = dict(
         title="Gasspeicher Deutschland: 72.5% (2026-05-27)",
         description="Aktueller Fuellstand deutscher Gasspeicher: 72.5%.",
         source_url="https://agsi.gie.eu/",
@@ -102,6 +102,8 @@ def _bnetza_item():
         previous_value=71.9,
         previous_value_date="2026-05-26",
     )
+    base.update(kwargs)
+    return IngestionItem(**base)
 
 
 def test_shadow_logs_json_and_does_not_alter_insert_path(monkeypatch, capsys):
@@ -158,6 +160,38 @@ def test_shadow_logs_json_and_does_not_alter_insert_path(monkeypatch, capsys):
     assert log["indicator_id"] == "wi-gasspeicher-fuellstand"
     assert log["parsed_value"] == 72.5
     assert log["previous_value"] == 71.9
+
+
+def test_keep_previous_gate_skips_indicator_update(monkeypatch, capsys):
+    item = _bnetza_item(
+        title="Gasspeicher Deutschland: 150% (2026-05-27)",
+        current_value=150.0,
+        previous_value=72.0,
+    )
+
+    class FakeBNetzAAdapter:
+        name = "BNetzA"
+
+        def fetch_latest(self):
+            return [item]
+
+    for attr in ("DestatisAdapter", "EIAAdapter", "FREDAdapter", "FAOAdapter",
+                 "TankerkoenigAdapter", "PegelonlineAdapter", "DWDAdapter", "EurostatAdapter", "WarningIndicatorsAdapter"):
+        monkeypatch.setattr(main, attr, EmptyAdapter)
+    monkeypatch.setattr(main, "BNetzAAdapter", FakeBNetzAAdapter)
+    monkeypatch.setattr(main, "RSSCrawler", EmptyCrawler)
+    monkeypatch.setattr(main, "fetch_indicator_thresholds", lambda _id: None)
+    monkeypatch.setattr(main, "upsert_source_health", lambda records: len(records))
+
+    inserted = []
+    monkeypatch.setattr(main, "insert_draft", lambda it, t: inserted.append((it, t)) or "id")
+
+    asyncio.run(main.run_ingestion())
+
+    assert inserted == []
+    shadow_lines = _collect_shadow_lines(capsys)
+    assert shadow_lines[0]["gate_class"] == "C1"
+    assert shadow_lines[0]["would_action"] == "keep_previous_value"
 
 
 def _lagebild_item():
