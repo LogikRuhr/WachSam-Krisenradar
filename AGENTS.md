@@ -21,6 +21,20 @@ Hauptprojekt: WachSam Krisenradar. Workspace: wachsam-app.
 - Verify vor Claim: Gegen Live-Daten pruefen, nicht nur Code lesen
 - Opus fuer Plans/Architektur, Sonnet fuer Tasks, Haiku fuer Checks
 
+## Qualitaets- & Lern-System (Simply First)
+- Bei unklarem oder schwachem Input: erst Rueckfragen, dann Plan. Der Plan nennt Scope, File-Liste, Acceptance, Verify und Rollback.
+- Jede relevante Aufgabe nutzt eine Spec, bevorzugt `docs/specs/TEMPLATE-spec.md`. Keine Arbeit ohne Definition of Done.
+- Verifikation ist getrennt von Implementierung: Tests/Lint/Typecheck/Build laufen vor "fertig"; danach prueft ein zweiter Reviewer den Diff gegen die Definition of Done mit klarem PASS oder FAIL.
+- Claude Code: fuer das DoD-Gate lokal `.claude/agents/reviewer.md` nutzen, falls vorhanden. `/code-review` ist nur ergaenzend fuer Diff-Bugs und Cleanups; es ersetzt das PASS/FAIL-DoD-Gate nicht.
+- Reviewer bleiben read-only: Diff pruefen, DoD abhaken, Sicherheits-/DSGVO-Risiken melden, keine Files aendern.
+- Echte Lessons kommen aus Tests, Linter, Builds, Reviews oder User-Feedback. In `LESSONS.md` nur konkrete Handlung, Datum und Confidence eintragen.
+
+## Aktuelle Verify-Gates
+- Root/Security: `bash scripts/verify.sh`
+- v02 TypeScript/Next.js: `cd v02 && pnpm run verify`
+- Python Intelligence: `cd v02/intelligence && python -m pytest tests/ -q`
+- Python-Linter: aktuell keiner konfiguriert; kein `ruff`/`mypy` in `pyproject.toml` oder `requirements.txt`.
+
 ## Infrastruktur
 - Zeitzone: Europe/Berlin (MESZ, UTC+2) — `TZ='Europe/Berlin' date`
 - IONOS VPS 24GB RAM
