@@ -1,0 +1,30 @@
+# WachSam Krisen-Wiki
+
+> Gepflegte Wissensbasis zu Krisen, systemischen Risiken und deren Auswirkungen auf
+> deutsche Haushalte. Markdown + YAML-Frontmatter nach Open Knowledge Format (OKF).
+> Stabile Wissensschicht — NICHT die Echtzeit-Lage. Aktuelle Werte über die in
+> quellen/ registrierten Live-Schnittstellen abfragen.
+
+## Einstieg
+- [README](README.md): Zweck und Struktur
+- [AGENTS.md](AGENTS.md): Schema, Ingest/Query/Lint, DSGVO-Regeln
+- [index.md](index.md): Maschinenlesbarer Index aller Seiten
+
+## Konzepte
+- [Kaskadeneffekt](konzepte/kaskadeneffekt.md)
+- [Systemisches Risiko](konzepte/systemisches-risiko.md)
+- [Haushalts-Resilienz](konzepte/haushalts-resilienz.md)
+
+## Risikodomänen
+- [Gasversorgung](risiken/gasversorgung.md)
+- [Stromversorgung](risiken/stromversorgung.md)
+- [Lieferketten](risiken/lieferketten.md)
+
+## Quellen & Methodik
+- [Behördliche Warnsysteme](quellen/behoerdliche-warnsysteme.md)
+- [Frische & Status](methodik/frische-und-status.md)
+- [OKF-Konventionen](methodik/okf-konventionen.md)
+
+## Ereignis-Chronik
+- [Übersicht](ereignisse/index.md)
+- [Ahrtal-Hochwasser 2021](ereignisse/2021-07-ahrtal-hochwasser.md)
