@@ -1,0 +1,182 @@
+{
+  "meta": {
+    "version": "v0.1",
+    "stand": "2026-06-16",
+    "retrieved_at": "2026-06-16T00:00:00Z",
+    "count": 11,
+    "note": "Welle 4: Strukturelle Kopplung der 12 Kaskaden an die 15 Frühwarnindikatoren. Faktenbasis = das linked_cascade-Feld in warning-indicators.json + die System-/Trigger-Logik aus cascades.json. role=driver: Indikator-System gehört zum Trigger/frühen Schritt der Kaskade; role=affected: Indikator bildet ein Spätfolge-System ab. revision_criteria nur bei Indikatoren mit klarer quantitativer kritischer Schwelle aus dem Lagebild. Kaskaden ohne verlinkten Indikator (b, i, k, l) sind Welle 6."
+  },
+  "links": [
+    {
+      "id": "cil-cascade-h-wi-gasspeicher-fuellstand",
+      "cascade_id": "cascade-h",
+      "indicator_id": "wi-gasspeicher-fuellstand",
+      "role": "driver",
+      "relation": "treibt",
+      "lag_hint": "Monate (Heizkosten folgen über die Heizperiode)",
+      "revision_criteria": [
+        {
+          "indicatorId": "wi-gasspeicher-fuellstand",
+          "label": "Gasspeicher-Füllstand unter 30 %",
+          "operator": "<",
+          "threshold": 30,
+          "unit": "Prozent"
+        }
+      ]
+    },
+    {
+      "id": "cil-cascade-h-wi-gaspreis-europa",
+      "cascade_id": "cascade-h",
+      "indicator_id": "wi-gaspreis-europa",
+      "role": "driver",
+      "relation": "treibt",
+      "lag_hint": "Monate (Großhandelspreis → Heizkosten der Haushalte)",
+      "revision_criteria": [
+        {
+          "indicatorId": "wi-gaspreis-europa",
+          "label": "Gaspreis Europa über 25 USD/MMBtu",
+          "operator": ">",
+          "threshold": 25,
+          "unit": "USD/MMBtu"
+        }
+      ]
+    },
+    {
+      "id": "cil-cascade-d-wi-oel-brent",
+      "cascade_id": "cascade-d",
+      "indicator_id": "wi-oel-brent",
+      "role": "driver",
+      "relation": "treibt",
+      "lag_hint": "ca. 2 Wochen (Kraftstoffpreise folgen Brent verzögert)",
+      "revision_criteria": [
+        {
+          "indicatorId": "wi-oel-brent",
+          "label": "Brent über 110 USD",
+          "operator": ">",
+          "threshold": 110,
+          "unit": "USD"
+        }
+      ]
+    },
+    {
+      "id": "cil-cascade-d-wi-kraftstoffpreis-super-e10",
+      "cascade_id": "cascade-d",
+      "indicator_id": "wi-kraftstoffpreis-super-e10",
+      "role": "affected",
+      "relation": "folgt",
+      "lag_hint": "ca. 2 Wochen (Tankstellenpreis folgt dem Großhandel)",
+      "revision_criteria": [
+        {
+          "indicatorId": "wi-kraftstoffpreis-super-e10",
+          "label": "Super E10 über 1,86 Euro/Liter (Krisenniveau 2022)",
+          "operator": ">",
+          "threshold": 1.86,
+          "unit": "Euro/Liter"
+        }
+      ]
+    },
+    {
+      "id": "cil-cascade-d-wi-kraftstoffpreis-diesel",
+      "cascade_id": "cascade-d",
+      "indicator_id": "wi-kraftstoffpreis-diesel",
+      "role": "affected",
+      "relation": "folgt",
+      "lag_hint": "ca. 2 Wochen (Tankstellenpreis folgt dem Großhandel)",
+      "revision_criteria": [
+        {
+          "indicatorId": "wi-kraftstoffpreis-diesel",
+          "label": "Diesel über 1,95 Euro/Liter (Krisenniveau 2022)",
+          "operator": ">",
+          "threshold": 1.95,
+          "unit": "Euro/Liter"
+        }
+      ]
+    },
+    {
+      "id": "cil-cascade-a-wi-fao-food-price-index",
+      "cascade_id": "cascade-a",
+      "indicator_id": "wi-fao-food-price-index",
+      "role": "affected",
+      "relation": "folgt",
+      "lag_hint": "4-8 Wochen (Preisweitergabe in den Einzelhandel)",
+      "revision_criteria": [
+        {
+          "indicatorId": "wi-fao-food-price-index",
+          "label": "FAO Food Price Index über 135 Punkte",
+          "operator": ">",
+          "threshold": 135,
+          "unit": "Indexpunkte"
+        }
+      ]
+    },
+    {
+      "id": "cil-cascade-g-wi-duengemittel-preis",
+      "cascade_id": "cascade-g",
+      "indicator_id": "wi-duengemittel-preis",
+      "role": "driver",
+      "relation": "treibt",
+      "lag_hint": "3-6 Monate (Erzeugerpreise), 6-9 Monate (Lebensmittelpreise)",
+      "revision_criteria": [
+        {
+          "indicatorId": "wi-duengemittel-preis",
+          "label": "FAO Fertilizer Price Index über 160 Punkte",
+          "operator": ">",
+          "threshold": 160,
+          "unit": "Indexpunkte"
+        }
+      ]
+    },
+    {
+      "id": "cil-cascade-j-wi-inflation-vpi-de",
+      "cascade_id": "cascade-j",
+      "indicator_id": "wi-inflation-vpi-de",
+      "role": "driver",
+      "relation": "treibt",
+      "lag_hint": "Monate (Realeinkommen und Kaufkraft reagieren verzögert)",
+      "revision_criteria": [
+        {
+          "indicatorId": "wi-inflation-vpi-de",
+          "label": "Verbraucherpreisindex über 5 % YoY",
+          "operator": ">",
+          "threshold": 5,
+          "unit": "Prozent YoY"
+        }
+      ]
+    },
+    {
+      "id": "cil-cascade-f-wi-arbeitslosigkeit-de",
+      "cascade_id": "cascade-f",
+      "indicator_id": "wi-arbeitslosigkeit-de",
+      "role": "affected",
+      "relation": "folgt",
+      "lag_hint": "Monate (Arbeitsmarkt folgt dem Exportrückgang verzögert)",
+      "revision_criteria": [
+        {
+          "indicatorId": "wi-arbeitslosigkeit-de",
+          "label": "Registrierte Arbeitslose über 3,5 Mio.",
+          "operator": ">",
+          "threshold": 3.5,
+          "unit": "Millionen Personen"
+        }
+      ]
+    },
+    {
+      "id": "cil-cascade-c-wi-bsi-cyberbedrohung",
+      "cascade_id": "cascade-c",
+      "indicator_id": "wi-bsi-cyberbedrohung",
+      "role": "driver",
+      "relation": "treibt",
+      "lag_hint": "Wochen (regionale Versorgungsstörungen)",
+      "revision_criteria": null
+    },
+    {
+      "id": "cil-cascade-e-wi-vertrauen-politik",
+      "cascade_id": "cascade-e",
+      "indicator_id": "wi-vertrauen-politik",
+      "role": "affected",
+      "relation": "folgt",
+      "lag_hint": "langfristig (struktureller Vertrauensverlust)",
+      "revision_criteria": null
+    }
+  ]
+}

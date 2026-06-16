@@ -3,6 +3,7 @@ import postgres from "postgres";
 import * as schema from "../schema";
 import { CITIZEN_ACTIONS } from "./actions";
 import { CASCADES } from "./cascades";
+import { CASCADE_INDICATOR_LINKS } from "./cascade-indicator-links";
 import { COST_IMPACTS } from "./cost-impacts";
 import { FACT_REFS } from "./fact-refs";
 import { FACTS } from "./facts";
@@ -18,6 +19,7 @@ export const seedData = {
   facts: FACTS,
   factRefs: FACT_REFS,
   cascades: CASCADES,
+  cascadeIndicatorLinks: CASCADE_INDICATOR_LINKS,
   governance: GOVERNANCE_ITEMS,
   indicators: INDICATORS,
   costImpacts: COST_IMPACTS,
@@ -35,6 +37,7 @@ export const getSeedStats = (): SeedStats => ({
   facts: FACTS.length,
   factRefs: FACT_REFS.length,
   cascades: CASCADES.length,
+  cascadeIndicatorLinks: CASCADE_INDICATOR_LINKS.length,
   governance: GOVERNANCE_ITEMS.length,
   indicators: INDICATORS.length,
   costImpacts: COST_IMPACTS.length,
@@ -59,10 +62,12 @@ export const validateSeedData = (): string[] => {
   const errors: string[] = [];
   const factIds = new Set(FACTS.map((fact) => fact.id));
   const cascadeIds = new Set(CASCADES.map((cascade) => cascade.id));
+  const indicatorIds = new Set(INDICATORS.map((indicator) => indicator.id));
 
   errors.push(...assertUnique("facts", FACTS.map((item) => item.id)));
   errors.push(...assertUnique("fact_refs", FACT_REFS.map((item) => item.id)));
   errors.push(...assertUnique("cascades", CASCADES.map((item) => item.id)));
+  errors.push(...assertUnique("cascade_indicator_links", CASCADE_INDICATOR_LINKS.map((item) => item.id)));
   errors.push(...assertUnique("governance", GOVERNANCE_ITEMS.map((item) => item.id)));
   errors.push(...assertUnique("indicators", INDICATORS.map((item) => item.id)));
   errors.push(...assertUnique("cost_impacts", COST_IMPACTS.map((item) => item.id)));
@@ -93,6 +98,15 @@ export const validateSeedData = (): string[] => {
   for (const item of INDICATORS) {
     if (item.linkedCascade && !cascadeIds.has(item.linkedCascade)) {
       errors.push(`indicators.${item.id}: unbekannte linkedCascade ${item.linkedCascade}`);
+    }
+  }
+
+  for (const item of CASCADE_INDICATOR_LINKS) {
+    if (!cascadeIds.has(item.cascadeId)) {
+      errors.push(`cascade_indicator_links.${item.id}: unbekannte cascadeId ${item.cascadeId}`);
+    }
+    if (!indicatorIds.has(item.indicatorId)) {
+      errors.push(`cascade_indicator_links.${item.id}: unbekannte indicatorId ${item.indicatorId}`);
     }
   }
 
@@ -140,6 +154,13 @@ export const seedDatabase = async (db: Db): Promise<SeedStats> => {
   for (const row of INDICATORS) {
     await db.insert(schema.indicators).values(row).onConflictDoUpdate({
       target: schema.indicators.id,
+      set: { ...row, updatedAt: now },
+    });
+  }
+
+  for (const row of CASCADE_INDICATOR_LINKS) {
+    await db.insert(schema.cascadeIndicatorLinks).values(row).onConflictDoUpdate({
+      target: schema.cascadeIndicatorLinks.id,
       set: { ...row, updatedAt: now },
     });
   }
