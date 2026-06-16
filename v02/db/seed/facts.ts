@@ -16,6 +16,7 @@ export const FACTS: NewFact[] = [
     sourceName: "Bundesagentur für Arbeit",
     sourceUrl: "https://www.arbeitsagentur.de/presse/2026-05-arbeitsmarkt-im-januar-2026",
     sourceStand: "30. Januar 2026",
+    evidenceType: "fakt",
     retrievedAt: date("2026-05-23"),
   },
   {
@@ -28,6 +29,7 @@ export const FACTS: NewFact[] = [
     sourceName: "IW Köln",
     sourceUrl: "https://www.iwkoeln.de/presse/pressemitteilungen/michael-groemling-bip-waechst-2026-um-knapp-ein-prozent.html",
     sourceStand: "5. Dezember 2025",
+    evidenceType: "schaetzung",
     retrievedAt: date("2026-05-23"),
   },
   {
@@ -40,6 +42,7 @@ export const FACTS: NewFact[] = [
     sourceName: "Capital",
     sourceUrl: "https://www.capital.de/wirtschaft-politik/wachstum-2026--regierung-halbiert-prognose-wegen-irankrieg-37333956.html",
     sourceStand: "Mai 2026",
+    evidenceType: "schaetzung",
     retrievedAt: date("2026-05-13"),
   },
   {
@@ -52,6 +55,7 @@ export const FACTS: NewFact[] = [
     sourceName: "FAO Food Price Index",
     sourceUrl: "https://www.fao.org/worldfoodsituation/foodpricesindex",
     sourceStand: "März 2026",
+    evidenceType: "fakt",
     retrievedAt: date("2026-05-14"),
   },
   {
@@ -64,6 +68,7 @@ export const FACTS: NewFact[] = [
     sourceName: "BSI",
     sourceUrl: "https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Publikationen/Lageberichte/Lagebericht2025_Achtseiter.html",
     sourceStand: "November 2025",
+    evidenceType: "schaetzung",
     retrievedAt: date("2026-05-14"),
   },
   {
@@ -76,6 +81,7 @@ export const FACTS: NewFact[] = [
     sourceName: "Stiftung für Zukunftsfragen",
     sourceUrl: "https://www.stiftungfuerzukunftsfragen.de/wie-blicken-die-buerger-auf-das-jahr-2026/",
     sourceStand: "2026",
+    evidenceType: "schaetzung",
     retrievedAt: date("2026-05-13"),
   },
   {
@@ -88,6 +94,7 @@ export const FACTS: NewFact[] = [
     sourceName: "Destatis",
     sourceUrl: "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/05/PD26_161_611.html",
     sourceStand: "12. Mai 2026 / April 2026",
+    evidenceType: "fakt",
     retrievedAt: date("2026-05-23"),
   },
   {
@@ -100,6 +107,7 @@ export const FACTS: NewFact[] = [
     sourceName: "Bundestag — Energiesteuer-Senkung",
     sourceUrl: "https://www.bundestag.de/dokumente/textarchiv/2026/kw17-pa-finanzen-1166336",
     sourceStand: "April 2026",
+    evidenceType: "fakt",
     retrievedAt: date("2026-05-19"),
   },
   {
@@ -112,6 +120,7 @@ export const FACTS: NewFact[] = [
     sourceName: "Bundesnetzagentur (via AGSI/GIE)",
     sourceUrl: "https://www.bundesnetzagentur.de/DE/Fachthemen/ElektrizitaetundGas/Versorgungssicherheit/aktuelle_gasversorgung/start.html",
     sourceStand: "2026",
+    evidenceType: "annahme",
     retrievedAt: date("2026-05-19"),
   },
   {
@@ -124,6 +133,7 @@ export const FACTS: NewFact[] = [
     sourceName: "BfArM",
     sourceUrl: "https://www.bfarm.de/DE/Arzneimittel/Arzneimittelinformationen/Lieferengpaesse/_verteilerseite.html?nn=471282",
     sourceStand: "2026",
+    evidenceType: "fakt",
     retrievedAt: date("2026-05-21"),
   },
   {
@@ -136,6 +146,7 @@ export const FACTS: NewFact[] = [
     sourceName: "Bundesnetzagentur — Schlichtung Post",
     sourceUrl: "https://www.bundesnetzagentur.de/SharedDocs/Pressemitteilungen/DE/2026/20260202_Schlichtung_TK_Post.html",
     sourceStand: "2. Februar 2026",
+    evidenceType: "fakt",
     retrievedAt: date("2026-05-23"),
   },
 ];

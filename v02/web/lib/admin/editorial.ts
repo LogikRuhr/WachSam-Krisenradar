@@ -15,6 +15,7 @@ import {
   governanceSchema,
   indicatorSchema,
   lagebildItemSchema,
+  nationalStateSchema,
   rejectReasonSchema,
   supplyRiskSchema,
   type EditorialItemType,
@@ -37,6 +38,7 @@ const tableMap = {
   lagebildItems: schema.lagebildItems,
   supplyRisks: schema.supplyRisks,
   citizenActions: schema.citizenActions,
+  nationalState: schema.nationalState,
 } as const satisfies Record<EditorialItemType, unknown>;
 
 const schemaMap = {
@@ -48,6 +50,7 @@ const schemaMap = {
   lagebildItems: lagebildItemSchema,
   supplyRisks: supplyRiskSchema,
   citizenActions: citizenActionSchema,
+  nationalState: nationalStateSchema,
 } as const satisfies Record<EditorialItemType, z.ZodTypeAny>;
 
 const auditItemTypeMap: Record<EditorialItemType, string> = {
@@ -59,6 +62,7 @@ const auditItemTypeMap: Record<EditorialItemType, string> = {
   lagebildItems: "lagebild_item",
   supplyRisks: "supply_risk",
   citizenActions: "citizen_action",
+  nationalState: "national_state",
 };
 
 function ensureDb() {
@@ -80,6 +84,7 @@ function revalidatePublic() {
   revalidatePath("/quellen");
   revalidatePath("/governance");
   revalidatePath("/indikatoren");
+  revalidatePath("/lage");
 }
 
 async function loadStatus(itemType: EditorialItemType, id: string): Promise<EditorialStatus | null> {

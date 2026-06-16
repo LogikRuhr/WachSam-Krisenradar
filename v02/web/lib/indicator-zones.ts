@@ -76,6 +76,74 @@ export function computeZone(
   };
 }
 
+/** Trendrichtung eines Live-Werts gegenüber dem Vorwert. "flat" = unverändert/kein Vorwert. */
+export type TrendDirection = "up" | "down" | "flat";
+
+export interface IndicatorVitals {
+  currentValue: number | null;
+  previousValue: number | null;
+  currentValueDate: Date | null;
+  unit: string | null;
+  /** Differenz current − previous; null wenn einer der Werte fehlt. */
+  delta: number | null;
+  trend: TrendDirection;
+  zone: ZoneResult | null;
+  /** true, wenn kein aktueller Messwert vorliegt (ehrlicher Leerzustand). */
+  pending: boolean;
+}
+
+/** Felder einer Indikator-Row, die für die Vitalwert-Darstellung gebraucht werden. */
+export interface IndicatorVitalsInput {
+  currentValue: string | number | null;
+  previousValue: string | number | null;
+  currentValueDate: Date | null;
+  thresholdWarn: string | number | null;
+  thresholdCritical: string | number | null;
+  scaleDirection: string;
+  unit: string | null;
+  zoneTextUncritical: string | null;
+  zoneTextElevated: string | null;
+  zoneTextCritical: string | null;
+}
+
+function toNumber(value: string | number | null | undefined): number | null {
+  if (value == null) return null;
+  const num = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
+/**
+ * Leitet aus einer Indikator-Row die anzeigefertigen Vitalwerte ab: numerischer
+ * Live-/Vorwert, Trend, Zone (via computeZone) und ein ehrlicher `pending`-Flag,
+ * wenn kein aktueller Wert vorliegt. Reine Funktion — keine DB, keine erfundenen Werte.
+ */
+export function indicatorVitals(input: IndicatorVitalsInput): IndicatorVitals {
+  const currentValue = toNumber(input.currentValue);
+  const previousValue = toNumber(input.previousValue);
+  const warn = toNumber(input.thresholdWarn);
+  const critical = toNumber(input.thresholdCritical);
+
+  const delta = currentValue != null && previousValue != null ? currentValue - previousValue : null;
+  const trend: TrendDirection = delta == null || delta === 0 ? "flat" : delta > 0 ? "up" : "down";
+
+  const zone = computeZone(currentValue, warn, critical, input.scaleDirection as ScaleDirection, {
+    uncritical: input.zoneTextUncritical,
+    elevated: input.zoneTextElevated,
+    critical: input.zoneTextCritical,
+  });
+
+  return {
+    currentValue,
+    previousValue,
+    currentValueDate: input.currentValueDate,
+    unit: input.unit,
+    delta,
+    trend,
+    zone,
+    pending: currentValue == null,
+  };
+}
+
 export interface InjectionPeriodResult {
   daysRemaining: number;
   gapToTarget: number;

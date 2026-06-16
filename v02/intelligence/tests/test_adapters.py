@@ -21,6 +21,11 @@ from src.adapters.tankerkoenig import (
     PLZ_BASKET,
     average_fuel_prices,
 )
+from src.adapters.bip import BIPAdapter, parse_eurostat_jsonstat
+from src.adapters.arbeitslosigkeit import ArbeitslosigkeitAdapter, parse_arbeitslosigkeit_table
+from src.adapters.ezbleitzins import EZBLeitzinsAdapter, parse_ecb_sdw_jsondata
+from src.adapters.staatsschulden import StaatsschuldenAdapter, parse_eurostat_debt
+from src.adapters.insolvenzen import InsolvenzenAdapter, parse_insolvenzen_table
 
 
 def _validate_items(items):
@@ -567,3 +572,426 @@ def test_fred_adapter_returns_fallback_on_network_exception(monkeypatch):
     items = FREDAdapter().fetch_latest()
     assert len(items) == 1
     assert items[0].indicator_id is None
+
+
+# ---------------------------------------------------------------------------
+# BIP-Wachstum — Eurostat namq_10_gdp
+# ---------------------------------------------------------------------------
+
+_BIP_EUROSTAT_RESPONSE = {
+    "dimension": {
+        "time": {
+            "category": {
+                "index": {"2025-Q3": 0, "2025-Q4": 1, "2026-Q1": 2},
+                "label": {"2025-Q3": "2025-Q3", "2025-Q4": "2025-Q4", "2026-Q1": "2026-Q1"},
+            }
+        }
+    },
+    "value": {"0": 0.0, "1": 0.2, "2": 0.3},
+}
+
+
+def test_parse_eurostat_jsonstat_sorts_and_extracts():
+    """parse_eurostat_jsonstat liefert Werte aufsteigend sortiert nach Periode."""
+    observations = parse_eurostat_jsonstat(_BIP_EUROSTAT_RESPONSE)
+
+    assert len(observations) == 3
+    assert observations[-1]["period"] == "2026-Q1"
+    assert observations[-1]["value"] == 0.3
+    assert observations[-2]["period"] == "2025-Q4"
+    assert observations[-2]["value"] == 0.2
+
+
+def test_parse_eurostat_jsonstat_handles_missing_values():
+    """Fehlende Werte (None in value-Dict) werden übersprungen."""
+    data = {
+        "dimension": {"time": {"category": {
+            "index": {"2026-Q1": 0, "2026-Q2": 1},
+            "label": {"2026-Q1": "2026-Q1", "2026-Q2": "2026-Q2"},
+        }}},
+        "value": {"0": 0.3},  # Index "1" fehlt
+    }
+    observations = parse_eurostat_jsonstat(data)
+    assert len(observations) == 1
+    assert observations[0]["value"] == 0.3
+
+
+def test_bip_adapter_maps_to_indicator_live_value(monkeypatch):
+    """BIPAdapter liefert IngestionItem mit korrekter indicator_id und Werten."""
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = _BIP_EUROSTAT_RESPONSE
+
+    monkeypatch.setattr("src.adapters.bip.requests.get", lambda *args, **kwargs: response)
+
+    item = BIPAdapter().fetch_latest()[0]
+
+    assert item.indicator_id == "wi-bip-wachstum-de"
+    assert item.current_value == 0.3
+    assert item.current_value_date == "2026-Q1"
+    assert item.previous_value == 0.2
+    assert item.previous_value_date == "2025-Q4"
+    assert item.source_period_type == "quarter"
+    assert item.source_stand_date == "2026-Q1"
+    _validate_items([item])
+
+
+def test_bip_adapter_returns_fallback_on_http_error(monkeypatch):
+    """HTTP-Fehler → Fallback-Item, confidence niedrig, kein Crash."""
+    response = MagicMock()
+    response.status_code = 503
+    monkeypatch.setattr("src.adapters.bip.requests.get", lambda *args, **kwargs: response)
+
+    items = BIPAdapter().fetch_latest()
+    assert len(items) == 1
+    assert items[0].indicator_id is None
+    assert items[0].confidence_suggestion == "niedrig"
+
+
+def test_bip_adapter_returns_fallback_on_network_exception(monkeypatch):
+    """Netzwerkfehler → Fallback-Item, kein Crash."""
+    monkeypatch.setattr(
+        "src.adapters.bip.requests.get",
+        lambda *args, **kwargs: (_ for _ in ()).throw(ConnectionError("timeout")),
+    )
+    items = BIPAdapter().fetch_latest()
+    assert len(items) == 1
+    assert items[0].indicator_id is None
+
+
+# ---------------------------------------------------------------------------
+# Arbeitslosigkeit — Destatis GENESIS 13211-0002 (BA-Registrierungsstatistik)
+# ---------------------------------------------------------------------------
+
+# GENESIS-Format verifiziert 2026-06-16: Region;Jahr;Monat;Anzahl;Quote1;Quote2;...
+# "Insgesamt" = Gesamtdeutschland; Anzahl Personen → Millionen Personen (÷ 1.000.000).
+_ARBEITSLOSIGKEIT_GENESIS_CSV = "\n".join([
+    "Tabelle: 13211-0002",
+    "Arbeitslose, Arbeitslosenquoten, Gemeldete Arbeitsstellen,;;;;;;;;",
+    "Kurzarbeiter, Kurzarbeitende Betriebe: Deutschland/;;;;;;;;",
+    "Frueheres Bundesgebiet/Neue Laender, Monate;;;;;;;;",
+    "Arbeitsmarktstatistik der Bundesagentur fuer Arbeit;;;;;;;;",
+    ";;;Arbeitslose;Arbeitslosenquote aller zivilen Erwerbspersonen;Arbeitslosenquote d. abhaengigen ziv. Erwerbspers.;Gemeldete Arbeitsstellen;Kurzarbeiter;Kurzarbeitende Betriebe",
+    ";;;Anzahl;Prozent;Prozent;Anzahl;Anzahl;Anzahl",
+    "Insgesamt;2026;April;3008161;6,4;7,0;641205;...;...",
+    "Insgesamt;2026;Mai;2950456;6,3;6,8;642814;...;...",
+    "Insgesamt;2026;Juni;...;...;...;...;...;...",
+    "Frueheres Bundesgebiet;2026;April;2456000;5,1;5,6;500000;...;...",
+])
+
+
+def test_parse_arbeitslosigkeit_table_extracts_latest_in_millions():
+    """parse_arbeitslosigkeit_table liefert current/previous in Mio, filtert 'Insgesamt'."""
+    result = parse_arbeitslosigkeit_table(_ARBEITSLOSIGKEIT_GENESIS_CSV)
+
+    assert result["current"]["period"] == "2026-05"
+    assert abs(result["current"]["value"] - 2.950456) < 0.000001
+    assert result["previous"]["period"] == "2026-04"
+    assert abs(result["previous"]["value"] - 3.008161) < 0.000001
+
+
+def test_parse_arbeitslosigkeit_table_raises_on_missing_anzahl_column():
+    """Tabelle ohne Anzahl-Spalte wirft ValueError."""
+    import pytest
+    with pytest.raises(ValueError, match="13211-0002"):
+        parse_arbeitslosigkeit_table("Region;Jahr;Monat;Quote\nInsgesamt;2026;Mai;6,3")
+
+
+def test_arbeitslosigkeit_adapter_maps_to_indicator_live_value(monkeypatch):
+    """ArbeitslosigkeitAdapter parst GENESIS-CSV und liefert korrektes IngestionItem (BA-Wert)."""
+    response = MagicMock()
+    response.status_code = 200
+    response.content = _ARBEITSLOSIGKEIT_GENESIS_CSV.encode("utf-8")
+    response.text = _ARBEITSLOSIGKEIT_GENESIS_CSV
+
+    monkeypatch.setattr(
+        "src.adapters.arbeitslosigkeit.requests.post",
+        lambda *args, **kwargs: response,
+    )
+
+    item = ArbeitslosigkeitAdapter().fetch_latest()[0]
+
+    assert item.indicator_id == "wi-arbeitslosigkeit-de"
+    assert abs(item.current_value - 2.950456) < 0.000001
+    assert item.current_value_date == "2026-05"
+    assert abs(item.previous_value - 3.008161) < 0.000001
+    assert item.previous_value_date == "2026-04"
+    assert item.source_period_type == "month"
+    # BA-Wert im Bereich 2,8–3,2 Mio (nicht ILO ~1,7 Mio)
+    assert item.current_value > 2.5
+    _validate_items([item])
+
+
+def test_arbeitslosigkeit_adapter_returns_fallback_on_http_error(monkeypatch):
+    """HTTP 401 (GENESIS ohne Credentials) → Fallback, confidence niedrig."""
+    response = MagicMock()
+    response.status_code = 401
+    response.content = b'{"Code":15}'
+    response.text = '{"Code":15}'
+    monkeypatch.setattr(
+        "src.adapters.arbeitslosigkeit.requests.post",
+        lambda *args, **kwargs: response,
+    )
+    items = ArbeitslosigkeitAdapter().fetch_latest()
+    assert items[0].indicator_id is None
+    assert items[0].confidence_suggestion == "niedrig"
+
+
+# ---------------------------------------------------------------------------
+# EZB-Leitzins — ECB SDW (DFR)
+# ---------------------------------------------------------------------------
+
+_ECB_SDW_RESPONSE = {
+    "dataSets": [
+        {
+            "series": {
+                "0:0:0:0:0:0:0": {
+                    "observations": {
+                        "0": [2.0],
+                        "1": [2.25],
+                    }
+                }
+            }
+        }
+    ],
+    "structure": {
+        "dimensions": {
+            "observation": [
+                {
+                    "id": "TIME_PERIOD",
+                    "values": [
+                        {"id": "2025-06-11", "name": "2025-06-11"},
+                        {"id": "2026-06-17", "name": "2026-06-17"},
+                    ],
+                }
+            ]
+        }
+    },
+}
+
+
+def test_parse_ecb_sdw_jsondata_extracts_observations():
+    """parse_ecb_sdw_jsondata extrahiert Zeitpunkt-Wert-Paare korrekt."""
+    observations = parse_ecb_sdw_jsondata(_ECB_SDW_RESPONSE)
+
+    assert len(observations) == 2
+    assert observations[-1]["period"] == "2026-06-17"
+    assert observations[-1]["value"] == 2.25
+    assert observations[-2]["period"] == "2025-06-11"
+    assert observations[-2]["value"] == 2.0
+
+
+def test_ezbleitzins_adapter_maps_to_indicator_live_value(monkeypatch):
+    """EZBLeitzinsAdapter liefert IngestionItem mit korrekter indicator_id."""
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = _ECB_SDW_RESPONSE
+
+    monkeypatch.setattr(
+        "src.adapters.ezbleitzins.requests.get",
+        lambda *args, **kwargs: response,
+    )
+
+    item = EZBLeitzinsAdapter().fetch_latest()[0]
+
+    assert item.indicator_id == "wi-ezb-leitzins"
+    assert item.current_value == 2.25
+    assert item.current_value_date == "2026-06-17"
+    assert item.previous_value == 2.0
+    assert item.previous_value_date == "2025-06-11"
+    assert item.source_period_type == "date"
+    _validate_items([item])
+
+
+def test_ezbleitzins_adapter_returns_fallback_on_http_error(monkeypatch):
+    """HTTP-Fehler → Fallback, confidence niedrig."""
+    response = MagicMock()
+    response.status_code = 503
+    monkeypatch.setattr(
+        "src.adapters.ezbleitzins.requests.get",
+        lambda *args, **kwargs: response,
+    )
+    items = EZBLeitzinsAdapter().fetch_latest()
+    assert items[0].indicator_id is None
+    assert items[0].confidence_suggestion == "niedrig"
+
+
+def test_ezbleitzins_adapter_handles_malformed_response(monkeypatch):
+    """Leere/fehlerhafte ECB-Antwort → Fallback, kein Crash."""
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = {"dataSets": [], "structure": {}}
+
+    monkeypatch.setattr(
+        "src.adapters.ezbleitzins.requests.get",
+        lambda *args, **kwargs: response,
+    )
+    items = EZBLeitzinsAdapter().fetch_latest()
+    assert items[0].indicator_id is None
+    assert items[0].confidence_suggestion == "niedrig"
+
+
+# ---------------------------------------------------------------------------
+# Staatsschuldenquote — Eurostat gov_10dd_edpt1
+# ---------------------------------------------------------------------------
+
+_SCHULDEN_EUROSTAT_RESPONSE = {
+    "dimension": {
+        "time": {
+            "category": {
+                "index": {"2023": 0, "2024": 1, "2025": 2},
+                "label": {"2023": "2023", "2024": "2024", "2025": "2025"},
+            }
+        }
+    },
+    "value": {"0": 62.3, "1": 62.2, "2": 63.5},
+}
+
+
+def test_parse_eurostat_debt_extracts_sorted_values():
+    """parse_eurostat_debt liefert aufsteigend sortierte Jahreswerte."""
+    observations = parse_eurostat_debt(_SCHULDEN_EUROSTAT_RESPONSE)
+
+    assert len(observations) == 3
+    assert observations[-1]["period"] == "2025"
+    assert observations[-1]["value"] == 63.5
+    assert observations[-2]["period"] == "2024"
+    assert observations[-2]["value"] == 62.2
+
+
+def test_staatsschulden_adapter_maps_to_indicator_live_value(monkeypatch):
+    """StaatsschuldenAdapter liefert IngestionItem mit korrekter indicator_id."""
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = _SCHULDEN_EUROSTAT_RESPONSE
+
+    monkeypatch.setattr(
+        "src.adapters.staatsschulden.requests.get",
+        lambda *args, **kwargs: response,
+    )
+
+    item = StaatsschuldenAdapter().fetch_latest()[0]
+
+    assert item.indicator_id == "wi-staatsschuldenquote-de"
+    assert item.current_value == 63.5
+    assert item.current_value_date == "2025"
+    assert item.previous_value == 62.2
+    assert item.previous_value_date == "2024"
+    assert item.source_period_type == "year"
+    _validate_items([item])
+
+
+def test_staatsschulden_adapter_returns_fallback_on_http_error(monkeypatch):
+    """HTTP-Fehler → Fallback, confidence niedrig."""
+    response = MagicMock()
+    response.status_code = 503
+    monkeypatch.setattr(
+        "src.adapters.staatsschulden.requests.get",
+        lambda *args, **kwargs: response,
+    )
+    items = StaatsschuldenAdapter().fetch_latest()
+    assert items[0].indicator_id is None
+    assert items[0].confidence_suggestion == "niedrig"
+
+
+# ---------------------------------------------------------------------------
+# Insolvenzen — Destatis GENESIS 52411-0001
+# ---------------------------------------------------------------------------
+
+# GENESIS-Format: Jahr und Monat in getrennten Spalten, verifiziert 2026-06-16.
+_INSOLVENZEN_GENESIS_CSV = "\n".join([
+    "Tabelle: 52411-0001",
+    "Insolvenzverfahren, Voraussichtliche Forderungen:;;;;",
+    "Deutschland, Monate;;;;",
+    ";;Insolvenzverfahren;Veränderung zum Vorjahresmonat;Voraussichtliche Forderungen",
+    ";;Anzahl;in (%);Tsd. EUR",
+    "2026;Februar;10439;-1,1;3178273",
+    "2026;März;12531;+16,1;4486873",
+    "2026;April;...;...;...",
+])
+
+
+def test_parse_insolvenzen_table_extracts_latest():
+    """parse_insolvenzen_table gibt current + previous korrekt zurück (GENESIS-Format)."""
+    result = parse_insolvenzen_table(_INSOLVENZEN_GENESIS_CSV)
+
+    assert result["current"]["value"] == 12531.0
+    assert result["current"]["period"] == "2026-03"
+    assert result["previous"]["value"] == 10439.0
+
+
+def test_parse_insolvenzen_table_raises_on_missing_column():
+    """Tabelle ohne Insolvenz-Spalte wirft ValueError."""
+    import pytest
+    with pytest.raises(ValueError, match="Insolvenz"):
+        parse_insolvenzen_table("Datum;Umsatz\n2026-03;1000")
+
+
+def test_insolvenzen_adapter_maps_to_indicator_live_value(monkeypatch):
+    """InsolvenzenAdapter parst GENESIS-CSV und liefert korrektes IngestionItem."""
+    response = MagicMock()
+    response.status_code = 200
+    response.content = _INSOLVENZEN_GENESIS_CSV.encode("utf-8")
+    response.text = _INSOLVENZEN_GENESIS_CSV
+
+    monkeypatch.setattr(
+        "src.adapters.insolvenzen.requests.post",
+        lambda *args, **kwargs: response,
+    )
+
+    item = InsolvenzenAdapter().fetch_latest()[0]
+
+    assert item.indicator_id == "wi-insolvenzen-de"
+    assert item.current_value == 12531.0
+    assert item.current_value_date == "2026-03"
+    assert item.previous_value == 10439.0
+    assert item.source_period_type == "month"
+    _validate_items([item])
+
+
+def test_insolvenzen_adapter_returns_fallback_on_http_error(monkeypatch):
+    """HTTP 401 (GENESIS ohne Credentials) → Fallback, confidence niedrig."""
+    response = MagicMock()
+    response.status_code = 401
+    response.content = b'{"Code":15}'
+    response.text = '{"Code":15}'
+    monkeypatch.setattr(
+        "src.adapters.insolvenzen.requests.post",
+        lambda *args, **kwargs: response,
+    )
+    items = InsolvenzenAdapter().fetch_latest()
+    assert items[0].indicator_id is None
+    assert items[0].confidence_suggestion == "niedrig"
+
+
+@pytest.mark.live
+def test_bip_adapter_live():
+    adapter = BIPAdapter()
+    assert adapter.name == "BIP"
+    items = adapter.fetch_latest()
+    assert isinstance(items, list)
+    assert len(items) >= 1
+
+
+@pytest.mark.live
+def test_arbeitslosigkeit_adapter_live():
+    adapter = ArbeitslosigkeitAdapter()
+    items = adapter.fetch_latest()
+    assert isinstance(items, list)
+    assert len(items) >= 1
+
+
+@pytest.mark.live
+def test_ezbleitzins_adapter_live():
+    adapter = EZBLeitzinsAdapter()
+    items = adapter.fetch_latest()
+    assert isinstance(items, list)
+    assert len(items) >= 1
+
+
+@pytest.mark.live
+def test_staatsschulden_adapter_live():
+    adapter = StaatsschuldenAdapter()
+    items = adapter.fetch_latest()
+    assert isinstance(items, list)
+    assert len(items) >= 1

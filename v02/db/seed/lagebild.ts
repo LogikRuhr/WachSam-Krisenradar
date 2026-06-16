@@ -27,6 +27,7 @@ export const LAGEBILD_ITEMS: NewLagebildItem[] = lagebildData.map((item) => ({
   trend: item.trend,
   primaerindikator: item.primaerindikator,
   confidence: item.confidence,
+  evidenceType: item.evidence_type as NewLagebildItem["evidenceType"],
   factIds: FACT_IDS_BY_LAGEBILD_ID[item.id] ?? [],
   retrievedAt: dateOrNull(item.retrieved_at),
 }));

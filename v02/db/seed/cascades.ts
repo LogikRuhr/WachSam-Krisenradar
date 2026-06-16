@@ -4,6 +4,10 @@ import cascadeData from "./source-data/cascades.json";
 
 export type NewCascade = InferInsertModel<typeof cascades>;
 
+const W6_DRAFT_CASCADE_IDS = new Set([
+  "cascade-m", "cascade-n", "cascade-o", "cascade-p", "cascade-q", "cascade-r", "cascade-s",
+]);
+
 export const CASCADES: NewCascade[] = cascadeData.cascades.map((item) => ({
   id: item.id,
   title: item.title,
@@ -16,4 +20,5 @@ export const CASCADES: NewCascade[] = cascadeData.cascades.map((item) => ({
   steps: item.steps,
   haushaltswirkung: item.haushaltswirkung,
   retrievedAt: new Date(cascadeData.meta.retrieved_at),
+  ...(W6_DRAFT_CASCADE_IDS.has(item.id) ? { editorialStatus: "draft" as const } : {}),
 }));

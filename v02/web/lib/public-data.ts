@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { db, schema } from "./db";
 import { aufwandRank, confidenceRank, isRising } from "./personalization";
@@ -150,7 +150,54 @@ async function safeSingle<T>(query: () => Promise<T[]>): Promise<DbItemState<T>>
   return { connected: state.connected, error: state.error, data: state.connected ? (state.rows[0] ?? null) : null };
 }
 
-export async function getCascadeById(id: string) {
+export type IndicatorRow = typeof schema.indicators.$inferSelect;
+export type CascadeIndicatorLink = typeof schema.cascadeIndicatorLinks.$inferSelect & {
+  indicator: IndicatorRow | null;
+};
+export type CascadeWithLinks = WithSources<typeof schema.cascades.$inferSelect> & {
+  indicatorLinks: CascadeIndicatorLink[];
+};
+
+/**
+ * Lädt die cascade_indicator_links einer Kaskade samt verlinkter, publizierter
+ * Indikatoren (mit Live-Werten). Nur Links mit publiziertem Status UND publiziertem
+ * Indikator werden sichtbar — sonst leaken Draft-Indikatoren über die Detailseite.
+ * Treiber-Links (driver) zuerst, dann betroffene (affected); stabile Reihenfolge.
+ */
+async function attachIndicatorLinks(cascadeId: string): Promise<CascadeIndicatorLink[]> {
+  const activeDb = database();
+  if (!activeDb) return [];
+  const links = await activeDb
+    .select()
+    .from(schema.cascadeIndicatorLinks)
+    .where(
+      and(
+        eq(schema.cascadeIndicatorLinks.cascadeId, cascadeId),
+        eq(schema.cascadeIndicatorLinks.editorialStatus, PUBLISHED),
+      ),
+    );
+  if (links.length === 0) return [];
+
+  const indicatorIds = Array.from(new Set(links.map((link) => link.indicatorId)));
+  const indicators = await activeDb
+    .select()
+    .from(schema.indicators)
+    .where(
+      and(inArray(schema.indicators.id, indicatorIds), eq(schema.indicators.editorialStatus, PUBLISHED)),
+    );
+  const byId = new Map(indicators.map((indicator) => [indicator.id, indicator]));
+
+  return links
+    .map((link) => ({ ...link, indicator: byId.get(link.indicatorId) ?? null }))
+    .filter((link) => link.indicator !== null)
+    .sort(
+      (a, b) =>
+        Number(a.role === "affected") - Number(b.role === "affected") ||
+        a.indicatorId.localeCompare(b.indicatorId),
+    );
+}
+
+export async function getCascadeById(id: string): Promise<DbItemState<CascadeWithLinks>> {
   const state = await safeSingle(() =>
     database()!
       .select()
@@ -158,9 +205,10 @@ export async function getCascadeById(id: string) {
       .where(and(eq(schema.cascades.id, id), eq(schema.cascades.editorialStatus, PUBLISHED)))
       .limit(1),
   );
-  if (!state.connected || !state.data) return state;
-  const [data] = await attachSources("cascade", [state.data]);
-  return { ...state, data };
+  if (!state.connected || !state.data) return state as DbItemState<CascadeWithLinks>;
+  const [withSources] = await attachSources("cascade", [state.data]);
+  const indicatorLinks = await attachIndicatorLinks(id);
+  return { ...state, data: { ...withSources, indicatorLinks } };
 }
 
 export async function getGovernanceById(id: string) {
@@ -246,6 +294,30 @@ export async function getIndicators() {
       .orderBy(asc(schema.indicators.system)),
   );
   return { ...state, rows: await attachSources("indicator", state.rows) };
+}
+
+/** Vitalwerte des Gesamtstands: publizierte Indikatoren mit gesetztem headlineTier, nach Rang. */
+export async function getHeadlineVitals() {
+  const state = await safe(() =>
+    database()!
+      .select()
+      .from(schema.indicators)
+      .where(and(eq(schema.indicators.editorialStatus, PUBLISHED), isNotNull(schema.indicators.headlineTier)))
+      .orderBy(asc(schema.indicators.headlineTier)),
+  );
+  return { ...state, rows: await attachSources("indicator", state.rows) };
+}
+
+/** Neuester publizierter Gesamtstand Deutschland. */
+export async function getNationalState() {
+  return safeSingle(() =>
+    database()!
+      .select()
+      .from(schema.nationalState)
+      .where(eq(schema.nationalState.editorialStatus, PUBLISHED))
+      .orderBy(desc(schema.nationalState.standDate))
+      .limit(1),
+  );
 }
 
 export async function getSourceTrustLayer() {

@@ -2,9 +2,9 @@
   "meta": {
     "version": "v0.2",
     "stand": "2026-05-21",
-    "count": 12,
+    "count": 19,
     "retrieved_at": "2026-05-21T10:00:00Z",
-    "note": "12 vollständige Kaskaden A–L. Kontrollierter Datensatz."
+    "note": "19 Kaskaden A–S. A–L = Bürger-Bereich-Kanon (Stand 2026-05-21). M–S = Welle 6, abgeleitet aus Lagebild-Dokument v2.0 (12.06.2026), editorial_status=draft."
   },
   "cascades": [
     {
@@ -848,6 +848,188 @@
         "lagebild-arbeit",
         "cascade-f"
       ]
-    }
+    },
+    {
+  "id": "cascade-m",
+  "title": "Steigende Unternehmensinsolvenzen können Arbeitsplätze und Forderungen belasten",
+  "trigger": "Schwache Konjunktur, hohe Kosten und gestiegenes Zinsniveau erhöhen den Insolvenzdruck",
+  "confidence": "hoch",
+  "severity": "erhoeht",
+  "zeithorizont": "monate",
+  "methodology_tag": "bia",
+  "germany_relevance": {
+    "direct": true,
+    "systems_affected": ["finanzen", "arbeit", "industrie"],
+    "time_to_impact": "monate",
+    "description": "2025: 24.064 Unternehmensinsolvenzen (+10,3 %), höchster Stand seit 2014; 77.219 Verbraucherinsolvenzen (+8,4 %)"
+  },
+  "steps": [
+    { "step": 1, "description": "Schwache Konjunktur, hohe Energie-/Kostenlast und Zinsniveau erhöhen den Insolvenzdruck", "systems": ["finanzen", "industrie"] },
+    { "step": 2, "description": "Unternehmens- und Verbraucherinsolvenzen steigen (2025: 24.064 bzw. 77.219)", "systems": ["finanzen"] },
+    { "step": 3, "description": "Arbeitsplatz- und Forderungsverluste treffen Beschäftigte und Gläubiger", "systems": ["arbeit", "finanzen"] }
+  ],
+  "haushaltswirkung": "Arbeitsplatzrisiken bei betroffenen Unternehmen; offene Forderungen für Gläubiger und Beschäftigte",
+  "quellen": ["Destatis Unternehmensinsolvenzen 2025 (13.03.2026)", "DATEV magazin 2026"],
+  "sources": [
+    { "name": "Statistisches Bundesamt", "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2026/03/PD26_085_52411.html", "stand": "13. März 2026" }
+  ],
+  "linked_items": ["arbeit-arbeitsmarkt-druck"]
+},
+{
+  "id": "cascade-n",
+  "title": "Zu wenige Fertigstellungen und steigende Mieten können Haushalte und soziale Lage belasten",
+  "trigger": "Hohe Bau- und Finanzierungskosten treffen auf anhaltenden Nachfrageüberhang",
+  "confidence": "hoch",
+  "severity": "erhoeht",
+  "zeithorizont": "langfristig",
+  "methodology_tag": "scenario",
+  "germany_relevance": {
+    "direct": true,
+    "systems_affected": ["finanzen", "gesellschaft", "infrastruktur"],
+    "time_to_impact": "langfristig",
+    "description": "Fertigstellungen 2025: 206.600 (−18,0 %), niedrigster Stand seit 2012; Bauüberhang 760.700 Wohnungen; Baugenehmigungen 2025 +10,8 %"
+  },
+  "steps": [
+    { "step": 1, "description": "Hohe Bau- und Finanzierungskosten bremsen Neubau und Fertigstellungen", "systems": ["finanzen", "infrastruktur"] },
+    { "step": 2, "description": "Fertigstellungen sinken unter Bedarf, Mieten in Ballungsräumen steigen", "systems": ["finanzen", "gesellschaft"] },
+    { "step": 3, "description": "Verteilungs- und soziale Konflikte in angespannten Wohnungsmärkten nehmen zu", "systems": ["gesellschaft"] }
+  ],
+  "haushaltswirkung": "Steigende Mieten und knapper Wohnraum belasten besonders Haushalte in Ballungsräumen",
+  "quellen": ["Destatis Baufertigstellungen 2025 (22.05.2026)", "Destatis Baugenehmigungen 2025"],
+  "sources": [
+    { "name": "Statistisches Bundesamt — Bauen", "url": "https://www.destatis.de/DE/Themen/Branchen-Unternehmen/Bauen/_inhalt.html", "stand": "22. Mai 2026" }
+  ],
+  "linked_items": []
+},
+{
+  "id": "cascade-o",
+  "title": "Investitionsstau bei Brücken, Schulen und Netzen kann Standort und Alltag belasten",
+  "trigger": "Jahrzehntelanger Sanierungsrückstand trifft auf angespannte Kommunalfinanzen",
+  "confidence": "hoch",
+  "severity": "erhoeht",
+  "zeithorizont": "langfristig",
+  "methodology_tag": "steep",
+  "germany_relevance": {
+    "direct": true,
+    "systems_affected": ["infrastruktur", "finanzen", "mobilitaet"],
+    "time_to_impact": "langfristig",
+    "description": "Kommunaler Investitionsrückstand 215,7 Mrd. € (Rekord, +15,9 %); Schulen 67,8 Mrd. €, Straßen 53,4 Mrd. €"
+  },
+  "steps": [
+    { "step": 1, "description": "Investitionsstau und Sanierungsrückstand wachsen trotz Sondervermögen", "systems": ["infrastruktur", "finanzen"] },
+    { "step": 2, "description": "Ausfälle bei Brücken, Bahn, Schulen und Netzen häufen sich", "systems": ["infrastruktur", "mobilitaet"] },
+    { "step": 3, "description": "Produktivitäts- und Standortverluste sowie Einschränkungen im Alltag", "systems": ["infrastruktur", "finanzen"] }
+  ],
+  "haushaltswirkung": "Eingeschränkte Verkehrs-, Schul- und Versorgungsinfrastruktur im Alltag",
+  "quellen": ["KfW-Kommunalpanel 2025/2026", "Difu 2025"],
+  "sources": [
+    { "name": "Deutsches Institut für Urbanistik (Difu)", "url": "https://difu.de/presse/pressemitteilungen/2025-07-01/kfw-kommunalpanel-2025-investitionsstau-in-kommunen-weiter-angestiegen", "stand": "2025/2026" }
+  ],
+  "linked_items": []
+},
+{
+  "id": "cascade-p",
+  "title": "Hohe Verschuldung einzelner Eurostaaten kann über Zinsen und Spreads auf Deutschland wirken",
+  "trigger": "Hohe Verschuldung in Frankreich und Italien plus gestiegene EZB-Zinsen",
+  "confidence": "mittel",
+  "severity": "erhoeht",
+  "zeithorizont": "monate",
+  "methodology_tag": "scenario",
+  "germany_relevance": {
+    "direct": false,
+    "systems_affected": ["finanzen", "gesellschaft"],
+    "time_to_impact": "monate",
+    "description": "Deutschland 63,5 % Schuldenquote (solide); Risikoländer Frankreich 117,7 %, Italien 137,8 %, Griechenland 149,7 %; EZB-Einlagesatz 2,25 %"
+  },
+  "steps": [
+    { "step": 1, "description": "Hohe Verschuldung einzelner Eurostaaten (Frankreich, Italien) erhöht die Anfälligkeit", "systems": ["finanzen"] },
+    { "step": 2, "description": "Ansteckung über EZB-Zinsen, Spreads und Target2 möglich", "systems": ["finanzen"] },
+    { "step": 3, "description": "Indirekte Belastung Deutschlands über Finanzmärkte und Bundeshaushalt", "systems": ["finanzen", "gesellschaft"] }
+  ],
+  "haushaltswirkung": "Indirekt über Zinsen und Bundeshaushalt; Deutschland bleibt vorerst sicherer Hafen",
+  "quellen": ["Eurostat Schuldenstand Q3 2025 (22.01.2026)", "Destatis/Eurostat"],
+  "sources": [
+    { "name": "Eurostat", "url": "https://ec.europa.eu/eurostat/de/web/products-euro-indicators/w/2-22012026-ap", "stand": "22. Januar 2026" }
+  ],
+  "linked_items": []
+},
+{
+  "id": "cascade-q",
+  "title": "Anhaltender Ukraine-Krieg und hohe Verteidigungsausgaben können den Bundeshaushalt belasten",
+  "trigger": "Andauernder Krieg ohne belastbaren Waffenstillstand erhöht Verteidigungs- und Sicherheitsausgaben",
+  "confidence": "hoch",
+  "severity": "erhoeht",
+  "zeithorizont": "langfristig",
+  "methodology_tag": "scenario",
+  "germany_relevance": {
+    "direct": true,
+    "systems_affected": ["finanzen", "gesellschaft", "industrie"],
+    "time_to_impact": "langfristig",
+    "description": "Verteidigungsausgaben 2026: 108,2 Mrd. € (2,5 % des BIP); Ziel 3,5 % bis 2029, Etat bis ~152,8 Mrd. €"
+  },
+  "steps": [
+    { "step": 1, "description": "Anhaltender Krieg und Sicherheitsdruck erhöhen die Verteidigungsausgaben", "systems": ["finanzen", "gesellschaft"] },
+    { "step": 2, "description": "Hohe fiskalische Bindung über Sondervermögen und steigende Wehretats", "systems": ["finanzen"] },
+    { "step": 3, "description": "Fiskalischer Spielraum sinkt; zugleich stützen Aufträge Teile der Industrie", "systems": ["finanzen", "industrie"] }
+  ],
+  "haushaltswirkung": "Wachsende Verteidigungsausgaben binden Haushaltsmittel; Verteidigungsindustrie profitiert",
+  "quellen": ["Deutscher Bundestag/BMVg Verteidigungshaushalt 2026", "IW Köln 2026"],
+  "sources": [
+    { "name": "Deutscher Bundestag", "url": "https://www.bundestag.de/presse/hib/kurzmeldungen-1106068", "stand": "2026" }
+  ],
+  "linked_items": []
+},
+{
+  "id": "cascade-r",
+  "title": "Staatliche Desinformationskampagnen können Vertrauen und gesellschaftlichen Zusammenhalt belasten",
+  "trigger": "Dokumentierte staatliche Desinformationskampagnen (Doppelgänger, Storm-1516) zielen auf Diskurs und Wahlen",
+  "confidence": "hoch",
+  "severity": "erhoeht",
+  "zeithorizont": "langfristig",
+  "methodology_tag": "rca",
+  "germany_relevance": {
+    "direct": true,
+    "systems_affected": ["gesellschaft"],
+    "time_to_impact": "langfristig",
+    "description": "Kampagnen Doppelgänger und Storm-1516 dokumentiert (BfV, EU DisinfoLab); >100 Storm-1516-Fakes 2025 (CORRECTIV)"
+  },
+  "steps": [
+    { "step": 1, "description": "Staatliche Desinformationskampagnen verbreiten gezielt Falschinformationen", "systems": ["gesellschaft"] },
+    { "step": 2, "description": "Beeinflussung von Diskurs und Wahlen, erschwerte Meinungsbildung", "systems": ["gesellschaft"] },
+    { "step": 3, "description": "Vertrauensverlust und steigende affektive Polarisierung", "systems": ["gesellschaft"] }
+  ],
+  "haushaltswirkung": "Kein direkter Mehrkosten-Effekt; Stabilitäts- und Vertrauensrisiko für die Demokratie",
+  "quellen": ["BfV — Spionage/Sabotage/Desinformation", "CORRECTIV 2025"],
+  "sources": [
+    { "name": "Bundesamt für Verfassungsschutz", "url": "https://www.verfassungsschutz.de/SharedDocs/hintergruende/DE/spionage-und-proliferationsabwehr/gefaehrdung-russische-spionage-sabotage-desinformation.html", "stand": "2026" }
+  ],
+  "linked_items": ["gesellschaft-vertrauen"]
+},
+{
+  "id": "cascade-s",
+  "title": "Alterung und steigende Sozialbeiträge können Lohnkosten und Haushalte langfristig belasten",
+  "trigger": "Schrumpfende Erwerbsbevölkerung trifft auf steigende Leistungsausgaben der Sozialkassen",
+  "confidence": "hoch",
+  "severity": "erhoeht",
+  "zeithorizont": "langfristig",
+  "methodology_tag": "steep",
+  "germany_relevance": {
+    "direct": true,
+    "systems_affected": ["arbeit", "finanzen", "gesundheit"],
+    "time_to_impact": "langfristig",
+    "description": "Gesamtsozialversicherungsbeitrag 42,30 % (2026); Erwerbsbevölkerung 51,2 Mio. (2024) → 41,2 Mio. bis 2070; 643.000 offene Stellen"
+  },
+  "steps": [
+    { "step": 1, "description": "Alterung und schrumpfende Erwerbsbevölkerung erhöhen Fachkräftemangel und Ausgabenlast", "systems": ["arbeit", "gesundheit"] },
+    { "step": 2, "description": "Beitragssätze und Bundeszuschüsse steigen (Gesamtbeitrag 42,30 %)", "systems": ["finanzen", "arbeit"] },
+    { "step": 3, "description": "Höhere Lohnnebenkosten und Druck auf Bundeshaushalt; Verteilungskonflikte", "systems": ["finanzen", "gesellschaft"] }
+  ],
+  "haushaltswirkung": "Höhere Sozialabgaben mindern Nettoeinkommen; langfristig Druck auf Renten und Beiträge",
+  "quellen": ["GKV-Spitzenverband Rechengrößen 2026", "Destatis 16. Bevölkerungsvorausberechnung (11.12.2025)"],
+  "sources": [
+    { "name": "GKV-Spitzenverband", "url": "https://www.gkv-spitzenverband.de/media/dokumente/presse/zahlen_und_grafiken/20260101_Faktenblatt_Rechengroessen_Beitragsrecht.pdf", "stand": "1. Januar 2026" }
+  ],
+  "linked_items": ["arbeit-arbeitsmarkt-druck"]
+}
   ]
 }

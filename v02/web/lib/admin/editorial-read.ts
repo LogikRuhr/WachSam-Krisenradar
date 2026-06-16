@@ -232,6 +232,23 @@ export const editorialTypeMeta = {
       { name: "causalLinks", label: "Wirkungsbezüge (JSON)", kind: "json", required: true },
     ],
   },
+  nationalState: {
+    type: "nationalState",
+    auditType: "national_state",
+    label: "Gesamtstand",
+    singularLabel: "Gesamtstand",
+    titleField: "executiveSummary",
+    description: "Gesamtstand Deutschland: Tonalität, Kurzlage und Revisionskriterien.",
+    publicPath: "/lage",
+    fields: [
+      { name: "id", label: "ID", kind: "text", required: true },
+      { name: "standDate", label: "Stand (ISO-Zeitstempel)", kind: "text", required: true, help: "ISO 8601, z.B. 2026-06-15T00:00:00Z" },
+      { name: "overallTone", label: "Gesamttonalität", kind: "select", required: true, options: severityOptions },
+      { name: "executiveSummary", label: "Kurzlage", kind: "textarea", required: true },
+      { name: "revisionCriteria", label: "Revisionskriterien (JSON)", kind: "json", required: true, help: "Array von Objekten {label, operator, threshold, ...}." },
+      { name: "gegentrends", label: "Gegentrends (JSON)", kind: "json", help: "Array von Strings." },
+    ],
+  },
 } as const satisfies Record<EditorialItemType, EditorialTypeMeta>;
 
 const tableMap = {
@@ -243,6 +260,7 @@ const tableMap = {
   lagebildItems: schema.lagebildItems,
   supplyRisks: schema.supplyRisks,
   citizenActions: schema.citizenActions,
+  nationalState: schema.nationalState,
 } as const satisfies Record<EditorialItemType, unknown>;
 
 function ensureDb() {

@@ -30,6 +30,22 @@ PLAUSIBILITY_RULES: dict[str, dict[str, float]] = {
     # Kraftstoffe in €/Liter.
     "wi-kraftstoffpreis-super-e10": {"plausibility_min": 0.5, "plausibility_max": 5.0, "max_delta_percent": 20.0},
     "wi-kraftstoffpreis-diesel": {"plausibility_min": 0.5, "plausibility_max": 5.0, "max_delta_percent": 20.0},
+    # BIP-Wachstum QoQ in %. Historische Extreme: Finanzkrise/Covid -10% QoQ;
+    # max_delta_percent 200 konservativ (Rate kann von -2% auf +2% springen).
+    "wi-bip-wachstum-de": {"plausibility_min": -15.0, "plausibility_max": 15.0, "max_delta_percent": 200.0},
+    # Unternehmensinsolvenzen absolut (Anzahl/Monat). Historisch ~1000–3500.
+    # 2023 ca. 1700–2200/Monat; oberes Limit konservativ 60000.
+    "wi-insolvenzen-de": {"plausibility_min": 0.0, "plausibility_max": 60000.0, "max_delta_percent": 40.0},
+    # Registrierte Arbeitslose in Millionen Personen (BA-Statistik, GENESIS 13211-0002).
+    # Aktuelle Werte ca. 2,9–3,1 Mio; threshold_warn 3.0, critical 3.5 Mio.
+    # Historisch: Minimum ~2,0 Mio (2019), Maximum ~5,0 Mio (2005).
+    "wi-arbeitslosigkeit-de": {"plausibility_min": 1.0, "plausibility_max": 8.0, "max_delta_percent": 15.0},
+    # EZB-Leitzins (DFR) in %. Historisch -0.5% bis +4.5%; max_delta liberal da
+    # Zinsschritte selten >0.75 pp aber relative Änderung kann groß sein.
+    "wi-ezb-leitzins": {"plausibility_min": -1.0, "plausibility_max": 10.0, "max_delta_percent": 100.0},
+    # Staatsschuldenquote in % des BIP. EU-Referenzwert 60%; Deutschland historisch 40–85%.
+    # Jahreswerte → max_delta_percent 10 (10%-Punkt/Jahr ist außergewöhnlich hoch).
+    "wi-staatsschuldenquote-de": {"plausibility_min": 0.0, "plausibility_max": 200.0, "max_delta_percent": 10.0},
 }
 
 

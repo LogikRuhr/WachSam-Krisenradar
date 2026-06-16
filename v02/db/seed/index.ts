@@ -3,6 +3,7 @@ import postgres from "postgres";
 import * as schema from "../schema";
 import { CITIZEN_ACTIONS } from "./actions";
 import { CASCADES } from "./cascades";
+import { CASCADE_INDICATOR_LINKS } from "./cascade-indicator-links";
 import { COST_IMPACTS } from "./cost-impacts";
 import { FACT_REFS } from "./fact-refs";
 import { FACTS } from "./facts";
@@ -10,6 +11,7 @@ import { GOVERNANCE_ITEMS } from "./governance";
 import { INDICATORS } from "./indicators";
 import { ITEM_SOURCES } from "./item-sources";
 import { LAGEBILD_ITEMS } from "./lagebild";
+import { NATIONAL_STATE } from "./national-state";
 import { SEED_META } from "./seed-meta";
 import { SOURCES } from "./sources";
 import { SUPPLY_RISKS } from "./supply-risks";
@@ -18,10 +20,12 @@ export const seedData = {
   facts: FACTS,
   factRefs: FACT_REFS,
   cascades: CASCADES,
+  cascadeIndicatorLinks: CASCADE_INDICATOR_LINKS,
   governance: GOVERNANCE_ITEMS,
   indicators: INDICATORS,
   costImpacts: COST_IMPACTS,
   lagebildItems: LAGEBILD_ITEMS,
+  nationalState: NATIONAL_STATE,
   supplyRisks: SUPPLY_RISKS,
   citizenActions: CITIZEN_ACTIONS,
   itemSources: ITEM_SOURCES,
@@ -35,10 +39,12 @@ export const getSeedStats = (): SeedStats => ({
   facts: FACTS.length,
   factRefs: FACT_REFS.length,
   cascades: CASCADES.length,
+  cascadeIndicatorLinks: CASCADE_INDICATOR_LINKS.length,
   governance: GOVERNANCE_ITEMS.length,
   indicators: INDICATORS.length,
   costImpacts: COST_IMPACTS.length,
   lagebildItems: LAGEBILD_ITEMS.length,
+  nationalState: NATIONAL_STATE.length,
   supplyRisks: SUPPLY_RISKS.length,
   citizenActions: CITIZEN_ACTIONS.length,
   itemSources: ITEM_SOURCES.length,
@@ -59,14 +65,17 @@ export const validateSeedData = (): string[] => {
   const errors: string[] = [];
   const factIds = new Set(FACTS.map((fact) => fact.id));
   const cascadeIds = new Set(CASCADES.map((cascade) => cascade.id));
+  const indicatorIds = new Set(INDICATORS.map((indicator) => indicator.id));
 
   errors.push(...assertUnique("facts", FACTS.map((item) => item.id)));
   errors.push(...assertUnique("fact_refs", FACT_REFS.map((item) => item.id)));
   errors.push(...assertUnique("cascades", CASCADES.map((item) => item.id)));
+  errors.push(...assertUnique("cascade_indicator_links", CASCADE_INDICATOR_LINKS.map((item) => item.id)));
   errors.push(...assertUnique("governance", GOVERNANCE_ITEMS.map((item) => item.id)));
   errors.push(...assertUnique("indicators", INDICATORS.map((item) => item.id)));
   errors.push(...assertUnique("cost_impacts", COST_IMPACTS.map((item) => item.id)));
   errors.push(...assertUnique("lagebild_items", LAGEBILD_ITEMS.map((item) => item.id)));
+  errors.push(...assertUnique("national_state", NATIONAL_STATE.map((item) => item.id)));
   errors.push(...assertUnique("supply_risks", SUPPLY_RISKS.map((item) => item.id)));
   errors.push(...assertUnique("citizen_actions", CITIZEN_ACTIONS.map((item) => item.id)));
   errors.push(...assertUnique("item_sources", ITEM_SOURCES.map((item) => item.id)));
@@ -93,6 +102,15 @@ export const validateSeedData = (): string[] => {
   for (const item of INDICATORS) {
     if (item.linkedCascade && !cascadeIds.has(item.linkedCascade)) {
       errors.push(`indicators.${item.id}: unbekannte linkedCascade ${item.linkedCascade}`);
+    }
+  }
+
+  for (const item of CASCADE_INDICATOR_LINKS) {
+    if (!cascadeIds.has(item.cascadeId)) {
+      errors.push(`cascade_indicator_links.${item.id}: unbekannte cascadeId ${item.cascadeId}`);
+    }
+    if (!indicatorIds.has(item.indicatorId)) {
+      errors.push(`cascade_indicator_links.${item.id}: unbekannte indicatorId ${item.indicatorId}`);
     }
   }
 
@@ -140,6 +158,20 @@ export const seedDatabase = async (db: Db): Promise<SeedStats> => {
   for (const row of INDICATORS) {
     await db.insert(schema.indicators).values(row).onConflictDoUpdate({
       target: schema.indicators.id,
+      set: { ...row, updatedAt: now },
+    });
+  }
+
+  for (const row of CASCADE_INDICATOR_LINKS) {
+    await db.insert(schema.cascadeIndicatorLinks).values(row).onConflictDoUpdate({
+      target: schema.cascadeIndicatorLinks.id,
+      set: { ...row, updatedAt: now },
+    });
+  }
+
+  for (const row of NATIONAL_STATE) {
+    await db.insert(schema.nationalState).values(row).onConflictDoUpdate({
+      target: schema.nationalState.id,
       set: { ...row, updatedAt: now },
     });
   }

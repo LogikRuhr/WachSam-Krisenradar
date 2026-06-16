@@ -36,6 +36,8 @@ export const sourceHealthStatusEnum = pgEnum("source_health_status", [
   "unknown",
   "anomaly",
 ]);
+export const evidenceType = pgEnum("evidence_type", ["fakt", "schaetzung", "annahme", "bewertung"]);
+export const cascadeIndicatorRole = pgEnum("cascade_indicator_role", ["driver", "affected"]);
 
 const createdAt = timestamp("created_at", { withTimezone: true }).defaultNow().notNull();
 const updatedAt = timestamp("updated_at", { withTimezone: true }).defaultNow().notNull();
@@ -44,6 +46,8 @@ const editorialReviewedAt = timestamp("editorial_reviewed_at", { withTimezone: t
 const publishedAt = timestamp("published_at", { withTimezone: true });
 const editorialStatus = editorialStatusEnum("editorial_status").notNull().default("published");
 const editorialReviewedBy = text("editorial_reviewed_by");
+
+export type RevisionCriterion = { indicatorId?: string; label: string; operator: ">" | "<" | ">=" | "<="; threshold: number; unit?: string };
 
 export const users = pgTable(
   "users",
@@ -137,6 +141,7 @@ export const facts = pgTable("facts", {
   sourceName: text("source_name").notNull(),
   sourceUrl: text("source_url").notNull(),
   sourceStand: text("source_stand").notNull(),
+  evidenceType: evidenceType("evidence_type"),
   retrievedAt,
   editorialStatus,
   editorialReviewedAt,
@@ -229,6 +234,7 @@ export const indicators = pgTable("indicators", {
   recentReferenceSourceName: text("recent_reference_source_name"),
   recentReferenceSourceUrl: text("recent_reference_source_url"),
   thresholdMethod: text("threshold_method"),
+  headlineTier: integer("headline_tier"),
 
   retrievedAt,
   editorialStatus,
@@ -267,6 +273,7 @@ export const lagebildItems = pgTable("lagebild_items", {
   primaerindikator: text("primaerindikator").notNull(),
   confidence: confidenceEnum("confidence").notNull(),
   factIds: jsonb("fact_ids").$type<string[]>().notNull(),
+  evidenceType: evidenceType("evidence_type"),
   retrievedAt,
   editorialStatus,
   editorialReviewedAt,
@@ -387,6 +394,7 @@ export const householdsRelations = relations(households, ({ one }) => ({
 export const cascadesRelations = relations(cascades, ({ many }) => ({
   governanceItems: many(governance),
   indicators: many(indicators),
+  cascadeIndicatorLinks: many(cascadeIndicatorLinks),
 }));
 
 export const governanceRelations = relations(governance, ({ one }) => ({
@@ -424,17 +432,62 @@ export const sourceHealth = pgTable("source_health", {
   updatedAt,
 });
 
+export const nationalState = pgTable("national_state", {
+  id: text("id").primaryKey(),
+  standDate: timestamp("stand_date", { withTimezone: true }).notNull(),
+  overallTone: severityEnum("overall_tone").notNull(),
+  executiveSummary: text("executive_summary").notNull(),
+  revisionCriteria: jsonb("revision_criteria").$type<RevisionCriterion[]>().notNull().default(sql`'[]'::jsonb`),
+  gegentrends: jsonb("gegentrends").$type<string[]>(),
+  retrievedAt,
+  editorialStatus,
+  editorialReviewedAt,
+  editorialReviewedBy,
+  publishedAt,
+  createdAt,
+  updatedAt,
+});
+
+export const cascadeIndicatorLinks = pgTable("cascade_indicator_links", {
+  id: text("id").primaryKey(),
+  cascadeId: text("cascade_id").notNull().references(() => cascades.id, { onDelete: "cascade" }),
+  indicatorId: text("indicator_id").notNull().references(() => indicators.id, { onDelete: "cascade" }),
+  role: cascadeIndicatorRole("role").notNull(),
+  relation: text("relation"),
+  lagHint: text("lag_hint"),
+  revisionCriteria: jsonb("revision_criteria").$type<RevisionCriterion[]>(),
+  retrievedAt,
+  editorialStatus,
+  editorialReviewedAt,
+  editorialReviewedBy,
+  publishedAt,
+  createdAt,
+  updatedAt,
+}, (table) => [uniqueIndex("cascade_indicator_links_unique").on(table.cascadeId, table.indicatorId, table.role)]);
+
 export const indicatorsRelations = relations(indicators, ({ one, many }) => ({
   cascade: one(cascades, {
     fields: [indicators.linkedCascade],
     references: [cascades.id],
   }),
   observations: many(indicatorObservations),
+  cascadeIndicatorLinks: many(cascadeIndicatorLinks),
 }));
 
 export const indicatorObservationsRelations = relations(indicatorObservations, ({ one }) => ({
   indicator: one(indicators, {
     fields: [indicatorObservations.indicatorId],
+    references: [indicators.id],
+  }),
+}));
+
+export const cascadeIndicatorLinksRelations = relations(cascadeIndicatorLinks, ({ one }) => ({
+  cascade: one(cascades, {
+    fields: [cascadeIndicatorLinks.cascadeId],
+    references: [cascades.id],
+  }),
+  indicator: one(indicators, {
+    fields: [cascadeIndicatorLinks.indicatorId],
     references: [indicators.id],
   }),
 }));

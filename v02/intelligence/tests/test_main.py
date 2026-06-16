@@ -28,6 +28,15 @@ class EmptyCrawler:
         return []
 
 
+_ALL_ADAPTER_ATTRS = (
+    "DestatisAdapter", "BNetzAAdapter", "EIAAdapter", "FREDAdapter",
+    "FAOAdapter", "TankerkoenigAdapter", "PegelonlineAdapter", "DWDAdapter",
+    "EurostatAdapter", "WarningIndicatorsAdapter",
+    "BIPAdapter", "ArbeitslosigkeitAdapter", "EZBLeitzinsAdapter",
+    "StaatsschuldenAdapter", "InsolvenzenAdapter",
+)
+
+
 def test_run_ingestion_routes_bnetza_indicator_items_to_indicator_updates(monkeypatch):
     bnetza_item = IngestionItem(
         title="Gasspeicher Deutschland: 72.5% (2026-05-27)",
@@ -56,16 +65,10 @@ def test_run_ingestion_routes_bnetza_indicator_items_to_indicator_updates(monkey
         def fetch_latest(self):
             return [bnetza_item]
 
-    monkeypatch.setattr(main, "DestatisAdapter", EmptyAdapter)
+    for attr in _ALL_ADAPTER_ATTRS:
+        if attr != "BNetzAAdapter":
+            monkeypatch.setattr(main, attr, EmptyAdapter)
     monkeypatch.setattr(main, "BNetzAAdapter", FakeBNetzAAdapter)
-    monkeypatch.setattr(main, "EIAAdapter", EmptyAdapter)
-    monkeypatch.setattr(main, "FREDAdapter", EmptyAdapter)
-    monkeypatch.setattr(main, "FAOAdapter", EmptyAdapter)
-    monkeypatch.setattr(main, "TankerkoenigAdapter", EmptyAdapter)
-    monkeypatch.setattr(main, "PegelonlineAdapter", EmptyAdapter)
-    monkeypatch.setattr(main, "DWDAdapter", EmptyAdapter)
-    monkeypatch.setattr(main, "EurostatAdapter", EmptyAdapter)
-    monkeypatch.setattr(main, "WarningIndicatorsAdapter", EmptyAdapter)
     monkeypatch.setattr(main, "RSSCrawler", EmptyCrawler)
 
     inserted = []
@@ -116,9 +119,9 @@ def test_shadow_logs_json_and_does_not_alter_insert_path(monkeypatch, capsys):
         def fetch_latest(self):
             return [item]
 
-    for attr in ("DestatisAdapter", "EIAAdapter", "FREDAdapter", "FAOAdapter",
-                 "TankerkoenigAdapter", "PegelonlineAdapter", "DWDAdapter", "EurostatAdapter", "WarningIndicatorsAdapter"):
-        monkeypatch.setattr(main, attr, EmptyAdapter)
+    for attr in _ALL_ADAPTER_ATTRS:
+        if attr != "BNetzAAdapter":
+            monkeypatch.setattr(main, attr, EmptyAdapter)
     monkeypatch.setattr(main, "BNetzAAdapter", FakeBNetzAAdapter)
     monkeypatch.setattr(main, "RSSCrawler", EmptyCrawler)
     # Hermetisch halten: keine echte DB-Verbindung für die C3-Schwellen.
@@ -175,9 +178,9 @@ def test_keep_previous_gate_skips_indicator_update(monkeypatch, capsys):
         def fetch_latest(self):
             return [item]
 
-    for attr in ("DestatisAdapter", "EIAAdapter", "FREDAdapter", "FAOAdapter",
-                 "TankerkoenigAdapter", "PegelonlineAdapter", "DWDAdapter", "EurostatAdapter", "WarningIndicatorsAdapter"):
-        monkeypatch.setattr(main, attr, EmptyAdapter)
+    for attr in _ALL_ADAPTER_ATTRS:
+        if attr != "BNetzAAdapter":
+            monkeypatch.setattr(main, attr, EmptyAdapter)
     monkeypatch.setattr(main, "BNetzAAdapter", FakeBNetzAAdapter)
     monkeypatch.setattr(main, "RSSCrawler", EmptyCrawler)
     monkeypatch.setattr(main, "fetch_indicator_thresholds", lambda _id: None)
@@ -228,9 +231,9 @@ def test_non_indicator_item_skips_shadow_gate(monkeypatch, capsys):
         def fetch_latest(self):
             return [item]
 
-    for attr in ("BNetzAAdapter", "EIAAdapter", "FREDAdapter", "FAOAdapter",
-                 "TankerkoenigAdapter", "PegelonlineAdapter", "DWDAdapter", "EurostatAdapter", "WarningIndicatorsAdapter"):
-        monkeypatch.setattr(main, attr, EmptyAdapter)
+    for attr in _ALL_ADAPTER_ATTRS:
+        if attr != "DestatisAdapter":
+            monkeypatch.setattr(main, attr, EmptyAdapter)
     monkeypatch.setattr(main, "DestatisAdapter", FakeMediaAdapter)
     monkeypatch.setattr(main, "RSSCrawler", EmptyCrawler)
 
@@ -309,8 +312,7 @@ def test_rss_items_use_article_evidence_before_llm(monkeypatch):
             status="extracted",
         )
 
-    for attr in ("DestatisAdapter", "BNetzAAdapter", "EIAAdapter", "FREDAdapter",
-                 "FAOAdapter", "TankerkoenigAdapter", "PegelonlineAdapter", "DWDAdapter", "EurostatAdapter", "WarningIndicatorsAdapter"):
+    for attr in _ALL_ADAPTER_ATTRS:
         monkeypatch.setattr(main, attr, EmptyAdapter)
     monkeypatch.setattr(main, "RSSCrawler", FakeCrawler)
     monkeypatch.setattr(main, "ArticleFetcher", FakeArticleFetcher)
@@ -347,9 +349,9 @@ def test_run_ingestion_persists_source_health_when_path_is_explicit(monkeypatch,
         def fetch_latest(self):
             return [item]
 
-    for attr in ("DestatisAdapter", "EIAAdapter", "FREDAdapter", "FAOAdapter",
-                 "TankerkoenigAdapter", "PegelonlineAdapter", "DWDAdapter", "EurostatAdapter", "WarningIndicatorsAdapter"):
-        monkeypatch.setattr(main, attr, EmptyAdapter)
+    for attr in _ALL_ADAPTER_ATTRS:
+        if attr != "BNetzAAdapter":
+            monkeypatch.setattr(main, attr, EmptyAdapter)
     monkeypatch.setattr(main, "BNetzAAdapter", FakeBNetzAAdapter)
     monkeypatch.setattr(main, "RSSCrawler", EmptyCrawler)
     monkeypatch.setattr(main, "insert_draft", lambda item, item_type: "draft")
@@ -397,9 +399,9 @@ def test_run_ingestion_upserts_source_health_in_normal_mode(monkeypatch):
         def fetch_latest(self):
             return [item]
 
-    for attr in ("DestatisAdapter", "EIAAdapter", "FREDAdapter", "FAOAdapter",
-                 "TankerkoenigAdapter", "PegelonlineAdapter", "DWDAdapter", "EurostatAdapter", "WarningIndicatorsAdapter"):
-        monkeypatch.setattr(main, attr, EmptyAdapter)
+    for attr in _ALL_ADAPTER_ATTRS:
+        if attr != "BNetzAAdapter":
+            monkeypatch.setattr(main, attr, EmptyAdapter)
     monkeypatch.setattr(main, "BNetzAAdapter", FakeBNetzAAdapter)
     monkeypatch.setattr(main, "RSSCrawler", EmptyCrawler)
     monkeypatch.setattr(main, "insert_draft", lambda item, item_type: "draft")
@@ -410,10 +412,11 @@ def test_run_ingestion_upserts_source_health_in_normal_mode(monkeypatch):
 
     asyncio.run(main.run_ingestion(dry_run=False, allow_fetch=True))
 
-    assert [record.source_id for record in captured] == [
-        "empty", "bnetza", "empty", "empty", "empty", "empty", "empty", "empty"
-    ]
-    assert captured[1].status == "ok"
+    # Reihenfolge: alle Adapter in Adapter-Listenreihenfolge; BNetzA an Position 2 (Index 1).
+    # 15 Adapter gesamt (8 alt + 5 neu = 13 in run_ingestion-Liste, ohne deaktivierte).
+    bnetza_record = next(r for r in captured if r.source_id == "bnetza")
+    assert bnetza_record.status == "ok"
+    assert len(captured) == 13  # 8 bestehende + 5 neue Adapter
 
 
 # --- W6a.1: C4-Quellfehler-Sichtbarkeit im Ingestion-Fluss -------------------
@@ -435,9 +438,7 @@ def _collect_shadow_lines(capsys):
 
 def _patch_other_adapters(monkeypatch, keep):
     """Alle Adapter außer `keep` auf EmptyAdapter setzen; Crawler/Threshold neutralisieren."""
-    for attr in ("DestatisAdapter", "BNetzAAdapter", "EIAAdapter", "FREDAdapter",
-                 "FAOAdapter", "TankerkoenigAdapter", "PegelonlineAdapter", "DWDAdapter", "EurostatAdapter",
-                 "WarningIndicatorsAdapter"):
+    for attr in _ALL_ADAPTER_ATTRS:
         if attr != keep:
             monkeypatch.setattr(main, attr, EmptyAdapter)
     monkeypatch.setattr(main, "RSSCrawler", EmptyCrawler)

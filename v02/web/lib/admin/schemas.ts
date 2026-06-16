@@ -103,6 +103,23 @@ export const citizenActionSchema = z.object({
   causalLinks: z.array(z.record(z.string(), z.unknown())),
 });
 
+const revisionCriterionSchema = z.object({
+  indicatorId: z.string().optional(),
+  label: z.string().min(1),
+  operator: z.enum([">", "<", ">=", "<="]),
+  threshold: z.number(),
+  unit: z.string().optional(),
+});
+
+export const nationalStateSchema = z.object({
+  id: idField,
+  standDate: z.string().min(1).max(120),
+  overallTone: severity,
+  executiveSummary: longText,
+  revisionCriteria: z.array(revisionCriterionSchema),
+  gegentrends: z.array(z.string()).optional().nullable(),
+});
+
 export type FactInput = z.infer<typeof factSchema>;
 export type CascadeInput = z.infer<typeof cascadeSchema>;
 export type GovernanceInput = z.infer<typeof governanceSchema>;
@@ -111,6 +128,7 @@ export type CostImpactInput = z.infer<typeof costImpactSchema>;
 export type LagebildItemInput = z.infer<typeof lagebildItemSchema>;
 export type SupplyRiskInput = z.infer<typeof supplyRiskSchema>;
 export type CitizenActionInput = z.infer<typeof citizenActionSchema>;
+export type NationalStateInput = z.infer<typeof nationalStateSchema>;
 
 export const editorialItemTypes = [
   "facts",
@@ -121,6 +139,7 @@ export const editorialItemTypes = [
   "lagebildItems",
   "supplyRisks",
   "citizenActions",
+  "nationalState",
 ] as const;
 
 export type EditorialItemType = (typeof editorialItemTypes)[number];

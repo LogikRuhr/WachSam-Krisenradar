@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CascadeCausalityMap } from "@/components/CascadeCausalityMap";
+import { CascadeIndicatorLinks } from "@/components/CascadeIndicatorLinks";
 import { CascadeStoryPanel } from "@/components/CascadeStoryPanel";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { DbNotice } from "@/components/DbNotice";
@@ -125,6 +126,8 @@ export default async function CascadeDetailPage({ params }: PageProps) {
           }
         />
       </div>
+
+      <CascadeIndicatorLinks links={data.indicatorLinks} />
 
       <section className="cascade-source-band" aria-labelledby="cascade-source-heading">
         <div>
