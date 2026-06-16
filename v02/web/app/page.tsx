@@ -5,13 +5,24 @@ import { MethodikHinweis } from "@/components/MethodikHinweis";
 import { PfadHub } from "@/components/PfadHub";
 import { SignalChain } from "@/components/SignalChain";
 import { Verdict } from "@/components/Verdict";
-import { computeVerdict, personalNote } from "@/lib/personalization";
-import { getFrontDoorSignals } from "@/lib/public-data";
+import { VitalsBoard } from "@/components/VitalsBoard";
+import { computeVerdict, personalNote, type Verdict as VerdictData, type VerdictTone } from "@/lib/personalization";
+import { getFrontDoorSignals, getHeadlineVitals, getNationalState } from "@/lib/public-data";
 import { getCurrentUserProfile } from "@/lib/use-user-modus";
 
 export const dynamic = "force-dynamic";
 
 const DATE_FMT = new Intl.DateTimeFormat("de-DE", { day: "numeric", month: "long", year: "numeric" });
+
+// overall_tone (national_state) ist eine Severity-Stufe; auf denselben Verdict-Ton
+// abbilden, den computeVerdict nutzt, damit Gesamtstand und Fallback konsistent sind.
+const TONE_BY_SEVERITY: Record<string, VerdictTone> = {
+  stabil: "ruhig",
+  beobachten: "beobachten",
+  erhoeht: "beobachten",
+  kritisch: "angespannt",
+  eskalierend: "ernst",
+};
 
 function formatStand(value: Date | string | null | undefined): string | null {
   if (!value) return null;
@@ -21,9 +32,22 @@ function formatStand(value: Date | string | null | undefined): string | null {
 
 export default async function HomePage() {
   const profile = await getCurrentUserProfile();
-  const signals = await getFrontDoorSignals(8);
+  const [signals, national, vitals] = await Promise.all([
+    getFrontDoorSignals(8),
+    getNationalState(),
+    getHeadlineVitals(),
+  ]);
   const verdict = computeVerdict(signals.rows.map((chain) => chain.signal));
   const chainsWithImpact = signals.rows.filter((chain) => chain.impact).slice(0, 3);
+
+  // Gesamtstand-Block: publizierter national_state bevorzugt, sonst der aus den
+  // Signalen abgeleitete Verdict (kein eigenständiges Gesamturteil erfunden).
+  const overallVerdict: VerdictData = national.data
+    ? { tone: TONE_BY_SEVERITY[national.data.overallTone] ?? "beobachten", text: national.data.executiveSummary }
+    : verdict;
+  const overallStand = national.data ? formatStand(national.data.standDate) : null;
+  const hasVitals = vitals.connected && vitals.rows.length > 0;
+  const showOverall = signals.connected && (national.data != null || hasVitals);
 
   const latestStand = signals.rows
     .map((chain) => chain.signal.publishedAt ?? chain.signal.retrievedAt)
@@ -73,6 +97,25 @@ export default async function HomePage() {
             <span className="mono-label">Qualität</span>
             <strong>Einordnung mit Unsicherheit</strong>
             <p>Confidence, Quellenlage und Haushaltsauswirkung werden getrennt angezeigt.</p>
+          </div>
+        </section>
+      ) : null}
+
+      {showOverall ? (
+        <section className="home-overall" aria-labelledby="home-overall-title">
+          <div className="home-section-head">
+            <p className="mono-label">Gesamtstand Deutschland</p>
+            <h2 id="home-overall-title" className="focus-title">Wie ist die Lage insgesamt?</h2>
+            <p>
+              {national.data
+                ? "Redaktionelle Gesamteinordnung mit den wichtigsten Vitalwerten."
+                : "Vorläufige Einordnung aus den veröffentlichten Signalen — die redaktionelle Gesamteinschätzung folgt."}
+            </p>
+          </div>
+          <Verdict verdict={overallVerdict} stand={overallStand} />
+          {hasVitals ? <VitalsBoard indicators={vitals.rows} limit={4} heading="Wichtigste Vitalwerte" /> : null}
+          <div className="home-actions">
+            <Link className="btn-rost" href="/lage">Zum vollständigen Lagebild</Link>
           </div>
         </section>
       ) : null}
