@@ -27,6 +27,7 @@ type RawIndicator = (typeof indicatorData.indicators)[number] & {
   recent_reference_source_name?: string;
   recent_reference_source_url?: string;
   threshold_method?: string;
+  headline_tier?: number;
 };
 
 export const INDICATORS: NewIndicator[] = indicatorData.indicators.map((_item) => {
@@ -62,5 +63,6 @@ export const INDICATORS: NewIndicator[] = indicatorData.indicators.map((_item) =
     recentReferenceSourceName: item.recent_reference_source_name ?? null,
     recentReferenceSourceUrl: item.recent_reference_source_url ?? null,
     thresholdMethod: item.threshold_method ?? null,
+    headlineTier: item.headline_tier ?? null,
   };
 });

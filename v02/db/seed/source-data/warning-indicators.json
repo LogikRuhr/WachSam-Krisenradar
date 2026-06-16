@@ -1,9 +1,9 @@
 {
   "meta": {
-    "version": "v0.2",
-    "stand": "2026-05-21",
-    "count": 11,
-    "note": "10 Frühwarnindikatoren. Basis: docs/warning-indicators.md"
+    "version": "v0.3",
+    "stand": "2026-06-16",
+    "count": 15,
+    "note": "15 Frühwarnindikatoren inkl. 4 neue Makro-Vitalwerte (Welle 2). Basis: docs/warning-indicators.md"
   },
   "indicators": [
     {
@@ -54,6 +54,7 @@
     },
     {
       "id": "wi-arbeitslosigkeit-de",
+      "headline_tier": 3,
       "label": "Registrierte Arbeitslose Deutschland",
       "threshold_warn": 3,
       "threshold_critical": 3.5,
@@ -79,6 +80,7 @@
     },
     {
       "id": "wi-inflation-vpi-de",
+      "headline_tier": 2,
       "label": "Verbraucherpreisindex Deutschland (VPI)",
       "threshold_warn": 3,
       "threshold_critical": 5,
@@ -104,6 +106,7 @@
     },
     {
       "id": "wi-oel-brent",
+      "headline_tier": 7,
       "label": "Brent Rohölpreis",
       "threshold_warn": 90,
       "threshold_critical": 110,
@@ -318,6 +321,94 @@
       "linked_cascade": "cascade-h",
       "scale_direction": "higher_is_worse",
       "threshold_method": "warn = 15 USD/MMBtu (ca. 2× Vorkrisenniveau 2019-2021 ~7 USD); critical = 25 USD/MMBtu (Orientierung an Extremphase Aug–Dez 2022 >30 USD, Rückrechnung für strukturell erhöhtes Niveau)"
+    },
+    {
+      "id": "wi-bip-wachstum-de",
+      "headline_tier": 1,
+      "label": "BIP-Wachstum Deutschland (QoQ)",
+      "threshold_warn": -0.3,
+      "threshold_critical": -1.0,
+      "unit": "Prozent QoQ",
+      "system": "industrie",
+      "severity_trigger": "erhoeht",
+      "quelle": "Eurostat (namq_10_gdp, quarterly, SCA)",
+      "sources": [
+        {
+          "name": "Eurostat — Quarterly GDP (namq_10_gdp)",
+          "url": "https://ec.europa.eu/eurostat/databrowser/view/namq_10_gdp",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "BIP-Wachstum bestimmt Investitionsbereitschaft, Steuereinnahmen und Arbeitsmarktentwicklung direkt",
+      "linked_cascade": null,
+      "scale_direction": "lower_is_worse",
+      "threshold_method": "warn = -0.3 % QoQ (zwei negative Quartale = technische Rezession nahe); critical = -1.0 % QoQ (ausgeprägte Rezessionsphase, historisch Finanzkrise/Covid)"
+    },
+    {
+      "id": "wi-insolvenzen-de",
+      "headline_tier": 4,
+      "label": "Unternehmensinsolvenzen Deutschland",
+      "threshold_warn": 1800,
+      "threshold_critical": 2500,
+      "unit": "Anzahl/Monat",
+      "system": "industrie",
+      "severity_trigger": "erhoeht",
+      "quelle": "Destatis GENESIS (52411-0001, monatlich)",
+      "sources": [
+        {
+          "name": "Destatis — Insolvenzen (GENESIS 52411-0001)",
+          "url": "https://www.destatis.de/DE/Themen/Branchen-Unternehmen/Unternehmen/Gewerbemeldungen-Insolvenzen/Publikationen/_inhalt.html",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "Unternehmenspleiten sind Frühindikator für wirtschaftliche Abschwächung; Wirkung auf Beschäftigung und Kreditausfälle",
+      "linked_cascade": null,
+      "scale_direction": "higher_is_worse",
+      "threshold_method": "warn = 1800/Monat (erhöhtes Niveau 2023-Trend); critical = 2500/Monat (historisches Krisenniveau analog 2009)"
+    },
+    {
+      "id": "wi-ezb-leitzins",
+      "headline_tier": 5,
+      "label": "EZB-Leitzins (Deposit Facility Rate)",
+      "threshold_warn": 3.5,
+      "threshold_critical": 4.5,
+      "unit": "Prozent",
+      "system": "finanzen",
+      "severity_trigger": "beobachten",
+      "quelle": "ECB Statistical Data Warehouse (SDW, DFR)",
+      "sources": [
+        {
+          "name": "ECB SDW — Deposit Facility Rate (FM.B.U2.EUR.4F.KR.DFR.LEV)",
+          "url": "https://data.ecb.europa.eu/data/datasets/FM/FM.B.U2.EUR.4F.KR.DFR.LEV",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "EZB-Leitzins bestimmt Finanzierungskosten für Unternehmen und Haushalte direkt; wirkt auf Investitionen und Konsumkredite",
+      "linked_cascade": null,
+      "scale_direction": "higher_is_worse",
+      "threshold_method": "warn = 3.5 % (Niveau ab dem Finanzierungskosten deutlich steigen); critical = 4.5 % (Restriktive Zone mit Rezessionsrisiko, analog Peak-Zyklus 2023)"
+    },
+    {
+      "id": "wi-staatsschuldenquote-de",
+      "headline_tier": 6,
+      "label": "Staatsschuldenquote Deutschland",
+      "threshold_warn": 70,
+      "threshold_critical": 90,
+      "unit": "Prozent des BIP",
+      "system": "finanzen",
+      "severity_trigger": "beobachten",
+      "quelle": "Eurostat (gov_10dd_edpt1, jährlich, ESA 2010)",
+      "sources": [
+        {
+          "name": "Eurostat — Government debt (gov_10dd_edpt1)",
+          "url": "https://ec.europa.eu/eurostat/databrowser/view/gov_10dd_edpt1",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "Staatsschuldenquote beeinflusst fiskalpolitischen Spielraum, Zinsausgaben und Kreditwürdigkeit Deutschlands",
+      "linked_cascade": null,
+      "scale_direction": "higher_is_worse",
+      "threshold_method": "warn = 70 % BIP (EU-Maastricht-Referenzwert 60 % + Puffer; aktuell ~63 %); critical = 90 % BIP (internationaler Schwellwert stark erhöhter Schuldenlast)"
     }
   ]
 }

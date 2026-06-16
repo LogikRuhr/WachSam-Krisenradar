@@ -17,6 +17,11 @@ from .adapters.fao import FAOAdapter
 from .adapters.tankerkoenig import TankerkoenigAdapter
 from .adapters.pegelonline import PegelonlineAdapter
 from .adapters.dwd import DWDAdapter
+from .adapters.bip import BIPAdapter
+from .adapters.arbeitslosigkeit import ArbeitslosigkeitAdapter
+from .adapters.ezbleitzins import EZBLeitzinsAdapter
+from .adapters.staatsschulden import StaatsschuldenAdapter
+from .adapters.insolvenzen import InsolvenzenAdapter
 # Imports bleiben erhalten
 # nicht aktiv (siehe run_ingestion / docs/intelligence/source-inventory.md):
 from .adapters.eurostat import EurostatAdapter
@@ -41,6 +46,11 @@ ADAPTER_TYPE_MAP = {
     "DWD": "indicators",
     "Eurostat": "facts",
     "WarningIndicators": "facts",
+    "BIP": "indicators",
+    "Arbeitslosigkeit": "indicators",
+    "EZBLeitzins": "indicators",
+    "Staatsschulden": "indicators",
+    "Insolvenzen": "indicators",
 }
 
 
@@ -84,6 +94,11 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
         TankerkoenigAdapter(),
         PegelonlineAdapter(),
         DWDAdapter(),
+        BIPAdapter(),
+        ArbeitslosigkeitAdapter(),
+        EZBLeitzinsAdapter(),
+        StaatsschuldenAdapter(),
+        InsolvenzenAdapter(),
         # Deaktiviert
         #   EurostatAdapter()          — Stub, parst Response nicht
         #   WarningIndicatorsAdapter() — redundant zu EIAAdapter (Brent)
