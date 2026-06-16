@@ -8,6 +8,7 @@
     "trend": "steigend",
     "primaerindikator": "Wachstumsprognose 2026 von 1,0 % auf 0,5 % halbiert",
     "confidence": "hoch",
+    "evidence_type": "schaetzung",
     "retrieved_at": "2026-05-13",
     "sources": [
       {
@@ -31,6 +32,7 @@
     "trend": "steigend",
     "primaerindikator": "FAO Food Price Index +2,4 % (März 2026); Zucker +7,2 %",
     "confidence": "hoch",
+    "evidence_type": "fakt",
     "retrieved_at": "2026-05-14",
     "sources": [
       {
@@ -54,6 +56,7 @@
     "trend": "steigend",
     "primaerindikator": "Cyberangriffe betreffen laut Branchenberichten rund 97 % der Stadtwerke",
     "confidence": "mittel",
+    "evidence_type": "schaetzung",
     "retrieved_at": "2026-05-14",
     "sources": [
       {
@@ -77,6 +80,7 @@
     "trend": "eskalierend",
     "primaerindikator": "3,1 Mio. Arbeitslose im Januar 2026 — Höchststand seit über einem Jahrzehnt",
     "confidence": "hoch",
+    "evidence_type": "fakt",
     "retrieved_at": "2026-05-13",
     "sources": [
       {
@@ -100,6 +104,7 @@
     "trend": "steigend",
     "primaerindikator": "Stiftung für Zukunftsfragen: rund 89 % erwarten weiteren Vertrauensverlust",
     "confidence": "mittel",
+    "evidence_type": "schaetzung",
     "retrieved_at": "2026-05-13",
     "sources": [
       {
@@ -123,6 +128,7 @@
     "trend": "steigend",
     "primaerindikator": "Destatis: Kraftstoffe im April 2026 deutlich teurer als im Vorjahresmonat",
     "confidence": "hoch",
+    "evidence_type": "fakt",
     "retrieved_at": "2026-05-19",
     "sources": [
       {
@@ -141,6 +147,7 @@
     "trend": "steigend",
     "primaerindikator": "3,1 Mio. Arbeitslose Januar 2026; Wachstumsprognose 2026 auf 0,5 % halbiert",
     "confidence": "hoch",
+    "evidence_type": "fakt",
     "retrieved_at": "2026-05-21",
     "sources": [
       {
@@ -164,6 +171,7 @@
     "trend": "gleichbleibend",
     "primaerindikator": "IW Köln Prognose 2026: Jahresinflation rund 3 %; Reallohnentwicklung negativ",
     "confidence": "hoch",
+    "evidence_type": "schaetzung",
     "retrieved_at": "2026-05-21",
     "sources": [
       {
@@ -182,6 +190,7 @@
     "trend": "steigend",
     "primaerindikator": "BfArM-Lieferengpassliste 2026 weiterhin aktiv; mehrere Wirkstoffgruppen betroffen",
     "confidence": "mittel",
+    "evidence_type": "fakt",
     "retrieved_at": "2026-05-21",
     "sources": [
       {
@@ -205,6 +214,7 @@
     "trend": "steigend",
     "primaerindikator": "Bundesnetzagentur 2026: erhöhtes Schlichtungsaufkommen Post",
     "confidence": "mittel",
+    "evidence_type": "fakt",
     "retrieved_at": "2026-05-21",
     "sources": [
       {

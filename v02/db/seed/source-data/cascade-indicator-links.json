@@ -3,8 +3,8 @@
     "version": "v0.1",
     "stand": "2026-06-16",
     "retrieved_at": "2026-06-16T00:00:00Z",
-    "count": 11,
-    "note": "Welle 4: Strukturelle Kopplung der 12 Kaskaden an die 15 Frühwarnindikatoren. Faktenbasis = das linked_cascade-Feld in warning-indicators.json + die System-/Trigger-Logik aus cascades.json. role=driver: Indikator-System gehört zum Trigger/frühen Schritt der Kaskade; role=affected: Indikator bildet ein Spätfolge-System ab. revision_criteria nur bei Indikatoren mit klarer quantitativer kritischer Schwelle aus dem Lagebild. Kaskaden ohne verlinkten Indikator (b, i, k, l) sind Welle 6."
+    "count": 15,
+    "note": "Welle 4: Strukturelle Kopplung der 12 Kaskaden an die 15 Frühwarnindikatoren. Faktenbasis = das linked_cascade-Feld in warning-indicators.json + die System-/Trigger-Logik aus cascades.json. role=driver: Indikator-System gehört zum Trigger/frühen Schritt der Kaskade; role=affected: Indikator bildet ein Spätfolge-System ab. revision_criteria nur bei Indikatoren mit klarer quantitativer kritischer Schwelle aus dem Lagebild. Kaskaden ohne verlinkten Indikator (b, i, k, l) sind Welle 6. Welle 6: + Links für cascade-m/p/r an Headline-Vitalwerte."
   },
   "links": [
     {
@@ -176,6 +176,44 @@
       "role": "affected",
       "relation": "folgt",
       "lag_hint": "langfristig (struktureller Vertrauensverlust)",
+      "revision_criteria": null
+    },
+    {
+      "id": "cil-cascade-m-wi-insolvenzen-de",
+      "cascade_id": "cascade-m",
+      "indicator_id": "wi-insolvenzen-de",
+      "role": "driver",
+      "relation": "treibt",
+      "lag_hint": "Monate (Insolvenzen folgen der Konjunktur verzögert)",
+      "revision_criteria": [
+        { "indicatorId": "wi-insolvenzen-de", "label": "Unternehmensinsolvenzen 2026 über 26.000", "operator": ">", "threshold": 26000, "unit": "Fälle/Jahr" }
+      ]
+    },
+    {
+      "id": "cil-cascade-p-wi-staatsschuldenquote-de",
+      "cascade_id": "cascade-p",
+      "indicator_id": "wi-staatsschuldenquote-de",
+      "role": "driver",
+      "relation": "treibt",
+      "lag_hint": "Quartale",
+      "revision_criteria": null
+    },
+    {
+      "id": "cil-cascade-p-wi-ezb-leitzins",
+      "cascade_id": "cascade-p",
+      "indicator_id": "wi-ezb-leitzins",
+      "role": "driver",
+      "relation": "treibt",
+      "lag_hint": "Monate (Zinsänderungen wirken auf Refinanzierung)",
+      "revision_criteria": null
+    },
+    {
+      "id": "cil-cascade-r-wi-vertrauen-politik",
+      "cascade_id": "cascade-r",
+      "indicator_id": "wi-vertrauen-politik",
+      "role": "affected",
+      "relation": "folgt",
+      "lag_hint": "langfristig (Vertrauensverlust)",
       "revision_criteria": null
     }
   ]

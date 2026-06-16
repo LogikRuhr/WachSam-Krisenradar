@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "version": "v0.1",
+    "stand": "2026-06-12",
+    "retrieved_at": "2026-06-12T00:00:00Z",
+    "count": 1,
+    "note": "Welle 6: Erster datierter Gesamtstand Deutschland (Schicht 2). Synthese aus dem Lagebild-Dokument v2.0 (Stand 12.06.2026). editorial_status=draft — redaktionelle Freigabe via Admin-CMS erforderlich. Zahlen der Vitalwerte werden zur Render-Zeit aus den headline_tier-Indikatoren gejoint, NICHT hier denormalisiert."
+  },
+  "states": [
+    {
+      "id": "ns-2026-06",
+      "stand_date": "2026-06-12T00:00:00Z",
+      "overall_tone": "kritisch",
+      "executive_summary": "Deutschland steht Mitte 2026 unter mehreren gleichzeitig wirkenden Belastungen – nicht vor einem einzelnen Kollaps, sondern unter sich teils verstärkendem Druck aus strukturellen, aktiven und externen Krisen. Die fragile konjunkturelle Erholung (BIP-Prognose +0,6 % für 2026) wird vom externen Energiepreisschock infolge der Iran-Eskalation überlagert: Brent liegt bei rund 94 US-Dollar je Barrel, die Inflation im Mai 2026 bei +2,6 % (Energie +6,6 %). Gleichzeitig läuft der industrielle Strukturwandel weiter, die Arbeitslosigkeit liegt bei 2,95 Mio. (Quote 6,3 %), die Zustimmung zur Bundesregierung auf einem Rekordtief. Die größten realen Belastungen zum Stichtag sind der Energiepreisschock (Iran/Hormus), die industrielle Substanzerosion und der politische Vertrauensverlust. Zugleich gibt es belastbare Gegentrends. Entscheidend ist nicht das Eintreten einzelner Risiken, sondern ob ihre Wechselwirkungen durch Reformen und Resilienz unterbrochen werden.",
+      "revision_criteria": [
+        { "indicatorId": "wi-oel-brent", "label": "Brent dauerhaft über 110 US-Dollar je Barrel", "operator": ">", "threshold": 110, "unit": "USD" },
+        { "indicatorId": "wi-insolvenzen-de", "label": "Unternehmensinsolvenzen 2026 über 26.000", "operator": ">", "threshold": 26000, "unit": "Fälle/Jahr" }
+      ],
+      "gegentrends": [
+        "Solide Staatsfinanzen: Schuldenquote 63,5 % (2025), im EU-Vergleich niedrig",
+        "Sondervermögen Infrastruktur (500 Mrd. €) als möglicher Investitionsimpuls",
+        "Baugenehmigungen steigen fünf Monate in Folge (+10,8 % im Jahr 2025)",
+        "Erstmalige Trendwende beim Bürokratie-Erfüllungsaufwand (−3,2 Mrd. €)",
+        "Insolvenzniveau historisch moderat (2025: 24.064 vs. Krisenjahr 2009: 32.687)",
+        "Leichtes Industrie-Umsatzplus in Q1 2026 (+1,7 %) als mögliche Bodenbildung"
+      ]
+    }
+  ]
+}

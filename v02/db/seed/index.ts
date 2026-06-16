@@ -11,6 +11,7 @@ import { GOVERNANCE_ITEMS } from "./governance";
 import { INDICATORS } from "./indicators";
 import { ITEM_SOURCES } from "./item-sources";
 import { LAGEBILD_ITEMS } from "./lagebild";
+import { NATIONAL_STATE } from "./national-state";
 import { SEED_META } from "./seed-meta";
 import { SOURCES } from "./sources";
 import { SUPPLY_RISKS } from "./supply-risks";
@@ -24,6 +25,7 @@ export const seedData = {
   indicators: INDICATORS,
   costImpacts: COST_IMPACTS,
   lagebildItems: LAGEBILD_ITEMS,
+  nationalState: NATIONAL_STATE,
   supplyRisks: SUPPLY_RISKS,
   citizenActions: CITIZEN_ACTIONS,
   itemSources: ITEM_SOURCES,
@@ -42,6 +44,7 @@ export const getSeedStats = (): SeedStats => ({
   indicators: INDICATORS.length,
   costImpacts: COST_IMPACTS.length,
   lagebildItems: LAGEBILD_ITEMS.length,
+  nationalState: NATIONAL_STATE.length,
   supplyRisks: SUPPLY_RISKS.length,
   citizenActions: CITIZEN_ACTIONS.length,
   itemSources: ITEM_SOURCES.length,
@@ -72,6 +75,7 @@ export const validateSeedData = (): string[] => {
   errors.push(...assertUnique("indicators", INDICATORS.map((item) => item.id)));
   errors.push(...assertUnique("cost_impacts", COST_IMPACTS.map((item) => item.id)));
   errors.push(...assertUnique("lagebild_items", LAGEBILD_ITEMS.map((item) => item.id)));
+  errors.push(...assertUnique("national_state", NATIONAL_STATE.map((item) => item.id)));
   errors.push(...assertUnique("supply_risks", SUPPLY_RISKS.map((item) => item.id)));
   errors.push(...assertUnique("citizen_actions", CITIZEN_ACTIONS.map((item) => item.id)));
   errors.push(...assertUnique("item_sources", ITEM_SOURCES.map((item) => item.id)));
@@ -161,6 +165,13 @@ export const seedDatabase = async (db: Db): Promise<SeedStats> => {
   for (const row of CASCADE_INDICATOR_LINKS) {
     await db.insert(schema.cascadeIndicatorLinks).values(row).onConflictDoUpdate({
       target: schema.cascadeIndicatorLinks.id,
+      set: { ...row, updatedAt: now },
+    });
+  }
+
+  for (const row of NATIONAL_STATE) {
+    await db.insert(schema.nationalState).values(row).onConflictDoUpdate({
+      target: schema.nationalState.id,
       set: { ...row, updatedAt: now },
     });
   }
