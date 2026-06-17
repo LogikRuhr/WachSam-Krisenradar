@@ -895,29 +895,30 @@ def test_staatsschulden_adapter_returns_fallback_on_http_error(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# Insolvenzen — Destatis GENESIS 52411-0001
+# Insolvenzen — Destatis 52411 Unternehmen
 # ---------------------------------------------------------------------------
 
-# GENESIS-Format: Jahr und Monat in getrennten Spalten, verifiziert 2026-06-16.
+# Destatis-Format "Insolvenzen nach Monaten", Stand 12. Juni 2026:
+# Die erste Zahl ist "insgesamt"; der Indikator meint die Spalte "Unternehmen".
 _INSOLVENZEN_GENESIS_CSV = "\n".join([
-    "Tabelle: 52411-0001",
-    "Insolvenzverfahren, Voraussichtliche Forderungen:;;;;",
-    "Deutschland, Monate;;;;",
-    ";;Insolvenzverfahren;Veränderung zum Vorjahresmonat;Voraussichtliche Forderungen",
-    ";;Anzahl;in (%);Tsd. EUR",
-    "2026;Februar;10439;-1,1;3178273",
-    "2026;März;12531;+16,1;4486873",
-    "2026;April;...;...;...",
+    "Tabelle: 52411-0010",
+    "Insolvenzen nach Monaten:;;;;;;;",
+    "Deutschland, Monate;;;;;;;",
+    ";;Insolvenzen insgesamt;Unternehmen;Verbraucher;ehemals selbständig Tätige;sonstige natürliche Personen, Nachlässe;Voraussichtliche Forderungen",
+    ";;Anzahl;Anzahl;Anzahl;Anzahl;Anzahl;Mill. EUR",
+    "2026;Februar;10439;2048;6075;1948;368;3178",
+    "2026;März;12531;2308;7462;2342;419;4451",
+    "2026;April;...;...;...;...;...;...",
 ])
 
 
 def test_parse_insolvenzen_table_extracts_latest():
-    """parse_insolvenzen_table gibt current + previous korrekt zurück (GENESIS-Format)."""
+    """parse_insolvenzen_table nutzt die Unternehmensspalte, nicht die Gesamtzahl."""
     result = parse_insolvenzen_table(_INSOLVENZEN_GENESIS_CSV)
 
-    assert result["current"]["value"] == 12531.0
+    assert result["current"]["value"] == 2308.0
     assert result["current"]["period"] == "2026-03"
-    assert result["previous"]["value"] == 10439.0
+    assert result["previous"]["value"] == 2048.0
 
 
 def test_parse_insolvenzen_table_raises_on_missing_column():
@@ -928,7 +929,7 @@ def test_parse_insolvenzen_table_raises_on_missing_column():
 
 
 def test_insolvenzen_adapter_maps_to_indicator_live_value(monkeypatch):
-    """InsolvenzenAdapter parst GENESIS-CSV und liefert korrektes IngestionItem."""
+    """InsolvenzenAdapter liefert Unternehmensinsolvenzen als Indikatorwert."""
     response = MagicMock()
     response.status_code = 200
     response.content = _INSOLVENZEN_GENESIS_CSV.encode("utf-8")
@@ -942,9 +943,9 @@ def test_insolvenzen_adapter_maps_to_indicator_live_value(monkeypatch):
     item = InsolvenzenAdapter().fetch_latest()[0]
 
     assert item.indicator_id == "wi-insolvenzen-de"
-    assert item.current_value == 12531.0
+    assert item.current_value == 2308.0
     assert item.current_value_date == "2026-03"
-    assert item.previous_value == 10439.0
+    assert item.previous_value == 2048.0
     assert item.source_period_type == "month"
     _validate_items([item])
 

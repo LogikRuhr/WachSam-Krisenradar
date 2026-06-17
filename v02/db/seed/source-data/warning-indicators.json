@@ -353,12 +353,12 @@
       "unit": "Anzahl/Monat",
       "system": "industrie",
       "severity_trigger": "erhoeht",
-      "quelle": "Destatis GENESIS (52411-0001, monatlich)",
+      "quelle": "Destatis — Insolvenzen nach Monaten (Unternehmen, monatlich)",
       "sources": [
         {
-          "name": "Destatis — Insolvenzen (GENESIS 52411-0001)",
-          "url": "https://www.destatis.de/DE/Themen/Branchen-Unternehmen/Unternehmen/Gewerbemeldungen-Insolvenzen/Publikationen/_inhalt.html",
-          "stand": "2026"
+          "name": "Destatis — Insolvenzen nach Monaten (Unternehmen)",
+          "url": "https://www.destatis.de/DE/Themen/Branchen-Unternehmen/Unternehmen/Gewerbemeldungen-Insolvenzen/Tabellen/Insolvenzen.html",
+          "stand": "12. Juni 2026"
         }
       ],
       "germany_relevance": "Unternehmenspleiten sind Frühindikator für wirtschaftliche Abschwächung; Wirkung auf Beschäftigung und Kreditausfälle",

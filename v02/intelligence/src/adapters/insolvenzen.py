@@ -8,26 +8,21 @@ from .base import BaseAdapter
 from .destatis import decode_genesis_table_response, _parse_number, _period_sort_key
 from ..models import GermanyRelevance, IngestionItem
 
-# Datenquelle: Destatis GENESIS Tabelle 52411-0001 (Unternehmensinsolvenzen, monatlich)
-# ZU VERIFIZIEREN: GENESIS 52411-0001 lieferte im Dev-Umfeld HTTP 401 (GAST-Auth).
-# Tabellennummer 52411-0001 entspricht der offiziellen Destatis-Dokumentation
-# "Insolvenzen — Monatswerte für Deutschland" — inhaltlich plausibel, aber
-# die konkrete Spaltenstruktur konnte nicht live verifiziert werden.
-# Im Produktivsystem (mit echtem DESTATIS_USERNAME/PASSWORD) sollte der Request
-# erfolgreich sein. Bis zur Verifikation: defensiver Fallback.
-_GENESIS_TABLE = "52411-0001"
+# Datenquelle: Destatis Tabelle 52411-0010 / "Insolvenzen nach Monaten".
+# Der Indikator meint die Spalte "Unternehmen", nicht "insgesamt".
+_GENESIS_TABLE = "52411-0010"
 _BASE_URL = "https://www-genesis.destatis.de/genesisWS/rest/2020"
 _SOURCE_URL = (
     "https://www.destatis.de/DE/Themen/Branchen-Unternehmen/Unternehmen/"
-    "Gewerbemeldungen-Insolvenzen/Publikationen/_inhalt.html"
+    "Gewerbemeldungen-Insolvenzen/Tabellen/Insolvenzen.html"
 )
 
 
 def parse_insolvenzen_table(table_text: str) -> dict:
-    """Parst die GENESIS-Tabelle 52411-0001 zu {'period', 'value'}-Dicts.
+    """Parst Destatis-Insolvenzdaten zu {'period', 'value'}-Dicts.
 
-    Verifiziert 2026-06-16: Tabelle hat Jahr-Monat-Split (getrennte Spalten),
-    Header-Zeile enthält "Insolvenzverfahren" und "Anzahl" als Einheit.
+    Verifiziert 2026-06-17: Die Tabelle enthält Gesamtzahlen und Teilspalten.
+    Für `wi-insolvenzen-de` ist ausschließlich die Spalte "Unternehmen" gültig.
     Nutzt _date_label_from_row zur Rekonstruktion von "Jahr-Monat"-Perioden.
     Gibt {'current': {'period', 'value'}, 'previous': ...} zurück.
     """
@@ -43,34 +38,26 @@ def parse_insolvenzen_table(table_text: str) -> dict:
     date_index = None
 
     for index, row in enumerate(rows):
-        # Nur Zeilen mit mindestens 4 Feldern und BEIDEN führenden Zellen leer
-        # (GENESIS-Spaltenheader-Muster: ;;Spaltenname;...;...).
         if len(row) < 4:
             continue
-        # Beide ersten Zellen müssen leer sein (GENESIS-Spaltenblock-Einrückung)
-        if row[0] != "" or row[1] != "":
-            continue
         lowered = [cell.lower() for cell in row]
-        # Suche nach der Anzahl-Spalte (Insolvenzverfahren; Einheit "Anzahl")
         value_candidates = [
             ci for ci, cell in enumerate(lowered)
-            if "insolvenz" in cell or "anzahl" in cell
+            if "unternehmen" in cell
         ]
         if value_candidates:
-            # Zeitachse: erste Spalte mit "monat", "jahr", "zeit" oder Leer-Spalte vor dem Wert
             date_candidates = [
                 ci for ci, cell in enumerate(lowered[:value_candidates[0]])
                 if "monat" in cell or "zeit" in cell or "datum" in cell or "jahr" in cell
             ]
             header_index = index
             value_index = value_candidates[0]
-            # GENESIS-Jahr-Monat-Split: Jahreszahl in col 0, Monat in col 1
             date_index = date_candidates[0] if date_candidates else 0
             break
 
     if header_index is None:
         raise ValueError(
-            "Insolvenzen-Tabelle: Keine Insolvenz-Spalte gefunden"
+            "Insolvenzen-Tabelle: Keine Unternehmensinsolvenz-Spalte gefunden"
         )
 
     values: list[tuple] = []
@@ -103,17 +90,13 @@ def parse_insolvenzen_table(table_text: str) -> dict:
 
 
 class InsolvenzenAdapter(BaseAdapter):
-    """Unternehmensinsolvenzen Deutschland — Destatis GENESIS 52411-0001 (monatlich).
-
-    ZU VERIFIZIEREN: GENESIS-Tabelle 52411-0001 lieferte im Dev-Umfeld HTTP 401.
-    Mit echten Destatis-Credentials (DESTATIS_USERNAME/PASSWORD) sollte der Abruf
-    funktionieren. Spaltenstruktur des Parsers konnte nicht live verifiziert werden.
+    """Unternehmensinsolvenzen Deutschland — Destatis 52411-0010 (monatlich).
 
     Einheit: Anzahl Unternehmensinsolvenzen pro Monat (absolut).
     Periodentyp: month.
     """
 
-    source_label = "Destatis GENESIS (52411-0001 — Unternehmensinsolvenzen DE)"
+    source_label = "Destatis (52411-0010 — Unternehmensinsolvenzen DE)"
     source_class = "behoerde"
     requires_api_key = False  # DESTATIS_USERNAME/PASSWORD, kein Key-Konzept
     output_target = "indicators"
@@ -168,14 +151,11 @@ class InsolvenzenAdapter(BaseAdapter):
                 previous_period = previous["period"] if previous else None
 
                 return [self.create_item(
-                    title=(
-                        f"Unternehmensinsolvenzen Deutschland: {int(current_value):,}"
-                        f" ({current_period})"
-                    ),
+                    title=f"Unternehmensinsolvenzen Deutschland: {int(current_value):,} ({current_period})".replace(",", "."),
                     description=(
-                        f"Destatis GENESIS 52411-0001 — Unternehmensinsolvenzen Deutschland: "
+                        "Destatis 52411-0010 — Unternehmensinsolvenzen Deutschland: "
                         f"{int(current_value):,} in {current_period} (monatlich)."
-                    ),
+                    ).replace(",", "."),
                     source_url=_SOURCE_URL,
                     germany_relevance=GermanyRelevance(
                         direct=True,
@@ -200,7 +180,7 @@ class InsolvenzenAdapter(BaseAdapter):
 
             self.log_error(
                 f"Insolvenzen fetch: HTTP {response.status_code} "
-                f"(ZU VERIFIZIEREN: GENESIS Auth und Tabelle 52411-0001)"
+                f"(GENESIS Auth oder Tabelle {_GENESIS_TABLE})"
             )
             self.record_source_error(
                 "wi-insolvenzen-de", f"HTTP {response.status_code}",
@@ -221,8 +201,8 @@ class InsolvenzenAdapter(BaseAdapter):
         return [self.create_item(
             title="Unternehmensinsolvenzen Deutschland — Datenquelle prüfen",
             description=(
-                "Destatis GENESIS 52411-0001 nicht erreichbar oder Auth fehlt. "
-                "Manuelle Prüfung erforderlich. (ZU VERIFIZIEREN)"
+                "Destatis 52411-0010 nicht erreichbar oder Auth fehlt. "
+                "Manuelle Prüfung erforderlich."
             ),
             source_url=_SOURCE_URL,
             germany_relevance=GermanyRelevance(
