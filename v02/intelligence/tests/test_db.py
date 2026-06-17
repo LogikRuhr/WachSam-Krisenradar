@@ -148,6 +148,46 @@ def test_indicator_ingest_bad_date_does_not_crash(mock_get_conn):
 
 
 # ---------------------------------------------------------------------------
+# Perioden-Normalisierung (timestamptz-Write-Bug: 2026-05 / 2026-Q1 / 2025)
+# ---------------------------------------------------------------------------
+
+def test_normalize_period_anchors_partial_periods():
+    """Partielle Perioden werden auf den ersten Tag des Zeitraums verankert,
+    damit der timestamptz-Write nicht am Postgres-Cast scheitert."""
+    from src.db import _normalize_period
+    assert _normalize_period("2026-06-08") == datetime(2026, 6, 8)
+    assert _normalize_period("2026-05") == datetime(2026, 5, 1)
+    assert _normalize_period("2026-Q1") == datetime(2026, 1, 1)
+    assert _normalize_period("2026-Q4") == datetime(2026, 10, 1)
+    assert _normalize_period("2025") == datetime(2025, 1, 1)
+    assert _normalize_period(None) is None
+    assert _normalize_period("kein-datum-xxx") is None
+
+
+@patch("src.db.get_connection")
+def test_indicator_ingest_normalizes_quarter_for_timestamptz(mock_get_conn):
+    """Quartalsperiode muss als Volldatum in die timestamptz-Spalte gehen (sonst
+    scheitert der Postgres-Cast → Wert wird nie geschrieben) und eine Observation
+    erzeugen (partielle Perioden wurden vorher still übersprungen)."""
+    mock_conn, mock_cursor = _setup_mock_conn()
+    mock_get_conn.return_value = mock_conn
+
+    item = _make_indicator_item(current_value_date="2026-Q1", source_period_type="quarter")
+    result = insert_draft(item, "indicators")
+
+    assert result == "gas_storage_level"
+    update_calls = [
+        c for c in mock_cursor.execute.call_args_list
+        if "UPDATE indicators" in str(c.args[0])
+    ]
+    assert update_calls, "Kein UPDATE indicators gefunden"
+    args = update_calls[0].args[1]
+    assert datetime(2026, 1, 1) in args, f"Quartal nicht zu Volldatum normalisiert: {args}"
+    assert "2026-Q1" not in args, "Roher Quartals-String darf nicht in den timestamptz-Write"
+    assert _observation_sqls(mock_cursor), "Quartalsperiode erzeugt keine Observation"
+
+
+# ---------------------------------------------------------------------------
 # source_health DB persistence Tests
 # ---------------------------------------------------------------------------
 

@@ -1,4 +1,5 @@
 import json
+import re
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -11,6 +12,40 @@ from .source_health import SourceHealthRecord
 from .validation import validate_draft, format_validation_reason
 
 
+_QUARTER_RE = re.compile(r"(\d{4})-?[Qq]([1-4])")
+_MONTH_RE = re.compile(r"(\d{4})-(\d{1,2})")
+_YEAR_RE = re.compile(r"\d{4}")
+
+
+def _normalize_period(date_str: Optional[str]) -> Optional[datetime]:
+    """Verankert eine (ggf. partielle) Periode auf ein Volldatum (erster Tag des
+    Zeitraums), damit timestamptz-Spalten nicht am Postgres-Cast scheitern.
+
+    "2026-06-08" → 2026-06-08 · "2026-05" → 2026-05-01 · "2026-Q1" → 2026-01-01 ·
+    "2026-Q4" → 2026-10-01 · "2025" → 2025-01-01. None/nicht-parsebar → None.
+    """
+    if not date_str:
+        return None
+    s = str(date_str).strip()
+    # Quartal zuerst (nie gültiges ISO für fromisoformat)
+    m = _QUARTER_RE.fullmatch(s)
+    if m:
+        return datetime(int(m.group(1)), (int(m.group(2)) - 1) * 3 + 1, 1)
+    # Volles ISO-Datum/-Zeit
+    try:
+        return datetime.fromisoformat(s)
+    except (ValueError, TypeError):
+        pass
+    # Jahr-Monat
+    m = _MONTH_RE.fullmatch(s)
+    if m and 1 <= int(m.group(2)) <= 12:
+        return datetime(int(m.group(1)), int(m.group(2)), 1)
+    # Reines Jahr
+    if _YEAR_RE.fullmatch(s):
+        return datetime(int(s), 1, 1)
+    return None
+
+
 def _append_observation(cur, indicator_id: str, value, date_str: Optional[str], source_stand: str) -> bool:
     """Schreibt eine einzelne Beobachtung in indicator_observations.
 
@@ -19,9 +54,8 @@ def _append_observation(cur, indicator_id: str, value, date_str: Optional[str], 
     """
     if value is None or date_str is None:
         return False
-    try:
-        observed_at = datetime.fromisoformat(date_str)
-    except (ValueError, TypeError):
+    observed_at = _normalize_period(date_str)
+    if observed_at is None:
         # Nicht-parsebares Datum: überspringen, aber nicht crashen
         return False
     cur.execute(
@@ -305,9 +339,9 @@ def insert_draft(item: IngestionItem, item_type: str = "lagebild_items") -> Opti
                        WHERE id = %s""",
                     (
                         str(item.current_value) if item.current_value is not None else None,
-                        item.current_value_date,
+                        _normalize_period(item.current_value_date),
                         str(item.previous_value) if item.previous_value is not None else None,
-                        item.previous_value_date,
+                        _normalize_period(item.previous_value_date),
                         now,
                         now,
                         item.indicator_id,
