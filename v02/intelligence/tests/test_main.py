@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import json
 from datetime import datetime
 from types import SimpleNamespace
@@ -47,6 +48,50 @@ def test_run_ingestion_resets_llm_runtime_state_at_run_start(monkeypatch):
     asyncio.run(main.run_ingestion(dry_run=True, allow_fetch=False))
 
     assert reset_calls == ["reset"]
+
+
+def test_run_scheduled_is_coroutine_function():
+    assert inspect.iscoroutinefunction(main.run_scheduled)
+
+
+def test_main_scheduled_starts_scheduler_with_created_event_loop(monkeypatch):
+    events = []
+
+    class FakeLoop:
+        def run_forever(self):
+            events.append("run_forever")
+
+        def close(self):
+            events.append("close")
+
+    class FakeScheduler:
+        def __init__(self, event_loop=None):
+            events.append(("scheduler", event_loop))
+
+        def add_job(self, job, trigger, hour, minute, id):
+            events.append(("job", job, trigger, hour, minute, id))
+
+        def start(self):
+            events.append("start")
+
+        def shutdown(self):
+            events.append("shutdown")
+
+    fake_loop = FakeLoop()
+    monkeypatch.setenv("INGESTION_MODE", "scheduled")
+    monkeypatch.setattr(main.asyncio, "new_event_loop", lambda: fake_loop)
+    monkeypatch.setattr(main.asyncio, "set_event_loop", lambda loop: events.append(("set_loop", loop)))
+    monkeypatch.setattr(main, "AsyncIOScheduler", FakeScheduler)
+
+    main.main([])
+
+    assert ("set_loop", fake_loop) in events
+    assert ("scheduler", fake_loop) in events
+    assert ("job", main.run_scheduled, "cron", 6, 0, "morning") in events
+    assert ("job", main.run_scheduled, "cron", 18, 0, "evening") in events
+    assert events.index("start") < events.index("run_forever")
+    assert "shutdown" in events
+    assert "close" in events
 
 
 def test_run_ingestion_routes_bnetza_indicator_items_to_indicator_updates(monkeypatch):

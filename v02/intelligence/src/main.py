@@ -254,9 +254,9 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
     print(f"\n=== Ingestion abgeschlossen um {datetime.utcnow()} ===")
 
 
-def run_scheduled():
-    """Wrapper für APScheduler — startet async run_ingestion."""
-    asyncio.get_event_loop().run_until_complete(run_ingestion())
+async def run_scheduled():
+    """APScheduler job: fuehrt einen Ingestion-Lauf im aktiven Event Loop aus."""
+    await run_ingestion()
 
 
 def parse_args(argv=None):
@@ -284,19 +284,23 @@ def main(argv=None):
     mode = os.environ.get("INGESTION_MODE", "once")
 
     if mode == "scheduled":
-        scheduler = AsyncIOScheduler()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        scheduler = AsyncIOScheduler(event_loop=loop)
         scheduler.add_job(run_scheduled, "cron", hour=6, minute=0, id="morning")
         scheduler.add_job(run_scheduled, "cron", hour=18, minute=0, id="evening")
         scheduler.start()
         print("Scheduler gestartet: 06:00 + 18:00 UTC")
         print("Drücke Ctrl+C zum Beenden.\n")
 
-        loop = asyncio.new_event_loop()
         try:
             loop.run_forever()
         except (KeyboardInterrupt, SystemExit):
-            scheduler.shutdown()
             print("Scheduler beendet.")
+        finally:
+            scheduler.shutdown()
+            loop.close()
     else:
         asyncio.run(run_ingestion())
 
