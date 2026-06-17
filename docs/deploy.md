@@ -8,6 +8,10 @@ Der Deploy legt den aktuellen `main`-Stand auf dem VPS unter `/opt/wachsam/sourc
 Der Deploy startet keine Container neu und ueberschreibt nicht die laufende Produktion unter
 `/opt/wachsam/current`, `/opt/wachsam/v02` oder `/opt/wachsam/docker-compose*.yml`.
 
+Ausnahme: `v02/infra/docker-compose.intelligence.prod.yml` ist ein Runtime-Overlay fuer die
+Intelligence-Pipeline. Es wird erst nach Source-Promote auf dem VPS manuell per Docker Compose
+genutzt und ist nicht Teil des GitHub-Source-Deploys.
+
 ## GitHub Secrets
 
 Erforderlich:
@@ -26,6 +30,10 @@ Nicht erforderlich fuer diesen Source-Deploy:
 
 Produktive `.env`-Werte werden erst als GitHub Secrets gesetzt, wenn ein Runtime-Stack in diesem
 Repo liegt und eine Spec den Bedarf begruendet.
+
+Vertex-AI-Credentials bleiben auf dem VPS unter `/opt/wachsam/secrets/` und werden im
+Intelligence-Overlay nur read-only gemountet. Der Key wird nie in Git, Images oder GitHub
+Artifacts abgelegt.
 
 ## Ablauf
 
@@ -62,5 +70,9 @@ git checkout --detach <previous-good-sha>
 bash scripts/verify.sh
 ```
 
-Runtime-Rollback ist nicht Teil dieses Repos, solange kein Runtime-Stack enthalten ist.
+Intelligence-Scheduler stoppen:
 
+```bash
+cd /opt/wachsam/v02/infra
+docker compose -f docker-compose.intelligence.prod.yml down
+```

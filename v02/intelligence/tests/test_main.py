@@ -37,6 +37,18 @@ _ALL_ADAPTER_ATTRS = (
 )
 
 
+def test_run_ingestion_resets_llm_runtime_state_at_run_start(monkeypatch):
+    reset_calls = []
+
+    for attr in _ALL_ADAPTER_ATTRS:
+        monkeypatch.setattr(main, attr, EmptyAdapter)
+    monkeypatch.setattr(main, "reset_llm_runtime_state", lambda: reset_calls.append("reset"), raising=False)
+
+    asyncio.run(main.run_ingestion(dry_run=True, allow_fetch=False))
+
+    assert reset_calls == ["reset"]
+
+
 def test_run_ingestion_routes_bnetza_indicator_items_to_indicator_updates(monkeypatch):
     bnetza_item = IngestionItem(
         title="Gasspeicher Deutschland: 72.5% (2026-05-27)",

@@ -28,7 +28,7 @@ from .adapters.eurostat import EurostatAdapter
 from .adapters.warning_indicators import WarningIndicatorsAdapter
 from .crawler.rss_crawler import RSSCrawler
 from .fetchers.article_fetcher import ArticleFetcher
-from .extractors.llm_extractor import extract_with_llm
+from .extractors.llm_extractor import extract_with_llm, reset_llm_runtime_state
 from .db import insert_draft, set_dry_run, fetch_indicator_thresholds, upsert_source_health
 from .validation import validate_draft
 from .gate import evaluate_plausibility, source_error_verdict, build_shadow_log
@@ -78,6 +78,7 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
 
     # Flag deterministisch am Lauf-Anfang setzen, damit kein Zustand hängen bleibt.
     set_dry_run(dry_run)
+    reset_llm_runtime_state()
 
     if dry_run:
         print("=== DRY-RUN: keine DB-Writes, keine Migrationen ===")

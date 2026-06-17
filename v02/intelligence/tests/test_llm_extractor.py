@@ -26,6 +26,17 @@ MOCK_LLM_RESPONSE = """{
 }"""
 
 
+@pytest.fixture(autouse=True)
+def reset_llm_runtime_state():
+    llm_module.reset_llm_runtime_state()
+
+
+def _configure_valid_settings(mock_settings):
+    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    mock_settings.VERTEX_AI_LOCATION = "europe-west3"
+    mock_settings.GOOGLE_APPLICATION_CREDENTIALS = __file__
+
+
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
 async def test_extract_skips_without_project(mock_settings):
@@ -37,9 +48,35 @@ async def test_extract_skips_without_project(mock_settings):
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
 @patch("src.extractors.llm_extractor._init_vertex")
-async def test_extract_returns_valid_item(mock_init, mock_settings):
+async def test_extract_skips_placeholder_credentials_before_vertex_init(mock_init, mock_settings, capsys):
     mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
-    mock_settings.VERTEX_AI_LOCATION = "europe-west3"
+    mock_settings.GOOGLE_APPLICATION_CREDENTIALS = "/pfad/zu/wachsam-intelligence-key.json"
+
+    result = await extract_with_llm("Test content", "https://example.com", "medien")
+
+    assert result is None
+    mock_init.assert_not_called()
+    assert "GOOGLE_APPLICATION_CREDENTIALS ist ein Placeholder" in capsys.readouterr().out
+
+
+@pytest.mark.asyncio
+@patch("src.extractors.llm_extractor.settings")
+@patch("src.extractors.llm_extractor._init_vertex")
+async def test_extract_skips_missing_credentials_file_before_vertex_init(mock_init, mock_settings):
+    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    mock_settings.GOOGLE_APPLICATION_CREDENTIALS = "C:/does/not/exist/wachsam-intelligence-key.json"
+
+    result = await extract_with_llm("Test content", "https://example.com", "medien")
+
+    assert result is None
+    mock_init.assert_not_called()
+
+
+@pytest.mark.asyncio
+@patch("src.extractors.llm_extractor.settings")
+@patch("src.extractors.llm_extractor._init_vertex")
+async def test_extract_returns_valid_item(mock_init, mock_settings):
+    _configure_valid_settings(mock_settings)
 
     mock_response = MagicMock()
     mock_response.text = MOCK_LLM_RESPONSE
@@ -64,7 +101,7 @@ async def test_extract_returns_valid_item(mock_init, mock_settings):
 @patch("src.extractors.llm_extractor.settings")
 @patch("src.extractors.llm_extractor._init_vertex")
 async def test_extract_handles_invalid_json(mock_init, mock_settings):
-    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    _configure_valid_settings(mock_settings)
 
     mock_response = MagicMock()
     mock_response.text = "not valid json"
@@ -84,7 +121,7 @@ async def test_extract_handles_invalid_json(mock_init, mock_settings):
 @patch("src.extractors.llm_extractor.settings")
 @patch("src.extractors.llm_extractor._init_vertex")
 async def test_extract_retries_resource_exhausted_then_returns_item(mock_init, mock_settings, monkeypatch):
-    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    _configure_valid_settings(mock_settings)
     sleep_calls = []
 
     async def fake_sleep(seconds):
@@ -115,7 +152,7 @@ async def test_extract_retries_resource_exhausted_then_returns_item(mock_init, m
 async def test_extract_returns_none_after_repeated_resource_exhausted(
     mock_init, mock_settings, monkeypatch, caplog
 ):
-    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    _configure_valid_settings(mock_settings)
     sleep_calls = []
 
     async def fake_sleep(seconds):
@@ -142,8 +179,38 @@ async def test_extract_returns_none_after_repeated_resource_exhausted(
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
 @patch("src.extractors.llm_extractor._init_vertex")
+async def test_extract_skips_later_calls_after_quota_exhausted(
+    mock_init, mock_settings, monkeypatch
+):
+    _configure_valid_settings(mock_settings)
+    sleep_calls = []
+
+    async def fake_sleep(seconds):
+        sleep_calls.append(seconds)
+
+    monkeypatch.setattr(llm_module, "asyncio", MagicMock(sleep=fake_sleep), raising=False)
+
+    mock_model = MagicMock()
+    mock_model.generate_content.side_effect = ResourceExhausted("quota")
+
+    mock_gm_module = MagicMock()
+    mock_gm_module.GenerativeModel.return_value = mock_model
+
+    with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
+        first = await extract_with_llm("Content", "https://example.com/1", "medien")
+        second = await extract_with_llm("Content", "https://example.com/2", "medien")
+
+    assert first is None
+    assert second is None
+    assert mock_model.generate_content.call_count == 3
+    assert sleep_calls == [2, 4]
+
+
+@pytest.mark.asyncio
+@patch("src.extractors.llm_extractor.settings")
+@patch("src.extractors.llm_extractor._init_vertex")
 async def test_extract_handles_json_fenced_response(mock_init, mock_settings):
-    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    _configure_valid_settings(mock_settings)
 
     mock_response = MagicMock()
     mock_response.text = f"```json\n{MOCK_LLM_RESPONSE}\n```"
@@ -164,7 +231,7 @@ async def test_extract_handles_json_fenced_response(mock_init, mock_settings):
 @patch("src.extractors.llm_extractor.settings")
 @patch("src.extractors.llm_extractor._init_vertex")
 async def test_extract_rejects_invalid_severity_from_llm(mock_init, mock_settings, caplog):
-    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    _configure_valid_settings(mock_settings)
     payload = json.loads(MOCK_LLM_RESPONSE)
     payload["severity_suggestion"] = "panik"
 
@@ -188,7 +255,7 @@ async def test_extract_rejects_invalid_severity_from_llm(mock_init, mock_setting
 @patch("src.extractors.llm_extractor.settings")
 @patch("src.extractors.llm_extractor._init_vertex")
 async def test_extract_rejects_unknown_system_from_llm(mock_init, mock_settings, caplog):
-    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    _configure_valid_settings(mock_settings)
     payload = json.loads(MOCK_LLM_RESPONSE)
     payload["germany_relevance"]["systems_affected"] = ["weltraum"]
 
@@ -212,7 +279,7 @@ async def test_extract_rejects_unknown_system_from_llm(mock_init, mock_settings,
 @patch("src.extractors.llm_extractor.settings")
 @patch("src.extractors.llm_extractor._init_vertex")
 async def test_extract_never_accepts_published_status_from_llm(mock_init, mock_settings):
-    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    _configure_valid_settings(mock_settings)
     payload = json.loads(MOCK_LLM_RESPONSE)
     payload["status"] = "published"
 

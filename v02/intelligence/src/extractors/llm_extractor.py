@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os
 import re
 from datetime import datetime
 from typing import Optional
@@ -23,6 +24,60 @@ from .prompts import SYSTEM_PROMPT, build_extraction_prompt
 logger = logging.getLogger(__name__)
 MAX_LLM_ATTEMPTS = 3
 LLM_RETRY_DELAYS_SECONDS = (2, 4)
+_CREDENTIAL_PLACEHOLDER_MARKERS = (
+    "/pfad/zu/",
+    "\\pfad\\zu\\",
+    "path/to/",
+    "<",
+    "your_",
+    "replace",
+)
+_LLM_CREDENTIALS_WARNING_EMITTED = False
+_LLM_QUOTA_EXHAUSTED = False
+_LLM_QUOTA_SKIP_WARNING_EMITTED = False
+
+
+def _llm_configuration_skip_reason() -> Optional[str]:
+    project = (settings.GOOGLE_CLOUD_PROJECT or "").strip()
+    if not project:
+        return "GOOGLE_CLOUD_PROJECT nicht gesetzt"
+
+    credentials_path = (settings.GOOGLE_APPLICATION_CREDENTIALS or "").strip()
+    if not credentials_path:
+        return "GOOGLE_APPLICATION_CREDENTIALS nicht gesetzt"
+
+    normalized = credentials_path.replace("\\", "/").lower()
+    if any(marker in normalized for marker in _CREDENTIAL_PLACEHOLDER_MARKERS):
+        return "GOOGLE_APPLICATION_CREDENTIALS ist ein Placeholder"
+
+    if not os.path.isfile(credentials_path):
+        return "GOOGLE_APPLICATION_CREDENTIALS nicht lesbar"
+
+    return None
+
+
+def _print_credentials_skip_once(reason: str) -> None:
+    global _LLM_CREDENTIALS_WARNING_EMITTED
+    if _LLM_CREDENTIALS_WARNING_EMITTED:
+        return
+    print(f"[LLM] {reason} — Skip")
+    _LLM_CREDENTIALS_WARNING_EMITTED = True
+
+
+def _print_quota_skip_once() -> None:
+    global _LLM_QUOTA_SKIP_WARNING_EMITTED
+    if _LLM_QUOTA_SKIP_WARNING_EMITTED:
+        return
+    print("[LLM] Quota exhausted earlier in this run — Skip")
+    _LLM_QUOTA_SKIP_WARNING_EMITTED = True
+
+
+def reset_llm_runtime_state() -> None:
+    """Reset per-run skip/circuit-breaker state for scheduled ingestion."""
+    global _LLM_CREDENTIALS_WARNING_EMITTED, _LLM_QUOTA_EXHAUSTED, _LLM_QUOTA_SKIP_WARNING_EMITTED
+    _LLM_CREDENTIALS_WARNING_EMITTED = False
+    _LLM_QUOTA_EXHAUSTED = False
+    _LLM_QUOTA_SKIP_WARNING_EMITTED = False
 
 
 def _validate_llm_payload(data: dict, source_url: str) -> bool:
@@ -73,8 +128,15 @@ async def extract_with_llm(
     Gibt ein IngestionItem mit status='extracted' zurück.
     Final-Werte setzt die Redaktion im Editorial-Gate.
     """
-    if not settings.GOOGLE_CLOUD_PROJECT:
-        print("[LLM] GOOGLE_CLOUD_PROJECT nicht gesetzt — Skip")
+    global _LLM_QUOTA_EXHAUSTED
+
+    skip_reason = _llm_configuration_skip_reason()
+    if skip_reason:
+        _print_credentials_skip_once(skip_reason)
+        return None
+
+    if _LLM_QUOTA_EXHAUSTED:
+        _print_quota_skip_once()
         return None
 
     try:
@@ -98,6 +160,7 @@ async def extract_with_llm(
                         "LLM unavailable after retries",
                         extra={"source_url": source_url, "attempts": attempt, "error": str(e)},
                     )
+                    _LLM_QUOTA_EXHAUSTED = True
                     print(f"[LLM] Extraction failed: llm_unavailable after {attempt} attempts")
                     return None
 

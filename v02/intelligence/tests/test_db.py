@@ -187,6 +187,32 @@ def test_indicator_ingest_normalizes_quarter_for_timestamptz(mock_get_conn):
     assert _observation_sqls(mock_cursor), "Quartalsperiode erzeugt keine Observation"
 
 
+@patch("src.db.get_connection")
+def test_indicator_ingest_skips_unknown_indicator_without_related_writes(mock_get_conn, capsys):
+    """Wenn der Stammsatz fehlt, darf der Live-Wert keine FK-Folgefehler erzeugen."""
+    mock_conn, mock_cursor = _setup_mock_conn()
+
+    def fake_execute(sql, params=None):
+        if "UPDATE indicators" in str(sql):
+            mock_cursor.rowcount = 0
+
+    mock_cursor.execute.side_effect = fake_execute
+    mock_get_conn.return_value = mock_conn
+
+    item = _make_indicator_item(indicator_id="wi-unknown-prod-only")
+    result = insert_draft(item, "indicators")
+
+    assert result is None
+    sqls = [str(c.args[0]) for c in mock_cursor.execute.call_args_list]
+    assert any("UPDATE indicators" in sql for sql in sqls)
+    assert not any("indicator_observations" in sql for sql in sqls)
+    assert not any("editorial_audit_log" in sql for sql in sqls)
+    assert not any("item_sources" in sql for sql in sqls)
+    assert "[DB] Indicator skipped: unknown indicator_id=wi-unknown-prod-only" in capsys.readouterr().out
+    mock_conn.rollback.assert_not_called()
+    mock_conn.close.assert_called_once()
+
+
 # ---------------------------------------------------------------------------
 # source_health DB persistence Tests
 # ---------------------------------------------------------------------------

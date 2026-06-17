@@ -1,0 +1,21 @@
+services:
+  intelligence:
+    build:
+      context: ../intelligence
+    image: wachsam-intelligence:prod
+    container_name: wachsam-intelligence
+    env_file:
+      - /opt/wachsam/.env
+      - /opt/wachsam/v02/intelligence/.env
+    environment:
+      INGESTION_MODE: scheduled
+    volumes:
+      - /opt/wachsam/secrets:/opt/wachsam/secrets:ro
+    networks:
+      - wachsam_default
+    restart: unless-stopped
+    command: python -m src.main
+
+networks:
+  wachsam_default:
+    external: true

@@ -347,6 +347,11 @@ def insert_draft(item: IngestionItem, item_type: str = "lagebild_items") -> Opti
                         item.indicator_id,
                     ),
                 )
+                if getattr(cur, "rowcount", None) == 0:
+                    print(f"[DB] Indicator skipped: unknown indicator_id={item.indicator_id}")
+                    conn.commit()
+                    return None
+
                 item_id = item.indicator_id
 
                 # Append-only Historie: source_stand = reales Datum der Beobachtung
