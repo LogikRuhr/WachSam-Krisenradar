@@ -25,7 +25,7 @@ from src.adapters.bip import BIPAdapter, parse_eurostat_jsonstat
 from src.adapters.arbeitslosigkeit import ArbeitslosigkeitAdapter, parse_arbeitslosigkeit_table
 from src.adapters.ezbleitzins import EZBLeitzinsAdapter, parse_ecb_sdw_jsondata
 from src.adapters.staatsschulden import StaatsschuldenAdapter, parse_eurostat_debt
-from src.adapters.insolvenzen import InsolvenzenAdapter, parse_insolvenzen_table
+from src.adapters.insolvenzen import InsolvenzenAdapter, parse_insolvenzen_html, parse_insolvenzen_table
 
 
 def _validate_items(items):
@@ -911,6 +911,34 @@ _INSOLVENZEN_GENESIS_CSV = "\n".join([
     "2026;April;...;...;...;...;...;...",
 ])
 
+_INSOLVENZEN_DESTATIS_HTML = """
+<html><body>
+<table>
+  <thead>
+    <tr><th colspan="2" rowspan="2">Jahr, Monat</th><th colspan="5">Insolvenzen (Anzahl)</th></tr>
+    <tr><th>insgesamt</th><th>Unternehmen</th><th>Verbraucher</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th rowspan="3" scope="row">2026</th>
+      <th scope="row"><abbr title="März">Mär</abbr></th>
+      <td>12&nbsp;531</td><td>2&nbsp;308</td><td>7&nbsp;462</td>
+    </tr>
+    <tr>
+      <th scope="row"><abbr title="Februar">Feb</abbr></th>
+      <td>10&nbsp;439</td><td>2&nbsp;048</td><td>6&nbsp;075</td>
+    </tr>
+    <tr>
+      <th scope="row"><abbr title="Januar">Jan</abbr></th>
+      <td>10&nbsp;494</td><td>1&nbsp;919</td><td>6&nbsp;142</td>
+    </tr>
+  </tbody>
+</table>
+<p>Stand&nbsp;12. Juni 2026</p>
+<h2>Veränderung zum Vorjahr</h2>
+</body></html>
+"""
+
 
 def test_parse_insolvenzen_table_extracts_latest():
     """parse_insolvenzen_table nutzt die Unternehmensspalte, nicht die Gesamtzahl."""
@@ -919,6 +947,16 @@ def test_parse_insolvenzen_table_extracts_latest():
     assert result["current"]["value"] == 2308.0
     assert result["current"]["period"] == "2026-03"
     assert result["previous"]["value"] == 2048.0
+
+
+def test_parse_insolvenzen_html_extracts_company_column():
+    """HTML-Fallback nutzt die Unternehmensspalte der offiziellen Destatis-Tabelle."""
+    result = parse_insolvenzen_html(_INSOLVENZEN_DESTATIS_HTML)
+
+    assert result["current"]["value"] == 2308.0
+    assert result["current"]["period"] == "2026-03"
+    assert result["previous"]["value"] == 2048.0
+    assert result["previous"]["period"] == "2026-02"
 
 
 def test_parse_insolvenzen_table_raises_on_missing_column():
@@ -950,6 +988,38 @@ def test_insolvenzen_adapter_maps_to_indicator_live_value(monkeypatch):
     _validate_items([item])
 
 
+def test_insolvenzen_adapter_falls_back_to_destatis_html(monkeypatch):
+    """Wenn GENESIS tablefile scheitert, schreibt der Adapter aus der Destatis-HTML-Tabelle."""
+    post_response = MagicMock()
+    post_response.status_code = 404
+    post_response.content = b'{"Code":2}'
+    post_response.text = '{"Code":2}'
+
+    get_response = MagicMock()
+    get_response.status_code = 200
+    get_response.content = _INSOLVENZEN_DESTATIS_HTML.encode("utf-8")
+    get_response.text = _INSOLVENZEN_DESTATIS_HTML
+    get_response.raise_for_status.return_value = None
+
+    monkeypatch.setattr(
+        "src.adapters.insolvenzen.requests.post",
+        lambda *args, **kwargs: post_response,
+    )
+    monkeypatch.setattr(
+        "src.adapters.insolvenzen.requests.get",
+        lambda *args, **kwargs: get_response,
+    )
+
+    item = InsolvenzenAdapter().fetch_latest()[0]
+
+    assert item.indicator_id == "wi-insolvenzen-de"
+    assert item.current_value == 2308.0
+    assert item.current_value_date == "2026-03"
+    assert item.previous_value == 2048.0
+    assert item.previous_value_date == "2026-02"
+    _validate_items([item])
+
+
 def test_insolvenzen_adapter_returns_fallback_on_http_error(monkeypatch):
     """HTTP 401 (GENESIS ohne Credentials) → Fallback, confidence niedrig."""
     response = MagicMock()
@@ -960,6 +1030,12 @@ def test_insolvenzen_adapter_returns_fallback_on_http_error(monkeypatch):
         "src.adapters.insolvenzen.requests.post",
         lambda *args, **kwargs: response,
     )
+
+    def raise_get(*args, **kwargs):
+        raise RuntimeError("html unavailable")
+
+    monkeypatch.setattr("src.adapters.insolvenzen.requests.get", raise_get)
+
     items = InsolvenzenAdapter().fetch_latest()
     assert items[0].indicator_id is None
     assert items[0].confidence_suggestion == "niedrig"
