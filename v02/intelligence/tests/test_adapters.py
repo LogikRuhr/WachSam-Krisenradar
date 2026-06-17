@@ -967,14 +967,15 @@ def test_parse_insolvenzen_table_raises_on_missing_column():
 
 
 def test_insolvenzen_adapter_maps_to_indicator_live_value(monkeypatch):
-    """InsolvenzenAdapter liefert Unternehmensinsolvenzen als Indikatorwert."""
+    """InsolvenzenAdapter liefert Unternehmensinsolvenzen aus der offiziellen HTML-Tabelle."""
     response = MagicMock()
     response.status_code = 200
-    response.content = _INSOLVENZEN_GENESIS_CSV.encode("utf-8")
-    response.text = _INSOLVENZEN_GENESIS_CSV
+    response.content = _INSOLVENZEN_DESTATIS_HTML.encode("utf-8")
+    response.text = _INSOLVENZEN_DESTATIS_HTML
+    response.raise_for_status.return_value = None
 
     monkeypatch.setattr(
-        "src.adapters.insolvenzen.requests.post",
+        "src.adapters.insolvenzen.requests.get",
         lambda *args, **kwargs: response,
     )
 
@@ -988,8 +989,40 @@ def test_insolvenzen_adapter_maps_to_indicator_live_value(monkeypatch):
     _validate_items([item])
 
 
+def test_insolvenzen_adapter_uses_destatis_html_before_genesis(monkeypatch):
+    """GENESIS 52411-0010 ist nicht die kanonische Runtime-Quelle für diesen Indikator."""
+    get_response = MagicMock()
+    get_response.status_code = 200
+    get_response.content = _INSOLVENZEN_DESTATIS_HTML.encode("utf-8")
+    get_response.text = _INSOLVENZEN_DESTATIS_HTML
+    get_response.raise_for_status.return_value = None
+
+    post_called = False
+
+    def post_response(*args, **kwargs):
+        nonlocal post_called
+        post_called = True
+        response = MagicMock()
+        response.status_code = 404
+        response.content = b'{"Code":2}'
+        response.text = '{"Code":2}'
+        return response
+
+    monkeypatch.setattr(
+        "src.adapters.insolvenzen.requests.get",
+        lambda *args, **kwargs: get_response,
+    )
+    monkeypatch.setattr("src.adapters.insolvenzen.requests.post", post_response)
+
+    item = InsolvenzenAdapter().fetch_latest()[0]
+
+    assert post_called is False
+    assert item.current_value == 2308.0
+    assert item.current_value_date == "2026-03"
+
+
 def test_insolvenzen_adapter_falls_back_to_destatis_html(monkeypatch):
-    """Wenn GENESIS tablefile scheitert, schreibt der Adapter aus der Destatis-HTML-Tabelle."""
+    """Wenn alte GENESIS-Mocks scheitern, bleibt die Destatis-HTML-Tabelle korrekt."""
     post_response = MagicMock()
     post_response.status_code = 404
     post_response.content = b'{"Code":2}'
@@ -1021,7 +1054,7 @@ def test_insolvenzen_adapter_falls_back_to_destatis_html(monkeypatch):
 
 
 def test_insolvenzen_adapter_returns_fallback_on_http_error(monkeypatch):
-    """HTTP 401 (GENESIS ohne Credentials) → Fallback, confidence niedrig."""
+    """Nicht erreichbare HTML-Tabelle → Fallback, confidence niedrig."""
     response = MagicMock()
     response.status_code = 401
     response.content = b'{"Code":15}'

@@ -7,17 +7,14 @@ import requests
 
 from .base import BaseAdapter
 from .destatis import (
-    decode_genesis_table_response,
     _date_label_from_row,
     _parse_number,
     _period_sort_key,
 )
 from ..models import GermanyRelevance, IngestionItem
 
-# Datenquelle: Destatis Tabelle 52411-0010 / "Insolvenzen nach Monaten".
+# Runtime-Datenquelle: offizielle Destatis-Tabelle "Insolvenzen nach Monaten".
 # Der Indikator meint die Spalte "Unternehmen", nicht "insgesamt".
-_GENESIS_TABLE = "52411-0010"
-_BASE_URL = "https://www-genesis.destatis.de/genesisWS/rest/2020"
 _SOURCE_URL = (
     "https://www.destatis.de/DE/Themen/Branchen-Unternehmen/Unternehmen/"
     "Gewerbemeldungen-Insolvenzen/Tabellen/Insolvenzen.html"
@@ -282,49 +279,7 @@ class InsolvenzenAdapter(BaseAdapter):
             return self._fallback()
 
     def fetch_insolvenzen(self) -> List[IngestionItem]:
-        try:
-            headers = {
-                "accept": "application/octet-stream",
-                "username": self._settings.DESTATIS_USERNAME or "GAST",
-                "password": self._settings.DESTATIS_PASSWORD or "GAST",
-                "Content-Type": "application/x-www-form-urlencoded",
-            }
-            data = {
-                "name": _GENESIS_TABLE,
-                "area": "all",
-                "compress": "false",
-                "format": "datencsv",
-                "language": "de",
-                "transpose": "false",
-                "job": "false",
-                "quality": "off",
-            }
-            response = requests.post(
-                f"{_BASE_URL}/data/tablefile",
-                headers=headers,
-                data=data,
-                timeout=30,
-            )
-
-            if response.status_code == 200 and len(response.content) > 50:
-                table_text = decode_genesis_table_response(response.content, response.text)
-                try:
-                    parsed = parse_insolvenzen_table(table_text)
-                except ValueError as parse_err:
-                    self.log_error(f"Insolvenzen GENESIS parse error: {parse_err}")
-                    return self._fetch_from_destatis_html(f"genesis_parse_error: {parse_err}")
-
-                return self._items_from_parsed(parsed)
-
-            self.log_error(
-                f"Insolvenzen fetch: HTTP {response.status_code} "
-                f"(GENESIS Auth oder Tabelle {_GENESIS_TABLE})"
-            )
-            return self._fetch_from_destatis_html(f"genesis_http: {response.status_code}")
-
-        except Exception as e:
-            self.log_error(f"Insolvenzen fetch failed: {e}")
-            return self._fetch_from_destatis_html(f"genesis_fetch_error: {type(e).__name__}")
+        return self._fetch_from_destatis_html()
 
     def _fallback(self) -> List[IngestionItem]:
         """Fallback-Item bei nicht erreichbarem GENESIS-Endpunkt."""
