@@ -7,6 +7,7 @@
 ## Was funktioniert
 - 2026-06-10 · Qualitäts-/Lern-System „Simply First" vorbereitet und additiv in AGENTS.md verankert; CLAUDE.md verweist auf AGENTS.md, docs/specs/TEMPLATE-spec.md definiert DoD, lokaler `.claude/agents/reviewer.md` bleibt gitignored und liefert PASS/FAIL-Review. · Handlung: bestehende Systeme (`.remember/`, `/code-review`, `wachsam-editorial-reviewer`) nicht duplizieren; echte Lessons nur aus Tests, Linter, Builds, Reviews oder User-Feedback eintragen. · Confidence: high
 - 2026-06-11 · Codex und Hermes arbeiten am selben Working Tree; Codex hat Dateien gestaged/committet, während Hermes parallel lief → Risiko, dass ein Agent dem anderen ungeprüfte Dateien in den Index legt oder ein Commit zwei getrennte Arbeiten vermischt. Handlung: Vor jedem Commit git status (unfiltered) + git show --stat HEAD prüfen, nie git add . / -A, nur gezielt benannte Dateien stagen, ein Commit = eine Arbeit. Confidence: high
+- 2026-06-18 · Eine interne Ops-Tabelle (`source_health`) öffentlich sichtbar machen, ohne potenziell sensible Felder (`errorMessages` mit internen URLs/Details) zu leaken. · Handlung: bereits auf der QUERY-Ebene nur unbedenkliche Spalten selektieren (Status/Stand/Counts), nie `select()`-alles und im JSX filtern — so ist ein Leak nicht nur ein Render entfernt. Confidence: high
 
 ## Was fehlgeschlagen ist (und warum)
 - <noch leer>
