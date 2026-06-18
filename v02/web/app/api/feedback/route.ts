@@ -4,26 +4,23 @@ import { auth } from "@/lib/auth";
 import { db, schema } from "@/lib/db";
 import { parseFeedbackInput } from "@/lib/feedback";
 import { createRateLimiter } from "@/lib/rate-limit";
+import { isSameOrigin, resolveExpectedHost } from "@/lib/same-origin";
 
 export const runtime = "nodejs";
 
 // Basis-Spam-Schutz: max. 5 Einsendungen pro Minute je Quell-IP (pro Prozess).
 const limiter = createRateLimiter({ max: 5, windowMs: 60_000 });
 
-/** Same-Origin-Guard (leichtgewichtiger CSRF-Schutz). POSTs aus unserem Client
- *  senden einen Origin-Header; fehlt er, wird nicht blockiert. */
-function sameOrigin(request: Request): boolean {
-  const origin = request.headers.get("origin");
-  if (!origin) return true;
-  try {
-    return new URL(origin).host === new URL(request.url).host;
-  } catch {
-    return false;
-  }
-}
-
 export async function POST(request: Request) {
-  if (!sameOrigin(request)) {
+  // Same-Origin-Guard. Hinter Traefik trägt request.url den INTERNEN Host —
+  // der erwartete (öffentliche) Host kommt aus dem vom Proxy gesetzten
+  // x-forwarded-host bzw. host-Header, sonst scheitert ein legitimer Browser-POST.
+  const expectedHost = resolveExpectedHost({
+    forwardedHost: request.headers.get("x-forwarded-host"),
+    host: request.headers.get("host"),
+    fallbackUrl: request.url,
+  });
+  if (!isSameOrigin(request.headers.get("origin"), expectedHost)) {
     return NextResponse.json({ ok: false, error: "Ungültige Herkunft." }, { status: 403 });
   }
 
