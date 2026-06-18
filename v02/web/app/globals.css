@@ -477,6 +477,15 @@ strong { color: var(--on-surface); font-weight: 700; }
 @keyframes skeleton-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
 
+/* --- Nutzen-Board (User Story: ein Satz pro Haushalt) --- */
+.nutzen-board { display: grid; gap: 18px; margin: 0 0 28px; border: 1px solid var(--outline); border-left: 3px solid var(--primary); border-radius: 0 4px 4px 0; background: rgba(27,30,37,.72); padding: 22px; }
+.nutzen-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.nutzen-card { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--outline); border-left: 3px solid var(--outline); border-radius: 0 4px 4px 0; background: var(--surface-container); padding: 16px; }
+.nutzen-card-active { border-left-color: var(--primary); }
+.nutzen-persona { font-size: 11px; color: var(--primary); }
+.nutzen-value { margin: 0; font-size: 14px; line-height: 1.45; color: var(--on-surface); }
+.nutzen-scope { margin: 0; font-size: 11px; letter-spacing: .04em; text-transform: none; line-height: 1.5; color: var(--on-surface-variant); }
+
 /* --- /lage: Revisionskriterien & Gegentrends --- */
 .lage-revision { margin: 0 0 28px; }
 .lage-revision .detail-panel { margin-bottom: 14px; }

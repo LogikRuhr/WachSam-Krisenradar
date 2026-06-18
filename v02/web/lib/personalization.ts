@@ -130,7 +130,7 @@ export function computeVerdict(items: VerdictItem[]): Verdict {
 
 const MODUS_LEAD: Record<HouseholdModus, string> = {
   single: "Für dich als Single sind besonders Kosten- und Versorgungsfolgen ohne geteilte Haushaltslast spürbar.",
-  familie: "Für deine Familie zählt, welche Signale Alltag, Planung und gemeinsame Haushaltskosten berühren.",
+  familie: "Für deine Familie zählt, welche Signale Alltag, Planung und gemeinsame Haushaltskosten betreffen können.",
   selbststaendig: "Für dich als Selbstständige(n) greifen Haushalts- und Arbeitsrisiken oft ineinander.",
   rentner: "Für dich zählen planbare Kosten, verlässliche Versorgung und stabile Routinen.",
 };
