@@ -7,6 +7,9 @@ class Settings(BaseSettings):
 
     GOOGLE_CLOUD_PROJECT: str = ""
     VERTEX_AI_LOCATION: str = "europe-west3"
+    GEMINI_MODEL_ID: str = "gemini-flash-latest"
+    WACHSAM_RESEARCH_AGENT_ENABLED: bool = False
+    WACHSAM_RESEARCH_AGENT_MIN_EVIDENCE_CHARS: int = 600
 
     DESTATIS_USERNAME: str = ""
     DESTATIS_PASSWORD: str = ""

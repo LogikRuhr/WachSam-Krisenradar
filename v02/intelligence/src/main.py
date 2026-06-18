@@ -29,6 +29,8 @@ from .adapters.warning_indicators import WarningIndicatorsAdapter
 from .crawler.rss_crawler import RSSCrawler
 from .fetchers.article_fetcher import ArticleFetcher
 from .extractors.llm_extractor import extract_with_llm, reset_llm_runtime_state
+from .research_agent.agent import extract_with_research_agent
+from .config import settings
 from .db import insert_draft, set_dry_run, fetch_indicator_thresholds, upsert_source_health
 from .validation import validate_draft
 from .gate import evaluate_plausibility, source_error_verdict, build_shadow_log
@@ -162,11 +164,26 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
                     continue
 
                 evidence_text = evidence.raw_text or evidence.excerpt
-                extracted = await extract_with_llm(
-                    evidence_text,
-                    raw.source_url,
-                    raw.source_class,
-                )
+                if settings.WACHSAM_RESEARCH_AGENT_ENABLED:
+                    agent_result = await extract_with_research_agent(
+                        evidence_text,
+                        raw.source_url,
+                        raw.source_class,
+                    )
+                    if agent_result.item:
+                        extracted = agent_result.item
+                    else:
+                        print(
+                            "  [AGENT] Rejected: "
+                            f"{agent_result.rejection_reason} — {raw.source_url}"
+                        )
+                        continue
+                else:
+                    extracted = await extract_with_llm(
+                        evidence_text,
+                        raw.source_url,
+                        raw.source_class,
+                    )
                 if extracted:
                     items.append(extracted)
                     print(f"  [LLM] Extrahiert: {extracted.title}")

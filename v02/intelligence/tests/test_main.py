@@ -385,6 +385,69 @@ def test_rss_items_use_article_evidence_before_llm(monkeypatch):
     assert inserted[0][1] == "lagebild_items"
 
 
+def test_rss_items_use_research_agent_when_feature_flag_enabled(monkeypatch):
+    raw = _lagebild_item()
+
+    class FakeCrawler:
+        def fetch_all(self):
+            return [raw]
+
+    class FakeArticleFetcher:
+        def fetch_article_evidence(self, **kwargs):
+            return SimpleNamespace(
+                evidence_status="evidence_ready",
+                excerpt="Artikel-Excerpt mit belegtem Fakt.",
+                raw_text="Artikel-Body mit belegtem Fakt und zusätzlichem Kontext.",
+                content_hash="abc123",
+            )
+
+    async def fail_llm(*_args):
+        raise AssertionError("legacy LLM path must not run when research agent is enabled")
+
+    async def fake_agent(content, source_url, source_class):
+        assert content == "Artikel-Body mit belegtem Fakt und zusätzlichem Kontext."
+        item = IngestionItem(
+            title="Agent-Draft",
+            description="Vom Agent-Pfad geprüft.",
+            source_url=source_url,
+            source_class=source_class,
+            last_ingested_at=datetime.utcnow(),
+            germany_relevance=GermanyRelevance(
+                direct=True,
+                systems_affected=["gesellschaft"],
+                time_to_impact="wochen",
+                description="Evidence-basierte Einordnung.",
+            ),
+            methodology_tag="steep",
+            affected_systems=["gesellschaft"],
+            raw_content=content,
+            status="extracted",
+        )
+        return SimpleNamespace(
+            item=item,
+            evidence_quality="medium",
+            rejection_reason=None,
+            source_claims=["Artikel-Body mit belegtem Fakt und zusätzlichem Kontext."],
+        )
+
+    for attr in _ALL_ADAPTER_ATTRS:
+        monkeypatch.setattr(main, attr, EmptyAdapter)
+    monkeypatch.setattr(main, "RSSCrawler", FakeCrawler)
+    monkeypatch.setattr(main, "ArticleFetcher", FakeArticleFetcher)
+    monkeypatch.setattr(main, "extract_with_llm", fail_llm)
+    monkeypatch.setattr(main, "extract_with_research_agent", fake_agent)
+    monkeypatch.setattr(main.settings, "WACHSAM_RESEARCH_AGENT_ENABLED", True)
+
+    inserted = []
+    monkeypatch.setattr(main, "insert_draft", lambda item, item_type: inserted.append((item, item_type)) or "draft")
+
+    asyncio.run(main.run_ingestion())
+
+    assert len(inserted) == 1
+    assert inserted[0][0].title == "Agent-Draft"
+    assert inserted[0][1] == "lagebild_items"
+
+
 def test_run_ingestion_persists_source_health_when_path_is_explicit(monkeypatch, tmp_path):
     item = _bnetza_item()
 

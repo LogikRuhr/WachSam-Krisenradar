@@ -63,3 +63,42 @@ Quelltext/Excerpt:
 {raw_content[:3000]}
 
 Erstelle eine strukturierte WachSam-Analyse als JSON. Nutze nur den Quelltext/Excerpt als Faktengrundlage."""
+
+
+EXTRACTION_RESPONSE_SCHEMA = {
+    "type": "object",
+    "required": [
+        "title",
+        "description",
+        "germany_relevance",
+        "methodology_tag",
+        "severity_suggestion",
+        "confidence_suggestion",
+        "possible_cascades",
+        "haushalts_auswirkungen",
+        "buergermassnahmen",
+    ],
+    "properties": {
+        "title": {"type": "string"},
+        "description": {"type": "string"},
+        "germany_relevance": {
+            "type": "object",
+            "required": ["direct", "systems_affected", "time_to_impact", "description"],
+            "properties": {
+                "direct": {"type": "boolean"},
+                "systems_affected": {
+                    "type": "array",
+                    "items": {"type": "string", "enum": list(SYSTEM_AFFECTED_VALUES)},
+                },
+                "time_to_impact": {"type": "string", "enum": list(TIME_TO_IMPACT_VALUES)},
+                "description": {"type": "string"},
+            },
+        },
+        "methodology_tag": {"type": "string", "enum": list(METHODOLOGY_TAG_VALUES)},
+        "severity_suggestion": {"type": "string", "enum": list(SEVERITY_SUGGESTION_VALUES)},
+        "confidence_suggestion": {"type": "string", "enum": list(CONFIDENCE_SUGGESTION_VALUES)},
+        "possible_cascades": {"type": "array", "items": {"type": "string"}},
+        "haushalts_auswirkungen": {"type": "array", "items": {"type": "string"}},
+        "buergermassnahmen": {"type": "array", "items": {"type": "string"}},
+    },
+}

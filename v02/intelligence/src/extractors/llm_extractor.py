@@ -6,8 +6,6 @@ import re
 from datetime import datetime
 from typing import Optional
 
-from google.api_core.exceptions import ResourceExhausted
-
 from ..models import (
     CONFIDENCE_SUGGESTION_VALUES,
     IngestionItem,
@@ -18,7 +16,7 @@ from ..models import (
     TIME_TO_IMPACT_VALUES,
 )
 from ..config import settings
-from .prompts import SYSTEM_PROMPT, build_extraction_prompt
+from .prompts import EXTRACTION_RESPONSE_SCHEMA, SYSTEM_PROMPT, build_extraction_prompt
 
 
 logger = logging.getLogger(__name__)
@@ -111,13 +109,45 @@ def _validate_llm_payload(data: dict, source_url: str) -> bool:
     return False
 
 
-def _init_vertex():
-    import vertexai
+def _create_genai_client():
+    from google import genai
 
-    vertexai.init(
+    return genai.Client(
+        vertexai=True,
         project=settings.GOOGLE_CLOUD_PROJECT,
         location=settings.VERTEX_AI_LOCATION,
     )
+
+
+def _create_generate_config():
+    from google.genai import types
+
+    return types.GenerateContentConfig(
+        system_instruction=SYSTEM_PROMPT,
+        response_mime_type="application/json",
+        response_json_schema=EXTRACTION_RESPONSE_SCHEMA,
+        temperature=0.2,
+    )
+
+
+def _is_quota_error(error: Exception) -> bool:
+    code = getattr(error, "code", None)
+    if code == 429 or str(code) == "429":
+        return True
+    marker = f"{error.__class__.__name__} {error}".lower()
+    return "resourceexhausted" in marker or "resource exhausted" in marker or "quota" in marker
+
+
+def _parse_response_json(response) -> dict:
+    parsed = getattr(response, "parsed", None)
+    if isinstance(parsed, dict):
+        return parsed
+
+    text = str(getattr(response, "text", "")).strip()
+    if text.startswith("```"):
+        match = re.search(r"\{.*\}", text, re.DOTALL)
+        text = match.group(0) if match else text
+    return json.loads(text)
 
 
 async def extract_with_llm(
@@ -140,21 +170,21 @@ async def extract_with_llm(
         return None
 
     try:
-        _init_vertex()
-        from vertexai.generative_models import GenerativeModel
-
-        model = GenerativeModel(
-            "gemini-2.5-flash",
-            system_instruction=SYSTEM_PROMPT,
-        )
-
+        client = _create_genai_client()
+        config = _create_generate_config()
         prompt = build_extraction_prompt(raw_content, source_url)
         response = None
         for attempt in range(1, MAX_LLM_ATTEMPTS + 1):
             try:
-                response = model.generate_content(prompt)
+                response = client.models.generate_content(
+                    model=settings.GEMINI_MODEL_ID,
+                    contents=prompt,
+                    config=config,
+                )
                 break
-            except ResourceExhausted as e:
+            except Exception as e:
+                if not _is_quota_error(e):
+                    raise
                 if attempt >= MAX_LLM_ATTEMPTS:
                     logger.warning(
                         "LLM unavailable after retries",
@@ -174,13 +204,7 @@ async def extract_with_llm(
         if response is None:
             return None
 
-        text = response.text.strip()
-
-        if text.startswith("```"):
-            match = re.search(r"\{.*\}", text, re.DOTALL)
-            text = match.group(0) if match else text
-
-        data = json.loads(text)
+        data = _parse_response_json(response)
         if not _validate_llm_payload(data, source_url):
             return None
 
