@@ -27,7 +27,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Ungültige Herkunft." }, { status: 403 });
   }
 
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  // Hinter dem eigenen Reverse-Proxy ist x-real-ip bzw. der RECHTESTE (vom Proxy
+  // gesetzte) x-forwarded-for-Eintrag vertrauenswürdiger als der linkeste, den der
+  // Client frei setzen kann — sonst ließe sich das Rate-Limit per fake-IP umgehen.
+  const forwarded = request.headers.get("x-forwarded-for");
+  const rightmostForwarded = forwarded?.split(",").map((part) => part.trim()).filter(Boolean).at(-1);
+  const ip = request.headers.get("x-real-ip")?.trim() || rightmostForwarded || "unknown";
   if (!limiter.check(ip).allowed) {
     return NextResponse.json(
       { ok: false, error: "Zu viele Anfragen. Bitte versuche es später erneut." },
