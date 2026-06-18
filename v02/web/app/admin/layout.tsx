@@ -14,6 +14,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     <main className="page-shell admin-shell">
       <nav className="admin-nav" aria-label="Admin Navigation">
         <Link href="/admin">Übersicht</Link>
+        <Link href="/admin/feedback">Feedback</Link>
         <Link href="/admin/audit">Audit</Link>
       </nav>
       {children}
