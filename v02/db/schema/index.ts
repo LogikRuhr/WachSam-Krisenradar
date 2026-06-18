@@ -38,6 +38,7 @@ export const sourceHealthStatusEnum = pgEnum("source_health_status", [
 ]);
 export const evidenceType = pgEnum("evidence_type", ["fakt", "schaetzung", "annahme", "bewertung"]);
 export const cascadeIndicatorRole = pgEnum("cascade_indicator_role", ["driver", "affected"]);
+export const feedbackCategoryEnum = pgEnum("feedback_category", ["lob", "problem", "idee", "datenfehler", "sonstiges"]);
 
 const createdAt = timestamp("created_at", { withTimezone: true }).defaultNow().notNull();
 const updatedAt = timestamp("updated_at", { withTimezone: true }).defaultNow().notNull();
@@ -491,3 +492,19 @@ export const cascadeIndicatorLinksRelations = relations(cascadeIndicatorLinks, (
     references: [indicators.id],
   }),
 }));
+
+/**
+ * In-App-Feedback der Bürger:innen. Anonym erlaubt (userId nullable, set null
+ * beim Löschen des Kontos); contactEmail rein freiwillig. Kein IP-/Tracking-Feld —
+ * DSGVO-minimal. Auswertung über das Editorial-CMS (editor/admin).
+ */
+export const feedback = pgTable("feedback", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+  category: feedbackCategoryEnum("category").notNull().default("sonstiges"),
+  message: text("message").notNull(),
+  pagePath: text("page_path"),
+  rating: integer("rating"),
+  contactEmail: text("contact_email"),
+  createdAt,
+});

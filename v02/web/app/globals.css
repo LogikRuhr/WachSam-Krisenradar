@@ -482,3 +482,17 @@ strong { color: var(--on-surface); font-weight: 700; }
 @media (max-width: 820px) {
   .cascade-indicator-band { grid-template-columns: 1fr; padding: 18px; }
 }
+
+/* --- Feedback-Widget --- */
+.feedback-widget { max-width: 720px; margin: 0 auto; padding: 8px 24px 28px; }
+.feedback-summary { display: inline-flex; cursor: pointer; border: 1px solid var(--outline); border-radius: 4px; background: var(--surface-container); padding: 10px 16px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); }
+.feedback-summary:hover { border-color: var(--primary); }
+.feedback-panel { margin-top: 12px; border: 1px solid var(--outline); border-left: 3px solid var(--primary); border-radius: 0 4px 4px 0; background: var(--surface-container); padding: 20px; }
+.feedback-form { display: grid; gap: 4px; }
+.feedback-form label { margin-top: 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--on-surface-variant); }
+.feedback-form textarea { resize: vertical; }
+.feedback-form .btn-primary { margin-top: 14px; }
+.feedback-hint { margin: 10px 0 0; font-size: 11px; letter-spacing: .03em; text-transform: none; line-height: 1.5; }
+.feedback-success { color: var(--success); margin: 0; }
+.feedback-error { color: var(--critical); margin: 8px 0 0; }
+.feedback-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }

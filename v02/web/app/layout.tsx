@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Bebas_Neue, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { TopNav } from "@/components/TopNav";
 import { Footer } from "@/components/Footer";
+import { FeedbackWidget } from "@/components/FeedbackWidget";
 import "./globals.css";
 
 const display = Bebas_Neue({ subsets: ["latin"], weight: "400", variable: "--font-display" });
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="font-sans">
         <TopNav />
         {children}
+        <FeedbackWidget />
         <Footer />
       </body>
     </html>
