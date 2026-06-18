@@ -336,6 +336,38 @@ export async function getSourceTrustLayer() {
   return { ...state, rows: Array.from(byUrl.values()) };
 }
 
+export type SourceHealthPublic = {
+  sourceName: string;
+  target: string;
+  status: string;
+  lastSuccessAt: Date | null;
+  lastCheckedAt: Date;
+  itemCount: number;
+  errorCount: number;
+};
+
+/**
+ * Öffentliche Datenaktualitäts-Übersicht aus source_health. Bewusst OHNE rohe
+ * errorMessages (können interne Details/URLs enthalten) — nur Status, Stand und
+ * Trefferzahl. Für die /status-Transparenzseite.
+ */
+export async function getSourceHealthOverview(): Promise<DbState<SourceHealthPublic>> {
+  return safe(() =>
+    database()!
+      .select({
+        sourceName: schema.sourceHealth.sourceName,
+        target: schema.sourceHealth.target,
+        status: schema.sourceHealth.status,
+        lastSuccessAt: schema.sourceHealth.lastSuccessAt,
+        lastCheckedAt: schema.sourceHealth.lastCheckedAt,
+        itemCount: schema.sourceHealth.itemCount,
+        errorCount: schema.sourceHealth.errorCount,
+      })
+      .from(schema.sourceHealth)
+      .orderBy(asc(schema.sourceHealth.sourceName)),
+  );
+}
+
 export async function getHeroLagebild() {
   const lagebild = await getLagebildItems();
   return { ...lagebild, rows: lagebild.rows.slice(0, 1) };
