@@ -61,6 +61,37 @@ async function attachSources<T extends { id: string }>(itemType: SourceRow["item
   }));
 }
 
+const SPARKLINE_LIMIT = 16;
+
+/**
+ * Hängt je Indikator-Row die jüngsten Beobachtungswerte als `sparkline` an
+ * (chronologisch alt→neu, max. SPARKLINE_LIMIT). Eine einzige Query über alle
+ * IDs; nicht-numerische Werte werden verworfen. Der Headline-Satz ist klein
+ * (wenige Indikatoren), daher genügt slice() statt Window-Function.
+ */
+async function attachSparklines<T extends { id: string }>(rows: T[]): Promise<(T & { sparkline: number[] })[]> {
+  const activeDb = database();
+  if (!activeDb || rows.length === 0) return rows.map((row) => ({ ...row, sparkline: [] }));
+  const ids = rows.map((row) => row.id);
+  const observations = await activeDb
+    .select({
+      indicatorId: schema.indicatorObservations.indicatorId,
+      value: schema.indicatorObservations.value,
+    })
+    .from(schema.indicatorObservations)
+    .where(inArray(schema.indicatorObservations.indicatorId, ids))
+    .orderBy(asc(schema.indicatorObservations.indicatorId), asc(schema.indicatorObservations.observedAt));
+  const byId = new Map<string, number[]>();
+  for (const obs of observations) {
+    const value = Number(obs.value);
+    if (!Number.isFinite(value)) continue;
+    const series = byId.get(obs.indicatorId) ?? [];
+    series.push(value);
+    byId.set(obs.indicatorId, series);
+  }
+  return rows.map((row) => ({ ...row, sparkline: (byId.get(row.id) ?? []).slice(-SPARKLINE_LIMIT) }));
+}
+
 type ParentTable = PgTable & { id: AnyPgColumn; editorialStatus: AnyPgColumn };
 
 // item_sources zeigt polymorph (itemType:itemId) auf das Parent-Item und trägt selbst
@@ -305,7 +336,30 @@ export async function getHeadlineVitals() {
       .where(and(eq(schema.indicators.editorialStatus, PUBLISHED), isNotNull(schema.indicators.headlineTier)))
       .orderBy(asc(schema.indicators.headlineTier)),
   );
-  return { ...state, rows: await attachSources("indicator", state.rows) };
+  const withSources = await attachSources("indicator", state.rows);
+  return { ...state, rows: await attachSparklines(withSources) };
+}
+
+export type IndicatorObservation = { observedAt: Date; value: number };
+
+/**
+ * Zeitreihe eines Indikators (chronologisch alt→neu, max. `limit` jüngste) für
+ * die Detail-Sparkline. Wird nur für bereits als publiziert bestätigte Indikatoren
+ * aufgerufen (siehe getIndicatorById) — kein Leak unpublizierter Werte.
+ */
+export async function getIndicatorObservations(indicatorId: string, limit = 60): Promise<DbState<IndicatorObservation>> {
+  const state = await safe(() =>
+    database()!
+      .select({ observedAt: schema.indicatorObservations.observedAt, value: schema.indicatorObservations.value })
+      .from(schema.indicatorObservations)
+      .where(eq(schema.indicatorObservations.indicatorId, indicatorId))
+      .orderBy(asc(schema.indicatorObservations.observedAt)),
+  );
+  const rows = state.rows
+    .map((row) => ({ observedAt: row.observedAt, value: Number(row.value) }))
+    .filter((row) => Number.isFinite(row.value))
+    .slice(-limit);
+  return { ...state, rows };
 }
 
 /** Neuester publizierter Gesamtstand Deutschland. */
