@@ -1,10 +1,10 @@
 import { modusLead } from "@/lib/personalization";
 import type { HouseholdModus } from "@/lib/profile";
 
-/** Vier Haushalts-Personas (= bestehende Modi). Nutzen-Satz aus modusLead, damit
- * Persona-Board und personalisierte Notizen dieselbe Quelle nutzen und nicht
+/** Vier Haushaltsmodi. Nutzen-Satz aus modusLead, damit
+ * Modus-Board und personalisierte Notizen dieselbe Quelle nutzen und nicht
  * auseinanderdriften. */
-const PERSONAS: { modus: HouseholdModus; label: string }[] = [
+const MODUS_OPTIONS: { modus: HouseholdModus; label: string }[] = [
   { modus: "single", label: "Single" },
   { modus: "familie", label: "Familie" },
   { modus: "selbststaendig", label: "Selbstständige" },
@@ -28,15 +28,15 @@ export function NutzenBoard({ activeModus }: { activeModus?: HouseholdModus | nu
         </p>
       </div>
       <ul className="nutzen-list" role="list">
-        {PERSONAS.map((persona) => {
-          const active = activeModus === persona.modus;
+        {MODUS_OPTIONS.map((modusOption) => {
+          const active = activeModus === modusOption.modus;
           return (
-            <li key={persona.modus} className={`nutzen-card${active ? " nutzen-card-active" : ""}`}>
-              <p className="mono-label nutzen-persona">
-                {persona.label}
+            <li key={modusOption.modus} className={`nutzen-card${active ? " nutzen-card-active" : ""}`}>
+              <p className="mono-label nutzen-modus">
+                {modusOption.label}
                 {active ? " · dein Profil" : ""}
               </p>
-              <p className="nutzen-value">{modusLead(persona.modus)}</p>
+              <p className="nutzen-value">{modusLead(modusOption.modus)}</p>
             </li>
           );
         })}

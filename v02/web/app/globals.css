@@ -482,7 +482,7 @@ strong { color: var(--on-surface); font-weight: 700; }
 .nutzen-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
 .nutzen-card { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--outline); border-left: 3px solid var(--outline); border-radius: 0 4px 4px 0; background: var(--surface-container); padding: 16px; }
 .nutzen-card-active { border-left-color: var(--primary); }
-.nutzen-persona { font-size: 11px; color: var(--primary); }
+.nutzen-modus { font-size: 11px; color: var(--primary); }
 .nutzen-value { margin: 0; font-size: 14px; line-height: 1.45; color: var(--on-surface); }
 .nutzen-scope { margin: 0; font-size: 11px; letter-spacing: .04em; text-transform: none; line-height: 1.5; color: var(--on-surface-variant); }
 
