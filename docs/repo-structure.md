@@ -1,67 +1,62 @@
 # Repo Structure
 
-WachSam folgt ab v0.1 einem kleinen, klaren Repo-Kern. Referenz fuer die Strukturdisziplin sind `browser-use/browser-use` und `browser-use/browser-harness`: wenige Top-Level-Bereiche, klare Trennung zwischen Produktcode, Doku, Ops, Agent-Artefakten und lokalen Experimenten.
+WachSam hat eine aktive Arbeitsbasis: `v02/`. Historische v0.1/v0.2-/Cutover-Texte sind Kontext, aber keine aktuelle Runtime- oder Arbeitsanweisung.
 
-## Top-Level-Bereiche
+## Aktive Top-Level-Bereiche
 
 | Pfad | Zweck | Tracking-Regel |
 |---|---|---|
-| `v01/` | Statische WachSam-Webapp: Vite, React, TypeScript, Tailwind, Seed-Daten, Tests; eingefroren als Static-Reference ab W0-Closeout (2026-05-22) | aktiv getrackt, **edits gesperrt** (siehe `v01/FROZEN.md`, ADR-037) |
-| `v02/` | Backend-Webapp (Next.js 15, Postgres 16, Drizzle, Auth.js v5, Resend), ab W1.1 | aktiv getrackt ab W1.1 |
-| `v02/web/` | Next.js-App-Router-Frontend in TypeScript | aktiv getrackt ab W1.1 |
-| `v02/db/` | Drizzle-Schema und Migrationsdateien | aktiv getrackt ab W1.1 |
-| `v02/infra/` | Docker-Compose und IONOS-VPS-Deploy-Artefakte | aktiv getrackt ab W1.1 |
-| `v02/ingest-py/` | Python-Scrapy-Live-Ingestion-Adapter (ab W2) | aktiv getrackt ab W2 |
-| `v02/intelligence/` | Intelligence-Pipeline: Python-Adapter, LLM-Extractor, Pydantic-Models (ADR-039, ab W2.1) | aktiv getrackt ab W2.1 |
-| `intelligence/` | Intelligence-Specs: Rollen, Prompts, Templates, Output-Schema, Architektur-Konzept | aktiv getrackt |
-| `docs/` | Produkt-, Methodik-, Brand-, UI-, Deploy- und Workflow-Doku | aktiv getrackt |
-| `docs/adr/` | Architekturentscheidungen | aktiv getrackt |
-| `specs/` | Wellen- und Feature-Vertraege | aktiv getrackt |
-| `rules/` | Operative Regeln fuer Agenten und Workflows | aktiv getrackt |
-| `references/` | Nicht-normative Analysen und Referenzen | nur wenn aktuell relevant |
-| `scripts/` | Repo-weite Verify-, Smoke-, Deploy- und Session-Helfer | aktiv getrackt |
-| `infra/ionos/` | IONOS-Static-Deploy-Artefakte und Runbooks | aktiv getrackt |
-| `ops/hermes-lite/` | experimentelle lokale Operations-Lesesicht | getrackt, aber keine Produkt-Runtime |
+| `v02/` | aktiver Produktcode | aktiv getrackt |
+| `v02/web/` | Next.js 15 App Router, Public UI, Auth, Admin/UI | aktiv getrackt |
+| `v02/db/` | Drizzle-Schema, Migrations und Seed-Daten | aktiv getrackt |
+| `v02/intelligence/` | Python-Adapter, Source Health, Evidence-first Intelligence | aktiv getrackt |
+| `v02/infra/` | Docker-/Runtime-Artefakte für WachSam | aktiv getrackt |
+| `docs/` | Produkt-, Methodik-, Brand-, UI-, Workflow- und ADR-Doku | aktiv getrackt |
+| `docs/specs/` | aktuelle Feature-/Implementierungs-Specs | aktiv getrackt |
+| `outputs/` | Markdown-Reports, Audits und Plan-Artefakte | aktiv getrackt, historische Momentaufnahme |
+| `scripts/` | Verify-, Smoke- und Hilfsskripte | aktiv getrackt |
 | `.github/` | CI und GitHub-Workflows | aktiv getrackt |
-| `.remember/` | Session-Handoff und agentenspezifische Briefs | nur freigegebene Brief-Dateien |
-| `outputs/` | explizite Markdown-Reports und Plan-Artefakte | `.md` bevorzugt, HTML lokal/gitignored |
+| `templates/` | wiederverwendbare Vorlagen | aktiv getrackt |
 
-## Verbotene Runtime-Rueckkehr
+## Historische oder lokale Bereiche
 
-Diese Pfade duerfen nicht als aktive Runtime wiederbelebt werden, auch nach dem v0.3-Backend-Pivot:
+| Pfad | Bedeutung |
+|---|---|
+| `v01/` | keine aktuelle Arbeitsbasis; falls in alten Docs erwähnt, historisch lesen |
+| `.remember/` | lokaler Session-/Handoff-Kontext; nicht als Produktcode behandeln |
+| `.superpowers/` | lokale Experimente/Mockups; nicht als aktuelle Produktweisung behandeln |
+| `.playwright-mcp/` | lokale Browser-/Tool-Artefakte; nicht als Produktquelle behandeln |
+| `.claude/`, `.codex/`, `.agents/` | lokale Agenten-/Skill-Artefakte, oft gitignored |
+
+## Verbotene Runtime-Rückkehr
+
+Diese Pfade dürfen nicht als neue aktive Runtime wiederbelebt werden:
 
 - Root-`src/`
 - Root-`tests/`
-- `src/db/`, `src/adapters/`, `src/app/`
-- Root-Next.js-, Vercel-, Drizzle-, Auth-, Stripe- oder Cron-Strukturen
-- neue API-, Datenbank- oder Scheduler-Pfade ausserhalb von `v02/` ohne akzeptierte Spec und ADR
+- Root-Next.js-/Drizzle-/Auth-/Cron-Strukturen außerhalb von `v02/`
+- `v01/` als neuer Feature-Ort
 
-Recovery-Quelle fuer alte Dateien ist Git-Historie, nicht lokales Copy-Back.
+Neue Produktarbeit findet in `v02/` statt. Neue Doku, Specs und Reports liegen in `docs/`, `docs/specs/` oder `outputs/`.
 
-**Legitimer Backend-Pfad ab W1.1:** `v02/` (siehe ADR-034 ff.). Alle Backend-, DB-, Auth-, API- und Ingestion-Arbeit findet ausschliesslich dort statt — nicht im Root-`src/` und nicht innerhalb von `v01/`.
+## Aktuelle Produktwahrheit
 
-## Lokale Artefakte
+Bei widersprüchlicher Doku gilt:
 
-Nicht getrackt werden:
-
-- `.superpowers/`
-- `.codex/`
-- `.playwright-mcp/`
-- `node_modules/`
-- `outputs/**/*.html`
-- PII- oder maschinenspezifische Dateien unter `outputs/`
-
-Wenn ein visuelles Mockup dauerhaft wichtig ist, wird es als kurzer Markdown-Report mit Link/Quelle dokumentiert. Roh-HTML bleibt lokal.
+1. `docs/product-current.md`
+2. `.remember/next-session-brief.md`
+3. `AGENTS.md`
+4. aktuelle `v02/`-Struktur
+5. ältere ADRs, Outputs und v0.1/v0.2-Texte nur historisch
 
 ## Repo-Gesundheitscheck
 
-Vor jeder Cleanup- oder Struktur-Welle:
+Vor Cleanup- oder Struktur-Wellen:
 
 ```bash
-git status -sb --untracked-files=all
+git status --short --branch --untracked-files=all
 git ls-files -o --exclude-standard
 git ls-files -m
-gh issue list --state open --limit 100
 ```
 
 Vor Abschluss:

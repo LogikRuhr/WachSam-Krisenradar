@@ -86,39 +86,22 @@ Pflicht-Read am Session-Start, zusätzlich zur kanonischen Doku:
 
 Codex schreibt am Session-Ende ausschließlich den eigenen `codex-session.md`, niemals `claude-session.md`. Geteilter `next-session-brief.md` wird durch denjenigen Agent gepflegt, der die abschließende Welle gefahren hat. Vertrag: `specs/04-shared-operational-surface.md`.
 
-## Aktiver Stack — v0.3 (Bau ab W1.1)
+## Aktiver Stack
 
-Backend-Webapp unter `v02/` (parallel zu `v01/`, Hard-Cutover sobald W1.7 ready):
+Aktive Arbeitsbasis ist `v02/`. Alte v0.1/v0.2- und Cutover-Texte sind historischer Kontext und dürfen neue Arbeit nicht steuern.
 
-- Next.js 15 (App Router, TypeScript strict)
-- Postgres 16 + Drizzle ORM
-- Auth.js v5 (Sessions, Magic-Link via Resend)
-- Editorial-Layer für kuratierte Inhalte
-- Live-Ingestion in Python + Scrapy (ab W2)
-- Intelligence-Pipeline: Vertex AI Gemini + Python-Adapter unter `v02/intelligence/` (ab W2.1, ADR-039)
-- Docker-Compose auf IONOS-VPS
+- `v02/web/` — Next.js 15 App Router, TypeScript strict, Public UI, Auth, Admin/UI
+- `v02/db/` — Postgres 16 + Drizzle ORM, Schema, Migrations, Seed-Daten
+- `v02/intelligence/` — Python-Adapter, Source Health, Evidence-first Intelligence, Vertex AI/Gemini-gestützte Extraktion mit Editorial-Gate
+- `v02/infra/` — Docker-/Runtime-Artefakte für den IONOS-VPS
 
-`v01/` wird post-W0 als Static-Reference eingefroren (nicht gelöscht, nicht weiterentwickelt). Verbindliche Architekturentscheidungen: ADR-034 (Pivot), ADR-035 (Postgres), ADR-036 (Stack TS+Python), ADR-037 (Cutover), ADR-038 (Ingestion), ADR-039 (Intelligence Core).
-
-## Static-Reference Stack — v0.1 (frozen post-W0)
-
-Statische Webapp unter `v01/`, eingefroren seit Welle W0 (2026-05-22). Läuft produktiv bis Hard-Cutover (W1.7), aber keine Feature-Entwicklung mehr:
-
-- Vite 6
-- React 19
-- TypeScript 5.x (strict)
-- Tailwind CSS 4 (CSS-first config über `@theme`-Block in `v01/src/index.css`)
-- Lokale TypeScript-Seed-Daten in `v01/src/data/`
-
-Es gibt **kein Backend, keine Datenbank, keine APIs und keine Cron-Pipeline** in v0.1. Deploy ist statisch über IONOS/GitHub Actions (`workflow_dispatch`) dokumentiert in `docs/deploy.md`.
-
-> **Hinweis:** v0.3 (ab W0/W1.1, 2026-05-22) wechselt diese Architektur — siehe ADR-034 ff. und die `## v0.3-Hinweis`-Sektion am Ende dieser Datei.
+Aktuelle Produktwahrheit steht in `docs/product-current.md`. Bei Widerspruch gilt: `docs/product-current.md` vor älteren ADRs, Outputs oder v0.1/v0.2-Texten.
 
 ## Pflichtregeln
 
 1. **Plan vor Code.** Vor jedem Edit File-Liste mit ADD/CHANGE/DELETE zeigen und auf Freigabe warten.
 2. **Kleine Scopes.** Eine Aufgabe pro Commit. Kein App-weiter Refactor ohne Freigabe.
-3. **Keine Mockdaten, keine erfundenen Quellen.** Jedes Item in `v01/src/data/` führt eine echte URL und einen Stand.
+3. **Keine Mockdaten, keine erfundenen Quellen.** Public Content in `v02` braucht eine echte Quelle, Stand-Datum und passende Editorial-/Evidence-Gates.
 4. **Verify vor "fertig"-Claim.** `scripts/verify.sh` ist das primäre Verify-Gate; Typecheck, Build und Tests sind mandatory. UI-Änderungen zusätzlich im Browser prüfen.
 5. **Blocker melden statt erfinden.** Wenn Daten oder Quellen fehlen: stoppen, nicht raten.
 6. **`git add` mit expliziten Pfaden.** Nie `git add -A` oder `git add .`.
@@ -173,26 +156,13 @@ Sub-Agents nur einsetzen, wenn der Hauptkontext sonst gesprengt würde. Default:
 - Vor Commit: `git status --short`, `git diff --staged --name-only` und `git diff --staged --stat` zeigen, auf Freigabe warten.
 - Nie `--no-verify`, nie Force-Push ohne explizite Freigabe. Force-Push auf `main` erfordert eine kontrollierte Welle mit Backup-Snapshot, kurzem `allow_force_pushes`-Toggle und sofortigem Re-Lock; ausschließlich `--force-with-lease` mit explizitem Lease-SHA.
 
-## v0.3-Hinweis — Backend-Pivot ab W0 (2026-05-22)
+## Aktuelle Arbeitsbasis — v02
 
-Mit Welle W0 (Doku-Vorbereitung) und Welle W1.1+ (Implementation) wechselt WachSam vom statischen v0.1-Stack zu einem Backend-Stack unter `v02/`. Bindende ADRs:
+WachSam arbeitet heute aus `v02/`. Der frühere Backend-Pivot und v01/v02-Cutover sind historischer Kontext. Für neue Arbeit gelten:
 
-- `docs/adr/034-backend-pivot.md` — Pivot-Entscheidung und Begründung
-- `docs/adr/035-postgres-choice.md` — Postgres 16 als Primärspeicher
-- `docs/adr/036-stack-ts-python.md` — Next.js 15 + Python-Ingestion
-- `docs/adr/037-cutover-strategy.md` — v01→v02 Hard-Cutover-Plan
-- `docs/adr/038-ingestion-architecture.md` — Live-Ingestion mit Scrapy
-- `docs/adr/039-intelligence-core.md` — LLM-gestützte Signalanalyse mit Editorial-Gate
+- Produktwahrheit: `docs/product-current.md`
+- Repo-Struktur: `docs/repo-structure.md`
+- Produktlogik: `docs/product.md` und `docs/methodology.md`
+- Verify: `docs/verification.md`, `bash scripts/verify.sh`, `cd v02 && pnpm run verify`
 
-Updated SoT- und Workflow-Files mit v0.3-Sektionen:
-
-- `docs/product.md` — Backend-Funktionsumfang
-- `docs/methodology.md` — Live-Ingestion-Methodik
-- `docs/brand.md` — Backend-UX-Token
-- `docs/ui-standard.md` — Authentifizierte Routen und Editorial-Patterns
-- `docs/agent-workflow.md` — Backend-Pivot-Workflow
-- `docs/repo-structure.md` — `v02/`-Layout
-- `docs/verification.md` — DB-Migration- und Auth-Smoke
-- `docs/testing.md` — Integration-Tests mit Postgres-Container
-
-`v01/` bleibt als Static-Reference eingefroren bis Hard-Cutover (W1.7).
+Neue Produktfeatures gehören nach `v02/`, nicht in historische oder Root-Runtime-Pfade.
