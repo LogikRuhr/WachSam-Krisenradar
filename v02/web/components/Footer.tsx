@@ -13,6 +13,9 @@ export function Footer() {
           </p>
         </div>
         <nav className="site-footer-links">
+          <Link href="/status">
+            Status
+          </Link>
           <Link href="/impressum">
             Impressum
           </Link>
