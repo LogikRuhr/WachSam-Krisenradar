@@ -6,7 +6,19 @@ fail() {
   exit 1
 }
 
-test -d .git || fail "not a git repository"
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1 && [ -f .git ]; then
+  gitdir=$(sed -n 's/^gitdir: //p' .git)
+  case "$gitdir" in
+    [A-Za-z]:/*)
+      drive=$(printf '%s' "$gitdir" | cut -c1 | tr '[:upper:]' '[:lower:]')
+      rest=$(printf '%s' "$gitdir" | cut -c3-)
+      export GIT_DIR="/mnt/$drive$rest"
+      export GIT_WORK_TREE="$(pwd -P)"
+      ;;
+  esac
+fi
+
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 || fail "not a git repository"
 
 if ! find . -path ./.git -prune -o -name '*.md' -type f -print -quit | grep -q .; then
   fail "no Markdown documentation found"

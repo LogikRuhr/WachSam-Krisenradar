@@ -7,10 +7,11 @@ import { MethodikHinweis } from "@/components/MethodikHinweis";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { SourcePills } from "@/components/SourcePill";
+import { Sparkline } from "@/components/Sparkline";
 import { ThresholdBar } from "@/components/ThresholdBar";
 import { computeInjectionPeriod, computeZone } from "@/lib/indicator-zones";
 import type { ScaleDirection } from "@/lib/indicator-zones";
-import { getIndicatorById, getItemSources } from "@/lib/public-data";
+import { getIndicatorById, getIndicatorObservations, getItemSources } from "@/lib/public-data";
 
 const DATE_FMT = new Intl.DateTimeFormat("de-DE", { day: "numeric", month: "long", year: "numeric" });
 
@@ -41,6 +42,9 @@ export default async function IndicatorDetailPage({ params }: PageProps) {
 
   const sourceState = await getItemSources("indicator", id);
   const sources = sourceState.data ?? [];
+
+  const observationState = await getIndicatorObservations(id);
+  const observationSeries = observationState.rows.map((row) => row.value);
 
   const currentVal = data.currentValue ? Number(data.currentValue) : null;
   const warnVal = data.thresholdWarn ? Number(data.thresholdWarn) : null;
@@ -105,6 +109,21 @@ export default async function IndicatorDetailPage({ params }: PageProps) {
                 zoneLabel={zoneResult?.zoneLabel ?? "Unkritisch"}
                 zoneText={zoneResult?.zoneText ?? null}
               />
+            </section>
+          ) : null}
+
+          {/* Verlauf — Trend-Sparkline aus den jüngsten Beobachtungen */}
+          {observationSeries.length >= 2 ? (
+            <section className="detail-panel">
+              <h2 className="detail-title-small">Verlauf</h2>
+              <Sparkline
+                className="detail-sparkline"
+                values={observationSeries}
+                width={240}
+                height={64}
+                ariaLabel={`${data.label}: Verlauf der letzten ${observationSeries.length} Messwerte${data.unit ? ` in ${data.unit}` : ""}`}
+              />
+              <p className="mono-meta">{observationSeries.length} Messwerte · jüngster Stand rechts.</p>
             </section>
           ) : null}
 
