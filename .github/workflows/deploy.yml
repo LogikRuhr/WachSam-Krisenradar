@@ -15,6 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
+      - name: Guard main branch
+        if: ${{ github.ref != 'refs/heads/main' }}
+        run: |
+          echo "::error::deploy-source must be run from main. Selected ref: ${GITHUB_REF_NAME:-$GITHUB_REF}"
+          exit 1
+
       - name: Checkout
         uses: actions/checkout@v6
 
