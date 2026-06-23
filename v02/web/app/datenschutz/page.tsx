@@ -27,7 +27,7 @@ export default function DatenschutzPage() {
             <ul className="mt-2 list-inside list-disc space-y-1">
               <li><strong>E-Mail-Adresse</strong> — für die Anmeldung per Magic-Link (Auth.js v5 via Resend)</li>
               <li><strong>Session-Cookie</strong> — technisch notwendig für die Sitzungsverwaltung, kein Tracking</li>
-              <li><strong>Haushalts-Profil</strong> — anonymisierter Modus (Single/Familie/Selbstständig/Rentner) und PLZ, keine personenbezogenen Scores</li>
+              <li><strong>Haushalts-Profil</strong> — anonymisierter Modus (Single/Familie/Selbstständig/Rentebeziehende) und PLZ, keine personenbezogenen Scores</li>
               <li><strong>Feedback</strong> — frei eingegebener Text sowie optionale Kategorie, Bewertung und freiwillige Kontakt-E-Mail. Bei angemeldeten Nutzern wird das Feedback mit dem Konto verknüpft, sonst anonym gespeichert. Es werden keine IP-Adressen gespeichert.</li>
             </ul>
           </div>

@@ -8,7 +8,7 @@ const modi: Array<{ value: HouseholdModus; label: string }> = [
   { value: "single", label: "Single" },
   { value: "familie", label: "Familie" },
   { value: "selbststaendig", label: "Selbstständig" },
-  { value: "rentner", label: "Rentner" },
+  { value: "rentner", label: "Rentebeziehende" },
 ];
 
 function ModusSwitcherInner() {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DbNotice } from "@/components/DbNotice";
+import { HouseholdCheck } from "@/components/HouseholdCheck";
 import { HomeStorySteps } from "@/components/HomeStorySteps";
 import { MethodikHinweis } from "@/components/MethodikHinweis";
 import { NutzenBoard } from "@/components/NutzenBoard";
@@ -10,6 +11,7 @@ import { VitalsBoard } from "@/components/VitalsBoard";
 import { computeVerdict, personalNote, type Verdict as VerdictData, type VerdictTone } from "@/lib/personalization";
 import { getFrontDoorSignals, getHeadlineVitals, getNationalState } from "@/lib/public-data";
 import { getCurrentUserProfile } from "@/lib/use-user-modus";
+import type { HouseholdCheckChain } from "@/lib/household-check";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +61,33 @@ export default async function HomePage() {
       chain.signal.sources.map((source) => `${source.sourceName}-${source.sourceUrl}`),
     ),
   ).size;
+  const checkChains: HouseholdCheckChain[] = signals.rows.map((chain) => ({
+    signal: {
+      id: chain.signal.id,
+      bereich: chain.signal.bereich,
+      severity: chain.signal.severity,
+      trend: chain.signal.trend,
+      titel: chain.signal.titel,
+      beschreibung: chain.signal.beschreibung,
+    },
+    impact: chain.impact
+      ? {
+          kind: chain.impact.kind,
+          bereich: chain.impact.bereich,
+          titel: chain.impact.titel,
+          beschreibung: chain.impact.beschreibung,
+          confidence: chain.impact.confidence,
+          zeithorizont: chain.impact.zeithorizont,
+        }
+      : null,
+    action: chain.action
+      ? {
+          titel: chain.action.titel,
+          beschreibung: chain.action.beschreibung,
+          aufwand: chain.action.aufwand,
+        }
+      : null,
+  }));
 
   return (
     <main className="page-shell" aria-labelledby="page-title">
@@ -75,6 +104,8 @@ export default async function HomePage() {
           <Link className="text-link" href="/massnahmen">Maßnahmen prüfen</Link>
         </div>
       </section>
+
+      <HouseholdCheck chains={checkChains} connected={signals.connected} />
 
       <HomeStorySteps />
 

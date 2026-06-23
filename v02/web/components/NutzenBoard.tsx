@@ -8,7 +8,7 @@ const MODUS_OPTIONS: { modus: HouseholdModus; label: string }[] = [
   { modus: "single", label: "Single" },
   { modus: "familie", label: "Familie" },
   { modus: "selbststaendig", label: "Selbstständige" },
-  { modus: "rentner", label: "Rentner:innen" },
+  { modus: "rentner", label: "Rentebeziehende" },
 ];
 
 /**
