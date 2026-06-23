@@ -1,14 +1,14 @@
-# Brand — WachSam v0.2
+# Brand — WachSam
 
-> WachSam ist die Krisenradar-Auslegung der RuhrLogik-Identität. Industrial Dark, zivile Lagezentrale für Haushalte — keine Marketing-Optik, kein Trading-Terminal, kein Newsfeed.
+> WachSam ist die Haushaltscheck-Auslegung der RuhrLogik-Identität: ruhig, robust, quellenbasiert und auf konkrete Alltagsentscheidungen in Deutschland ausgerichtet.
 
 ## Identität in einem Satz
 
-Sachlich, robust, nachvollziehbar, deutsch, methodisch erklärt. Dark-First Industrial Konsole mit der RuhrLogik-Marken-DNA als bindende Klammer: anthrazitschwarze Grundfläche, Rost als knapper Akzent, klare technische Raster, reduzierte 4 px-Radien, Bebas Neue für Marke und Lagesignale, IBM Plex Sans für UI und Lesetext, IBM Plex Mono für Daten und Quellen.
+Sachlich, robust, nachvollziehbar und haushaltsnah: WachSam nutzt die Industrial-Dark-DNA von RuhrLogik, damit Kostenrisiken, Versorgungsfragen, Wirkungsketten, Quellenstand und Unsicherheit wie ein ruhiger Prüfstand wirken — nicht wie ein Alarmraum.
 
 ## Verbindlichkeit
 
-Diese Datei ist der Brand-Vertrag für WachSam v0.2. Operationalisierte Detail-Spec liegt in `docs/DESIGN.md` (Layout, Komponenten, Stitch-Prompt-Struktur). Die Single Source für CSS-Tokens und Font-Loading bleibt `v01/src/index.css`. Bei Konflikt zwischen `brand.md`, `DESIGN.md` und `index.css` gilt: `brand.md` führt die strategische Direction, `DESIGN.md` die UX-Operationalisierung, `index.css` den tatsächlichen Code-Zustand. Drift zwischen den dreien ist ein Merge-Blocker.
+Diese Datei ist der Brand-Vertrag für die aktuelle WachSam-Richtung. Produktwahrheit führt `docs/product-current.md`; aktive Arbeitsbasis ist `v02/`. Ältere v0.1/v0.2-Abschnitte bleiben historische Brand- und UI-Herkunft, dürfen aber keine neue Arbeit gegen den Haushaltscheck-Fokus steuern. Bei Konflikt gilt: aktuelle Produktwahrheit vor dieser Brand-Datei, diese Brand-Datei vor älteren Design-/Output-Artefakten.
 
 ## Beziehung zu RuhrLogik
 
@@ -25,17 +25,16 @@ Gemeinsame Atome:
 
 WachSam ist eigenständig durch:
 
-- konsequenten Deutschland-Fokus, keine globale Karte als Selbstzweck
+- konsequenten Deutschland- und Haushaltsfokus
+- Kosten-/Versorgungsfragen als Einstieg statt abstrakter Krisenlage
 - längere Wirkungsketten statt kurzer Schlagwortlogik
 - Quellen- und Methodiktransparenz als Interface-Muster
-- Governance- und Vertrauenslage als ruhige Kontrollschicht
-- Frühwarnindikatoren als statische Schwellenwert-Dokumentation
-- klare Trennung von Public v0.2 und späteren Account-/Live-Funktionen
+- sichtbare Unsicherheit statt scheinbarer Gewissheit
 - methodisches Vokabular (germany_relevance, methodology_tag) als Audit-Spur
 
-## Farbpalette v0.2
+## Farbpalette v0.2-Herkunft
 
-Single Source: `v01/src/index.css` (`@theme`-Block). Brand-Tokens müssen dort gepflegt werden und referenzieren Tailwind v4 via `bg-[var(--color-…)]`.
+Diese Palette beschreibt die Industrial-Dark-DNA, die aus v0.2 in die aktuelle Richtung übernommen wird. Vor Code-Änderungen ist die tatsächliche `v02/`-Implementierung zu prüfen; diese Tabelle allein ist keine Runtime-Quelle.
 
 ### Grundflächen
 
@@ -86,7 +85,7 @@ Keine Hex-Codes in TSX/JSX. Immer Token-Bezug via `bg-[var(--color-…)]` oder T
 
 ## Typografie
 
-Single Source: `v01/src/index.css` (`@font-face`-Blöcke und `@theme`-Block). Font-Files in `v01/public/fonts/`.
+Diese Regeln beschreiben die gewünschte Markenwirkung. Vor Code-Änderungen ist die tatsächliche Font- und Token-Implementierung in `v02/` zu prüfen.
 
 | Ebene | Font | Regel |
 |---|---|---|
@@ -166,20 +165,13 @@ Nicht erlaubt:
 
 `prefers-reduced-motion` ist Pflicht.
 
-## Was die Brand NICHT ist
+## Brand-Guardrails
 
-WachSam v0.2 ist bewusst nicht:
+Die Brand soll wie ein ruhiger Haushalts-Prüfstand wirken: dunkel, präzise, klar gegliedert, quellenbewusst und sparsam akzentuiert. Rost ist Marke und Orientierung, nicht Alarm. Rot bleibt Ausnahme für funktionale Severity, nie Dauerfläche.
 
-- Marketing-Landingpage, Startup-Site, Hero-Marketing, Gradient-Orbs, Glasoptik
-- Trading-Terminal, Bloomberg-Klon, Command-Center-Optik
-- Newsfeed, Newspaper-Redesign, Schlagzeilen-Wording
-- Doomscrolling-Feed, Prepper-Forum, Krisen-Theater
-- Cyberpunk-Optik, Grid-Hintergrund als Selbstzweck
-- Rost-Flächen, Rost-Karten, Rost-Buttons, CTA-Optik
-- pulsierende Animationen, rote Blinker
-- Serif-Headlines, Bebas in Body-Texten
+Zu vermeiden sind Marketing-Landingpage-Optik, Trading-Terminal-Anmutung, Command-Center-Theater, Newsfeed-Schlagzeilen, Doomscrolling, Prepper-Ästhetik, Cyberpunk-Dekor, Rost-Flächen, pulsierende Alarme und Fake-Live-Scanning.
 
-Auch v0.3 bleibt nicht alarmistisch. Live-Daten ändern nichts am Ton: die App zeigt mehr aktuellen Stand, aber kein Dauer-Update-Theater, keine Live-Ticker, keine roten Banner für Routine-Ingestion-Events. Backend-Anbindung erweitert die Auditierbarkeit, nicht die Dramatik.
+Auch mit aktuelleren Daten bleibt WachSam nicht alarmistisch. Mehr Datenstand erhöht Auditierbarkeit und Nutzwert, aber nicht die Dramatik: keine Live-Ticker, keine roten Banner für Routine-Ingestion-Events, keine Realtime-Behauptungen ohne gebaute und geprüfte Grundlage.
 
 ## Bildmaterial
 
@@ -191,25 +183,20 @@ Zwischen Wave 3.5C1 und Wave 8.1 lief die App im Light-Theme: Off-White-Hintergr
 
 Die RuhrLogik-DNA (Rost, Plex Sans, Plex Mono, Strich-Marker, Mono-Labels) bleibt über alle Phasen erhalten.
 
-## Single Source für Code
+## Code-Bezug
 
-- Tokens: `v01/src/index.css` (`@theme`-Block)
-- Font-Loading: `v01/src/index.css` (`@font-face`-Blöcke)
-- Font-Files: `v01/public/fonts/`
-- Preload: `v01/index.html`
-- UX-Operationalisierung: `docs/DESIGN.md` (Layout, Sektionen, Stitch-Prompt)
-- Screen-Inventar: `docs/screens-blueprint.md`
+Aktive Arbeitsbasis ist `v02/`. Ältere `v01/`-Token-, Font- und Screen-Dokumentation beschreibt die Herkunft der Industrial-Dark-DNA, ist aber nicht mehr automatisch Single Source für neue Arbeit. Neue UI-Arbeit muss zuerst gegen `docs/product-current.md`, dann gegen diese Brand-Datei und anschließend gegen die aktuelle `v02/`-Code-Struktur geprüft werden.
 
 ## Änderungsregel
 
 Jede Token-, Font- oder Strukturelement-Änderung erfordert:
 
-1. Update von `v01/src/index.css` (Code-Quelle).
-2. Update dieser Datei (Brand-Vertrag).
-3. Bei UX-Auswirkung: Update von `docs/DESIGN.md`.
+1. Prüfung der aktuellen `v02/`-Implementierung.
+2. Update dieser Datei, wenn die Brand-Regel betroffen ist.
+3. Update der passenden UI-/Design-Doku, wenn das Pattern betroffen ist.
 4. Begründung im Commit-Body.
 
-Inline-Hex in TSX/JSX ist verboten. Wenn eine neue Farbe gebraucht wird: zuerst Token in `@theme`-Block, dann `var(--color-…)` in der Komponente.
+Inline-Hex in TSX/JSX ist verboten. Wenn eine neue Farbe gebraucht wird: zuerst ein passender Token in der aktuellen `v02/`-Tokenquelle, dann `var(--color-…)` oder die etablierte Projektkonvention in der Komponente.
 
 Token-Drift zwischen Code und Doku ist ein Merge-Blocker. Wenn er auftritt, wird vor anderen Arbeiten erst die Sync-Lücke geschlossen.
 

@@ -1,45 +1,34 @@
 # Produkt — WachSam
 
-> WachSam ist ein Deutschland-zentriertes Krisen- und Haushalts-Auswirkungsradar für Bürger, Haushalte und kleine Unternehmen.
+> WachSam ist ein persönlicher Haushalts-Krisencheck für Deutschland.
 >
-> Aktive Produkt-Direction: v0.3-Sektion am Ende (Backend, Editorial-CMS, Live-Ingestion).
+> Leitfrage: Was betrifft meinen Haushalt, was kostet es ungefähr pro Monat, und was kann ich konkret tun?
 
-Die verbindliche Produkt-Definition liegt seit Wave 7.6-1 in den beiden Source-of-Truth-Files `docs/# WachSam.md` und `docs/# WachSam — Logik, Funktion & Metho.md`. Dieses File operationalisiert die SoT für die kanonische Repo-Doku und das v0.1-Implementations-Mapping. Bei Konflikt zwischen Wording in `product.md` und SoT entscheidet die SoT.
+Aktuelle Produktwahrheit: `docs/product-current.md`. Dieses File operationalisiert die ältere Source-of-Truth-Doku für die aktuelle `v02/`-Arbeitsbasis. Historische v0.1/v0.2-/Cutover-Passagen bleiben Kontext, steuern aber keine neue Arbeit, wenn sie der Haushaltscheck-Richtung widersprechen.
 
 ## Kurzbeschreibung
 
-WachSam ist ein Deutschland-zentriertes Krisen- und Auswirkungenradar für Bürger, Haushalte und kleine Unternehmen.
+WachSam übersetzt Krisen, Preisentwicklungen, Infrastrukturprobleme und gesellschaftliche Spannungen in eine konkrete Haushaltsfrage: Welche Belastung ist für Menschen in Deutschland wahrscheinlich relevant, welche Kostenrichtung ist plausibel und welcher nächste Prüfschritt hilft im Alltag?
 
-Die Plattform analysiert globale Krisen, wirtschaftliche Entwicklungen, Infrastrukturprobleme und gesellschaftliche Spannungen darauf, welche konkreten Auswirkungen sie auf Deutschland und den Alltag deutscher Haushalte haben könnten.
+Die Plattform ordnet Signale nicht als Nachrichtenstrom ein, sondern als Wirkungspfad für Haushalte:
 
-WachSam übersetzt komplexe Systemkrisen in verständliche, praktische und alltagsrelevante Einschätzungen:
-
-- Was könnte teurer werden?
-- Welche Systeme geraten unter Druck?
-- Welche Risiken steigen?
-- Wie wahrscheinlich ist das?
-- Was kann man realistisch tun?
+- Was betrifft meinen Haushalt wahrscheinlich?
+- Was kann teurer oder knapper werden?
+- Welche Systeme erklären diese Wirkung?
+- Wie belastbar ist die Einschätzung?
+- Welche ruhige Maßnahme oder Prüfung ist sinnvoll?
 
 ## Vision
 
-WachSam soll komplexe globale Entwicklungen für normale Menschen verständlich machen.
+WachSam soll normalen Menschen helfen, komplexe Entwicklungen als konkrete Alltagsfolgen zu verstehen. Der Einstieg ist nicht die Krise selbst, sondern die Frage nach Haushalt, Kosten, Versorgung, Zeitfenster und Handlungsoption.
 
-Nicht:
+WachSam soll:
 
-- abstrakte Weltpolitik
-- endlose Krisenmeldungen
-- Panik
-- Doomscrolling
-
-Sondern:
-
-- Orientierung
-- Einordnung
-- Verständnis
-- Vorbereitung
-- Transparenz
-
-WachSam soll Menschen helfen, Risiken besser zu verstehen, Auswirkungen früher zu erkennen, Zusammenhänge sichtbar zu machen und rationale Entscheidungen zu treffen.
+- Orientierung geben, ohne Panik zu erzeugen
+- Kosten- und Versorgungsrisiken greifbar machen
+- Wirkungsketten sichtbar machen
+- Unsicherheit und Quellenstand offen zeigen
+- rationale Entscheidungen im Haushalt unterstützen
 
 ## Mission
 
@@ -49,22 +38,13 @@ Globale Krisen und systemische Risiken in konkrete, verständliche und alltagsre
 
 WachSam ist:
 
-- ein Haushalts-Auswirkungsradar
-- ein Deutschland-zentriertes Crisis-Intelligence-System
-- ein verständliches Risiko- und Belastungsradar
-- ein Systemstress- und Mehrkostenmonitor
-- ein Governance- und Vertrauensmonitor (neu in v0.2 / Wave 8.0)
+- ein Haushalts-Krisencheck für Deutschland
+- ein Kosten- und Versorgungsradar für Bürger, Familien und kleine Unternehmen
+- eine ruhige Übersetzungsschicht von Signal → Deutschland-Relevanz → Haushaltswirkung
+- ein Quellen- und Unsicherheitsfenster für alltagsrelevante Risiken
+- ein Werkzeug für konkrete Prüf- und Vorbereitungsentscheidungen
 
-WachSam ist NICHT:
-
-- ein generisches Krisen-Dashboard
-- ein militärisches OSINT-Tool
-- ein Weltuntergangsfeed
-- ein Prepper-Forum
-- ein klassisches Newsportal
-- ein politisches Propagandaprojekt
-- ein Verschwörungsportal
-- ein reines Dashboard
+Guardrail: WachSam bleibt ruhig, quellenbasiert und haushaltsbezogen. Es wird nicht zum generischen Krisen-Dashboard, Newsfeed, militärischen OSINT-Tool, Prepper-Forum oder politischen Kampfprojekt.
 
 ## Kernprinzip
 
@@ -296,20 +276,13 @@ Viele Bürger wissen nicht, welche Krisen tatsächlich relevant sind, was Auswir
 
 ## Der Mehrwert
 
-WachSam übersetzt komplexe Krisendynamiken in verständliche Alltagsrelevanz.
+WachSam übersetzt komplexe Krisendynamiken in eine kurze Entscheidungshilfe für Haushalte:
 
-Nicht:
-
-```
-„Die Welt ist instabil."
+```text
+„Was betrifft meinen Haushalt, was kostet es ungefähr pro Monat, und was kann ich konkret tun?"
 ```
 
-Sondern:
-
-```
-„Welche Entwicklungen könnten
-deinen Alltag in Deutschland beeinflussen?"
-```
+Der Mehrwert entsteht durch die Verbindung von Quelle, Stand, Wirkungskette, Kostenrichtung, Versorgungsrisiko und ruhigem Prüfschritt. Die App soll zuerst zeigen, was relevant ist — und ebenso klar markieren, was wahrscheinlich nicht betrifft oder nur unsicher einzuordnen ist.
 
 ## Unterschiede zu klassischen News
 
@@ -334,29 +307,19 @@ deinen Alltag in Deutschland beeinflussen?"
 
 ## Produktphilosophie
 
-WachSam soll:
-
-- kritisch sein
-- faktenbasiert arbeiten
-- Unsicherheiten offen kennzeichnen
-- Quellen transparent machen
-- nicht alarmistisch werden
-- nicht ideologisch werden
+WachSam arbeitet als ruhige Übersetzungsschicht: kritisch, faktenbasiert, haushaltsnah und transparent über Unsicherheit. Jede starke Aussage braucht Quelle, Stand und Confidence; jede Handlungsempfehlung bleibt ein Prüfschritt, keine individuelle Beratung.
 
 ## Produktstil
 
 WachSam soll wirken:
 
-- ruhig
-- modern
-- vertrauenswürdig
-- sachlich
-- verständlich
-- datenorientiert
-- nicht alarmistisch
-- nicht ideologisch
+- ruhig und brauchbar
+- sachlich und verständlich
+- quellenbasiert und überprüfbar
+- konkret genug für Alltagsentscheidungen
+- zurückhaltend bei Unsicherheit
 
-Zu vermeiden: Doomscrolling, Militär-OSINT-Look, Clickbait, Panik, politische Kampfbegriffe.
+Guardrails: kein Doomscrolling, kein Militär-OSINT-Look, kein Clickbait, keine Panik, keine politischen Kampfbegriffe, keine Fake-Live-Sprache.
 
 ## Produktkern in einem Satz
 

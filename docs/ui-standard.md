@@ -1,11 +1,13 @@
-# UI Standard — WachSam v0.2 + v0.3-Layout
+# UI Standard — WachSam
 
-> Component-Patterns für die Multi-Tab-App. Single source für Code: `v01/src/components/` und `v01/src/pages/`.
+> Component-Patterns für den WachSam-Haushaltscheck: Einstieg über Haushaltswirkung, Kosten-/Versorgungsfragen, Quellenstand und konkrete Prüfschritte.
 >
-> Aktive UI-Erweiterung ab v0.3: v0.3-Sektion am Ende dieser Datei (Hybrid-Navigation, Editorial-Patterns, Auth-Routen für `v02/`).
+> Aktive Arbeitsbasis ist `v02/`. Ältere v0.2/v0.3-Layoutabschnitte beschreiben weiterhin gültige Pattern, solange sie der aktuellen Produktwahrheit in `docs/product-current.md` nicht widersprechen.
 
 ## App-Shell und Layout
 
+- Jede neue UI-Welle beginnt beim Haushaltsnutzen: Was betrifft den Nutzer, welche Kosten-/Versorgungsrichtung ist plausibel, welcher nächste Prüfschritt hilft?
+- Der erste Screen muss die Haushaltswirkung schneller erklären als die interne Methodik. Methodik, Quellen und Confidence bleiben sichtbar, aber sie stützen die Entscheidungshilfe.
 - Maximalbreite: `max-w-5xl` (1024 px) zentriert.
 - Grundflächen folgen den v0.2-Dark-Tokens aus `docs/brand.md` (`--color-page` `#0D0D0D`, `--color-shell` `#111318`, `--color-surface` `#1A1A1A`, `--color-panel` `#141414`).
 - Sektion-Padding: `px-4 py-10 sm:px-6 sm:py-12`.
@@ -46,6 +48,8 @@ IONOS-Static-Deploy unterstützt SPA-Fallback bereits via `try_files $uri $uri/ 
 
 Component: `TodayRelevantSection.tsx`. Semantik: `<section aria-labelledby="today-relevant-heading">`. Platz: direkt zwischen `Hero` und `Legend`.
 
+Produktfunktion: Diese Section ist die Brücke vom Lagebild zum Haushaltscheck. Sie beantwortet zuerst, welche Wirkung für Haushalte relevant sein kann, und erst danach, welche Daten-/Methodikspur diese Einschätzung stützt.
+
 Aufbau:
 
 - Section-Header mit Strich-Marker, Mono-Label „Lesehilfe", H2 „Heute relevant für Haushalte" und einem kurzen Satz zur Leseführung.
@@ -62,7 +66,7 @@ Aufbau:
 
 Regeln:
 
-- Keine neuen Daten, keine neuen URLs und kein eigener Dashboard- oder Live-Feed-Frame.
+- Keine neuen Daten, keine neuen URLs und kein eigener Live-Feed-Frame.
 - Die Karten dürfen nur bestehende Seed-Items, Quellen, Confidence-Werte und Causal Links zusammenführen.
 - Source-Pills müssen mobil umbrechen; horizontales Overflow ist ein Bug.
 - `TodayRelevantSection` ersetzt nicht die Detail-Sections und zählt nicht zu den nummerierten Bereichen 1–6.
@@ -326,13 +330,14 @@ In `v01/src/components/` und `v01/src/pages/`:
 - Headings folgen der Hierarchie h1 → h2 → h3, kein Sprung. Detail-Pages haben ein h1, Section-Pages ein h2 (h1 ist der Brand-Marker in AppShell).
 - Kontraste der v0.2-Dark-Palette erfüllen mindestens WCAG AA für Body-Text.
 
-## Was die UI in v0.2 NICHT enthält
+## UI-Guardrails
 
-- Keine Tooltips, Modals oder Hover-Karten als Layout-Mechanik
-- Kein Theme-Switch — nur Dark-Theme (v0.2 ist Dark-First; v0.1-Light ist historisch).
-- Keine State-Library — Datei-Imports und URL-Params reichen
-- Keine User-Auth, Member-Funktionen oder Live-Daten in Public-v0.2 (siehe `docs/DESIGN.md` §Produktstruktur).
+- Keine Tooltips, Modals oder Hover-Karten als primäre Layout-Mechanik für Pflichtinformationen.
+- Kein Theme-Switch, solange die aktuelle Brand Dark-First bleibt.
+- Keine neue State-Library ohne konkreten Produktnutzen.
+- Keine User-Auth-, Member- oder Live-Daten-Claims in Public-Flächen, solange sie nicht gebaut und verifiziert sind.
 - Keine Animations-Loops, pulsierende Alarme oder Dauerpuls.
+- Keine Dashboard-Sprache als Lead. Listen und Karten sind erlaubt, aber sie müssen auf Haushaltswirkung, Kosten-/Versorgungsrichtung und nächste Prüfung hinführen.
 
 ## Was vor jedem UI-Edit zu prüfen ist
 
