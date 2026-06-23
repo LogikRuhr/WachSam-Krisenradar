@@ -2,6 +2,7 @@ import Link from "next/link";
 import { DbNotice } from "@/components/DbNotice";
 import { HomeStorySteps } from "@/components/HomeStorySteps";
 import { MethodikHinweis } from "@/components/MethodikHinweis";
+import { NutzenBoard } from "@/components/NutzenBoard";
 import { PfadHub } from "@/components/PfadHub";
 import { SignalChain } from "@/components/SignalChain";
 import { Verdict } from "@/components/Verdict";
@@ -76,6 +77,8 @@ export default async function HomePage() {
       </section>
 
       <HomeStorySteps />
+
+      <NutzenBoard activeModus={profile.modus} />
 
       {!signals.connected ? <DbNotice error={signals.error} /> : null}
 

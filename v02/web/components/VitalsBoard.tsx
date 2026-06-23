@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Sparkline } from "@/components/Sparkline";
 import { indicatorVitals, type TrendDirection } from "@/lib/indicator-zones";
 import { systemLabel } from "@/lib/personalization";
 
@@ -21,6 +22,8 @@ export type VitalIndicator = {
   zoneTextUncritical: string | null;
   zoneTextElevated: string | null;
   zoneTextCritical: string | null;
+  /** Jüngste Messwerte (chronologisch alt→neu) für die Trend-Sparkline. */
+  sparkline?: number[];
 };
 
 const TREND_LABEL: Record<TrendDirection, string> = {
@@ -44,6 +47,8 @@ function VitalCard({ indicator }: { indicator: VitalIndicator }) {
   const zoneKey = vitals.zone?.zone ?? null;
   const stand = vitals.currentValueDate ? DATE_FMT.format(vitals.currentValueDate) : null;
   const unit = indicator.unit ?? "";
+  const series = indicator.sparkline ?? [];
+  const showSparkline = !vitals.pending && series.length >= 2;
 
   return (
     <Link
@@ -62,6 +67,14 @@ function VitalCard({ indicator }: { indicator: VitalIndicator }) {
           {unit ? <span className="vital-unit">{unit}</span> : null}
         </span>
       )}
+
+      {showSparkline ? (
+        <Sparkline
+          className="vital-sparkline"
+          values={series}
+          ariaLabel={`${indicator.label}: Verlauf der letzten ${series.length} Messwerte${unit ? ` in ${unit}` : ""}, ${TREND_LABEL[vitals.trend]}`}
+        />
+      ) : null}
 
       <div className="vital-meta">
         {vitals.zone ? (

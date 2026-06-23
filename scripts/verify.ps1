@@ -5,7 +5,8 @@ function Fail($Message) {
   exit 1
 }
 
-if (-not (Test-Path ".git")) {
+& git rev-parse --is-inside-work-tree *> $null
+if ($LASTEXITCODE -ne 0) {
   Fail "Not a git repository."
 }
 
