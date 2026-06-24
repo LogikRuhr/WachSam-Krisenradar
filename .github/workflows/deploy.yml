@@ -22,7 +22,7 @@ jobs:
           exit 1
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Verify source
         run: bash scripts/verify.sh
