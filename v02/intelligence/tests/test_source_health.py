@@ -72,6 +72,24 @@ def test_build_source_health_degraded_when_items_and_errors():
     assert record.last_success_at == "2026-06-09T12:00:00"
 
 
+def test_build_source_health_carries_freshness_context():
+    record = build_source_health(
+        FakeAdapter(),
+        item_count=1,
+        source_errors=[],
+        checked_at=datetime(2026, 6, 24, 12, 0, 0),
+        freshness_status="acceptable-lag",
+        freshness_expectation="monthly",
+        source_stand="2026-05",
+        freshness_reason="monatlich veröffentlichte Quelle; Vormonat ist akzeptabel",
+    )
+
+    assert record.freshness_status == "acceptable-lag"
+    assert record.freshness_expectation == "monthly"
+    assert record.source_stand == "2026-05"
+    assert record.freshness_reason.startswith("monatlich")
+
+
 def test_persist_source_health_writes_jsonl(tmp_path):
     record = SourceHealthRecord(
         source_id="destatis",
@@ -83,6 +101,10 @@ def test_persist_source_health_writes_jsonl(tmp_path):
         item_count=1,
         error_count=0,
         error_messages=[],
+        freshness_status="fresh",
+        freshness_expectation="daily",
+        source_stand="2026-06-09",
+        freshness_reason="daily: Stand höchstens 1 Tag alt",
     )
     path = tmp_path / "source-health.jsonl"
 
@@ -93,3 +115,4 @@ def test_persist_source_health_writes_jsonl(tmp_path):
     payload = json.loads(lines[0])
     assert payload["source_id"] == "destatis"
     assert payload["status"] == "ok"
+    assert payload["freshness_status"] == "fresh"

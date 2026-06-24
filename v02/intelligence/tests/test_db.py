@@ -270,6 +270,20 @@ def test_upsert_source_health_maps_failed_to_error_and_rolls_back(mock_get_conn)
 
 
 @patch("src.db.get_connection")
+def test_upsert_source_health_maps_freshness_stale_to_public_stale(mock_get_conn):
+    mock_conn, mock_cursor = _setup_mock_conn()
+    mock_get_conn.return_value = mock_conn
+
+    result = upsert_source_health([
+        _source_health_record(status="ok", freshness_status="stale")
+    ])
+
+    assert result == 1
+    args = mock_cursor.execute.call_args_list[0].args[1]
+    assert args[3] == "stale"
+
+
+@patch("src.db.get_connection")
 def test_upsert_source_health_dry_run_does_not_open_db(mock_get_conn):
     set_dry_run(True)
     try:

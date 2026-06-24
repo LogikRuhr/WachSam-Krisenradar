@@ -14,9 +14,9 @@ export const metadata: Metadata = {
 const DATE_FMT = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" });
 
 const STATUS_META: Record<string, { label: string; tone: string }> = {
-  fresh: { label: "Aktuell", tone: "uncritical" },
+  fresh: { label: "Aktuell / erwartbarer Verzug", tone: "uncritical" },
   stale: { label: "Veraltet", tone: "elevated" },
-  error: { label: "Fehler", tone: "critical" },
+  error: { label: "Quellenfehler", tone: "critical" },
   anomaly: { label: "Auffällig", tone: "elevated" },
   disabled: { label: "Deaktiviert", tone: "none" },
   unknown: { label: "Unbekannt", tone: "none" },
@@ -39,6 +39,7 @@ export default async function StatusPage() {
         <p>
           Status und letzter erfolgreicher Abruf der angebundenen Datenquellen. WachSam zeigt
           Aktualität offen — ohne Fake-Live-Optik. Interne Fehlerdetails werden hier bewusst nicht angezeigt.
+          Monatliche, quartalsweise und jährlich verzögerte amtliche Quellen können trotz älterem Datum als aktuell gelten.
         </p>
       </SectionHeader>
 

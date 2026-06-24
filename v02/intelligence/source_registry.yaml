@@ -59,9 +59,9 @@ sources:
     auth_required: optional-api-key
     freshness_expectation: daily
     household_relevance: hoch
-    current_quality: live-dry-run-ok-with-key
-    risk_notes: Needs retry/stale-on-error persistence so transient AGSI timeouts do not look like clean updates.
-    next_step: Add health-check timeout/retry strategy and source-health persistence.
+    current_quality: live-dry-run-degraded-timeout-2026-06-24-stale-on-error
+    risk_notes: Live-Dry-Run am 2026-06-24 meldete Timeout; Adapter hält letzten guten Wert via Stale-on-error und darf kein frisches Leer-Item veröffentlichen.
+    next_step: Add retry/backoff and keep Source Health visible until AGSI responds reliably again.
   - id: eia-brent
     name: EIA Brent Rohölpreis
     layer: energy
@@ -144,14 +144,14 @@ sources:
     source_url: https://www.handelsblatt.com/
     adapter: src.crawler.rss_crawler.RSSCrawler
     indicator_ids: []
-    status: active
+    status: disabled
     format: rss
     auth_required: none
     freshness_expectation: continuous-editorial
     household_relevance: mittel
-    current_quality: live-dry-run-returned-zero-items
-    risk_notes: Feed path or parser may be stale; requires endpoint verification.
-    next_step: Verify current RSS URL and add tests.
+    current_quality: live-dry-run-returned-zero-items-2026-06-24
+    risk_notes: Feed path returned zero items in read-only live probe; do not treat as productive claim-discovery source until endpoint is verified.
+    next_step: Verify current RSS URL or replace with a stable documented feed before reactivating.
   - id: dwd-open-data
     name: DWD WarnWetter Warnlage
     layer: weather_water
@@ -186,6 +186,81 @@ sources:
     current_quality: live-adapter-added-current-measurements
     risk_notes: Narrow station basket; water-level interpretation remains station-specific and must not be treated as national flood forecast.
     next_step: Add thresholds or station baselines before strong severity claims.
+  - id: eurostat-bip-de
+    name: Eurostat BIP Wachstum Deutschland
+    layer: labour_industry
+    operator: Eurostat
+    source_url: https://ec.europa.eu/eurostat/databrowser/view/namq_10_gdp
+    adapter: src.adapters.bip.BIPAdapter
+    indicator_ids: [wi-bip-wachstum-de]
+    status: active
+    format: jsonstat
+    auth_required: none
+    freshness_expectation: quarterly
+    household_relevance: mittel
+    current_quality: live-dry-run-ok-quarterly
+    risk_notes: Quartalsdaten sind offiziell verzögert; nicht als Tagesindikator interpretieren.
+    next_step: Add threshold calibration before strong severity claims.
+  - id: destatis-arbeitslosigkeit
+    name: Destatis/BA Registrierte Arbeitslose Deutschland
+    layer: labour_industry
+    operator: Statistisches Bundesamt / Bundesagentur für Arbeit
+    source_url: https://www.destatis.de/DE/Themen/Arbeit/Arbeitsmarkt/Arbeitslosigkeit/_inhalt.html
+    adapter: src.adapters.arbeitslosigkeit.ArbeitslosigkeitAdapter
+    indicator_ids: [wi-arbeitslosigkeit-de]
+    status: active
+    format: html-table
+    auth_required: none
+    freshness_expectation: monthly
+    household_relevance: mittel
+    current_quality: live-dry-run-ok-monthly
+    risk_notes: Monatsdaten mit amtlichem Veröffentlichungsverzug; nicht als Echtzeit-Arbeitsmarkt behandeln.
+    next_step: Add thresholds and source-health monitoring.
+  - id: ecb-deposit-facility-rate
+    name: EZB Deposit Facility Rate
+    layer: prices_finance
+    operator: Europäische Zentralbank
+    source_url: https://data.ecb.europa.eu/data/datasets/FM/FM.B.U2.EUR.4F.KR.DFR.LEV
+    adapter: src.adapters.ezbleitzins.EZBLeitzinsAdapter
+    indicator_ids: [wi-ezb-leitzins]
+    status: active
+    format: sdmx-json
+    auth_required: none
+    freshness_expectation: daily-market-days
+    household_relevance: mittel
+    current_quality: live-dry-run-ok-policy-rate
+    risk_notes: Zinsschritte sind ereignisgetrieben; nicht täglich neue Werte erwarten.
+    next_step: Model as policy-rate stand with explicit source date.
+  - id: eurostat-government-debt-de
+    name: Eurostat Staatsschuldenquote Deutschland
+    layer: prices_finance
+    operator: Eurostat
+    source_url: https://ec.europa.eu/eurostat/databrowser/view/gov_10dd_edpt1
+    adapter: src.adapters.staatsschulden.StaatsschuldenAdapter
+    indicator_ids: [wi-staatsschuldenquote-de]
+    status: active
+    format: jsonstat
+    auth_required: none
+    freshness_expectation: yearly
+    household_relevance: mittel
+    current_quality: live-dry-run-ok-yearly-official
+    risk_notes: Jahres-/Strukturdaten sind offiziell langsam; nur als Kontext, nicht als aktueller Krisenpuls.
+    next_step: Keep source-stand language explicit in public UI.
+  - id: destatis-insolvenzen
+    name: Destatis Unternehmensinsolvenzen Deutschland
+    layer: labour_industry
+    operator: Statistisches Bundesamt
+    source_url: https://www.destatis.de/DE/Themen/Branchen-Unternehmen/Unternehmen/Gewerbemeldungen-Insolvenzen/Tabellen/Insolvenzen.html
+    adapter: src.adapters.insolvenzen.InsolvenzenAdapter
+    indicator_ids: [wi-insolvenzen-de]
+    status: active
+    format: html-table
+    auth_required: none
+    freshness_expectation: monthly-lagging-official
+    household_relevance: mittel
+    current_quality: live-dry-run-ok-lagging-official
+    risk_notes: Insolvenzstatistik hat amtlichen Melde-/Veröffentlichungsverzug; mehrere Monate Rückstand können akzeptabel sein.
+    next_step: Calibrate lag expectation and thresholds before severity claims.
   - id: smard
     name: SMARD Strommarktdaten
     layer: energy

@@ -420,19 +420,16 @@ def test_run_ingestion_persists_source_health_when_path_is_explicit(monkeypatch,
 
     records = [json.loads(line) for line in health_path.read_text(encoding="utf-8").splitlines()]
     bnetza_records = [record for record in records if record["source_id"] == "bnetza"]
-    assert bnetza_records == [
-        {
-            "source_id": "bnetza",
-            "source_name": "BNetzA",
-            "target": "indicators",
-            "status": "ok",
-            "last_checked_at": bnetza_records[0]["last_checked_at"],
-            "last_success_at": bnetza_records[0]["last_success_at"],
-            "item_count": 1,
-            "error_count": 0,
-            "error_messages": [],
-        }
-    ]
+    assert len(bnetza_records) == 1
+    assert bnetza_records[0]["source_name"] == "BNetzA"
+    assert bnetza_records[0]["target"] == "indicators"
+    assert bnetza_records[0]["status"] == "ok"
+    assert bnetza_records[0]["item_count"] == 1
+    assert bnetza_records[0]["error_count"] == 0
+    assert bnetza_records[0]["error_messages"] == []
+    assert bnetza_records[0]["freshness_expectation"] == "daily"
+    assert bnetza_records[0]["freshness_status"] == "stale"
+    assert bnetza_records[0]["source_stand"] == "2026-05-27"
 
 
 def test_run_ingestion_upserts_source_health_in_normal_mode(monkeypatch):
@@ -473,6 +470,8 @@ def test_run_ingestion_upserts_source_health_in_normal_mode(monkeypatch):
     # 15 Adapter gesamt (8 alt + 5 neu = 13 in run_ingestion-Liste, ohne deaktivierte).
     bnetza_record = next(r for r in captured if r.source_id == "bnetza")
     assert bnetza_record.status == "ok"
+    assert bnetza_record.freshness_expectation == "daily"
+    assert bnetza_record.freshness_status == "stale"
     assert len(captured) == 13  # 8 bestehende + 5 neue Adapter
 
 

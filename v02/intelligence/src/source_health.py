@@ -22,6 +22,10 @@ class SourceHealthRecord(BaseModel):
     item_count: int
     error_count: int
     error_messages: list[str]
+    freshness_status: str | None = None
+    freshness_expectation: str | None = None
+    source_stand: str | None = None
+    freshness_reason: str | None = None
 
 
 def _slug(value: str) -> str:
@@ -34,6 +38,10 @@ def build_source_health(
     item_count: int,
     source_errors: list[dict],
     checked_at: datetime | None = None,
+    freshness_status: str | None = None,
+    freshness_expectation: str | None = None,
+    source_stand: str | None = None,
+    freshness_reason: str | None = None,
 ) -> SourceHealthRecord:
     checked_at = checked_at or datetime.utcnow()
     description = adapter.describe() if hasattr(adapter, "describe") else {}
@@ -63,6 +71,10 @@ def build_source_health(
         item_count=item_count,
         error_count=error_count,
         error_messages=error_messages,
+        freshness_status=freshness_status,
+        freshness_expectation=freshness_expectation,
+        source_stand=source_stand,
+        freshness_reason=freshness_reason,
     )
 
 

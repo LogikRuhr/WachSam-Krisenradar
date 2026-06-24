@@ -185,6 +185,14 @@ SOURCE_HEALTH_STATUS_MAP = {
     "failed": "error",
 }
 
+FRESHNESS_STATUS_MAP = {
+    "fresh": "fresh",
+    "acceptable-lag": "fresh",
+    "archival": "fresh",
+    "stale": "stale",
+    "source-error": "error",
+}
+
 
 def upsert_source_health(records: list[SourceHealthRecord]) -> int:
     """Persistiert aktuellen Source-Health-Zustand additiv in `source_health`.
@@ -209,6 +217,9 @@ def upsert_source_health(records: list[SourceHealthRecord]) -> int:
         with conn.cursor() as cur:
             for record in records:
                 status = SOURCE_HEALTH_STATUS_MAP.get(record.status, "unknown")
+                freshness_status = FRESHNESS_STATUS_MAP.get(getattr(record, "freshness_status", None))
+                if freshness_status in {"stale", "error"}:
+                    status = freshness_status
                 cur.execute(
                     """INSERT INTO source_health
                        (source_id, source_name, target, status, last_checked_at,

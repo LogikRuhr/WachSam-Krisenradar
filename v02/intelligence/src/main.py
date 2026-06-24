@@ -34,6 +34,7 @@ from .validation import validate_draft
 from .gate import evaluate_plausibility, source_error_verdict, build_shadow_log
 from .plausibility_rules import get_rules
 from .source_health import build_source_health, persist_source_health
+from .freshness import classify_freshness, load_registry_index, source_stand_from_items
 
 
 ADAPTER_TYPE_MAP = {
@@ -119,6 +120,7 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
     items = []
     source_errors = []
     source_health_records = []
+    registry_index = load_registry_index()
     if allow_fetch:
         for adapter in adapters:
             result = []
@@ -134,8 +136,25 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
             # additiv; getattr-defensiv für Adapter/Fakes ohne das Attribut).
             adapter_errors.extend(getattr(adapter, "source_errors", []))
             source_errors.extend(adapter_errors)
+            registry_source = registry_index.by_adapter_name.get(adapter.name)
+            source_stand = source_stand_from_items(result)
+            if not source_stand:
+                source_stand = next((err.get("source_stand") for err in adapter_errors if err.get("source_stand")), None)
+            freshness = classify_freshness(
+                freshness_expectation=registry_source.freshness_expectation if registry_source else "unknown",
+                source_stand=source_stand,
+                has_source_error=bool(adapter_errors),
+            )
             source_health_records.append(
-                build_source_health(adapter, item_count=len(result), source_errors=adapter_errors)
+                build_source_health(
+                    adapter,
+                    item_count=len(result),
+                    source_errors=adapter_errors,
+                    freshness_status=freshness.status,
+                    freshness_expectation=freshness.expectation,
+                    source_stand=freshness.source_stand,
+                    freshness_reason=freshness.reason,
+                )
             )
 
         health_path = os.environ.get("WACHSAM_SOURCE_HEALTH_PATH")
