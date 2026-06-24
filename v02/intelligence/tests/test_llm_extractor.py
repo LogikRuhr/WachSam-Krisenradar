@@ -3,6 +3,7 @@ import json
 import pytest
 from unittest.mock import patch, MagicMock
 from google.api_core.exceptions import ResourceExhausted
+from google.auth.exceptions import DefaultCredentialsError
 
 import src.extractors.llm_extractor as llm_module
 from src.extractors.llm_extractor import extract_with_llm
@@ -70,6 +71,53 @@ async def test_extract_skips_missing_credentials_file_before_vertex_init(mock_in
 
     assert result is None
     mock_init.assert_not_called()
+
+
+@pytest.mark.asyncio
+@patch("src.extractors.llm_extractor.settings")
+@patch("src.extractors.llm_extractor._init_vertex")
+@patch("google.auth.default")
+async def test_extract_uses_adc_when_credentials_path_unset(mock_google_auth_default, mock_init, mock_settings):
+    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    mock_settings.VERTEX_AI_LOCATION = "europe-west3"
+    mock_settings.GOOGLE_APPLICATION_CREDENTIALS = ""
+    mock_google_auth_default.return_value = (MagicMock(), "test-project")
+
+    mock_response = MagicMock()
+    mock_response.text = MOCK_LLM_RESPONSE
+
+    mock_model = MagicMock()
+    mock_model.generate_content.return_value = mock_response
+
+    mock_gm_module = MagicMock()
+    mock_gm_module.GenerativeModel.return_value = mock_model
+
+    with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
+        result = await extract_with_llm("Gas prices rising...", "https://example.com", "medien")
+
+    assert result is not None
+    assert result.title == "Gaspreise steigen erneut"
+    mock_google_auth_default.assert_called_once()
+    mock_init.assert_called_once()
+
+
+@pytest.mark.asyncio
+@patch("src.extractors.llm_extractor.settings")
+@patch("src.extractors.llm_extractor._init_vertex")
+@patch("google.auth.default")
+async def test_extract_skips_when_credentials_path_unset_and_adc_missing(
+    mock_google_auth_default, mock_init, mock_settings, capsys
+):
+    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    mock_settings.GOOGLE_APPLICATION_CREDENTIALS = ""
+    mock_google_auth_default.side_effect = DefaultCredentialsError("missing adc")
+
+    result = await extract_with_llm("Test content", "https://example.com", "medien")
+
+    assert result is None
+    mock_google_auth_default.assert_called_once()
+    mock_init.assert_not_called()
+    assert "Google ADC nicht verfuegbar" in capsys.readouterr().out
 
 
 @pytest.mark.asyncio

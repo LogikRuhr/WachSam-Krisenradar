@@ -6,7 +6,9 @@ import re
 from datetime import datetime
 from typing import Optional
 
+import google.auth
 from google.api_core.exceptions import ResourceExhausted
+from google.auth.exceptions import DefaultCredentialsError
 
 from ..models import (
     CONFIDENCE_SUGGESTION_VALUES,
@@ -44,7 +46,11 @@ def _llm_configuration_skip_reason() -> Optional[str]:
 
     credentials_path = (settings.GOOGLE_APPLICATION_CREDENTIALS or "").strip()
     if not credentials_path:
-        return "GOOGLE_APPLICATION_CREDENTIALS nicht gesetzt"
+        try:
+            google.auth.default()
+        except DefaultCredentialsError:
+            return "Google ADC nicht verfuegbar"
+        return None
 
     normalized = credentials_path.replace("\\", "/").lower()
     if any(marker in normalized for marker in _CREDENTIAL_PLACEHOLDER_MARKERS):

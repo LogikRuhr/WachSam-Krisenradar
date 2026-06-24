@@ -35,6 +35,13 @@ Vertex-AI-Credentials bleiben auf dem VPS unter `/opt/wachsam/secrets/` und werd
 Intelligence-Overlay nur read-only gemountet. Der Key wird nie in Git, Images oder GitHub
 Artifacts abgelegt.
 
+Lokal kann die Intelligence-Pipeline entweder Google ADC nutzen (`gcloud auth
+application-default login`, dann `GOOGLE_APPLICATION_CREDENTIALS` leer lassen) oder ein
+Service-Account-Keyfile ausserhalb des Repos referenzieren, z.B.
+`%USERPROFILE%\.config\wachsam\secrets\wachsam-intelligence-key.json`.
+Prod bleibt beim expliziten Secret-Mount:
+`GOOGLE_APPLICATION_CREDENTIALS=/opt/wachsam/secrets/wachsam-intelligence-key.json`.
+
 ## Ablauf
 
 1. `verify` Workflow muss auf `main` gruen sein.
