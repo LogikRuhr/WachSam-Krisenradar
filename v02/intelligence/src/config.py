@@ -7,6 +7,7 @@ class Settings(BaseSettings):
 
     GOOGLE_CLOUD_PROJECT: str = ""
     VERTEX_AI_LOCATION: str = "europe-west3"
+    GEMINI_MODEL_NAME: str = "gemini-2.5-flash"
 
     DESTATIS_USERNAME: str = ""
     DESTATIS_PASSWORD: str = ""

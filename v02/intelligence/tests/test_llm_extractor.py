@@ -42,6 +42,7 @@ def reset_llm_runtime_state():
 def _configure_valid_settings(mock_settings):
     mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
     mock_settings.VERTEX_AI_LOCATION = "europe-west3"
+    mock_settings.GEMINI_MODEL_NAME = "gemini-2.5-flash"
     mock_settings.GOOGLE_APPLICATION_CREDENTIALS = __file__
 
 
@@ -73,6 +74,7 @@ async def test_extract_skips_without_project(mock_settings):
 @patch("src.extractors.llm_extractor._build_genai_client", create=True)
 async def test_extract_skips_placeholder_credentials_before_genai_client(mock_build_client, mock_settings, capsys):
     mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    mock_settings.GEMINI_MODEL_NAME = "gemini-2.5-flash"
     mock_settings.GOOGLE_APPLICATION_CREDENTIALS = "/pfad/zu/wachsam-intelligence-key.json"
 
     result = await extract_with_llm("Test content", "https://example.com", "medien")
@@ -87,12 +89,28 @@ async def test_extract_skips_placeholder_credentials_before_genai_client(mock_bu
 @patch("src.extractors.llm_extractor._build_genai_client", create=True)
 async def test_extract_skips_missing_credentials_file_before_genai_client(mock_build_client, mock_settings):
     mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    mock_settings.GEMINI_MODEL_NAME = "gemini-2.5-flash"
     mock_settings.GOOGLE_APPLICATION_CREDENTIALS = "C:/does/not/exist/wachsam-intelligence-key.json"
 
     result = await extract_with_llm("Test content", "https://example.com", "medien")
 
     assert result is None
     mock_build_client.assert_not_called()
+
+
+@pytest.mark.asyncio
+@patch("src.extractors.llm_extractor.settings")
+@patch("src.extractors.llm_extractor._build_genai_client", create=True)
+async def test_extract_skips_without_gemini_model_name(mock_build_client, mock_settings, capsys):
+    mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    mock_settings.GEMINI_MODEL_NAME = ""
+    mock_settings.GOOGLE_APPLICATION_CREDENTIALS = __file__
+
+    result = await extract_with_llm("Test content", "https://example.com", "medien")
+
+    assert result is None
+    mock_build_client.assert_not_called()
+    assert "GEMINI_MODEL_NAME nicht gesetzt" in capsys.readouterr().out
 
 
 @pytest.mark.asyncio
@@ -105,6 +123,7 @@ async def test_extract_uses_adc_when_credentials_path_unset(
 ):
     mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
     mock_settings.VERTEX_AI_LOCATION = "europe-west3"
+    mock_settings.GEMINI_MODEL_NAME = "gemini-2.5-flash"
     mock_settings.GOOGLE_APPLICATION_CREDENTIALS = ""
     mock_google_auth_default.return_value = (MagicMock(), "test-project")
     mock_client = _configure_genai_client(mock_build_client, mock_build_config)
@@ -126,6 +145,7 @@ async def test_extract_skips_when_credentials_path_unset_and_adc_missing(
     mock_google_auth_default, mock_build_client, mock_settings, capsys
 ):
     mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
+    mock_settings.GEMINI_MODEL_NAME = "gemini-2.5-flash"
     mock_settings.GOOGLE_APPLICATION_CREDENTIALS = ""
     mock_google_auth_default.side_effect = DefaultCredentialsError("missing adc")
 
@@ -158,6 +178,22 @@ async def test_extract_returns_valid_item_with_google_genai(mock_build_client, m
     assert call_kwargs["config"] == "generation-config"
     assert "https://example.com" in call_kwargs["contents"]
     assert "Gas prices rising..." in call_kwargs["contents"]
+
+
+@pytest.mark.asyncio
+@patch("src.extractors.llm_extractor.settings")
+@patch("src.extractors.llm_extractor._build_generation_config", create=True)
+@patch("src.extractors.llm_extractor._build_genai_client", create=True)
+async def test_extract_uses_configured_gemini_model(mock_build_client, mock_build_config, mock_settings):
+    _configure_valid_settings(mock_settings)
+    mock_settings.GEMINI_MODEL_NAME = "gemini-2.5-flash-001"
+    mock_client = _configure_genai_client(mock_build_client, mock_build_config)
+
+    result = await extract_with_llm("Gas prices rising...", "https://example.com", "medien")
+
+    assert result is not None
+    call_kwargs = mock_client.models.generate_content.call_args.kwargs
+    assert call_kwargs["model"] == "gemini-2.5-flash-001"
 
 
 @pytest.mark.asyncio

@@ -26,7 +26,6 @@ from .prompts import SYSTEM_PROMPT, build_extraction_prompt
 logger = logging.getLogger(__name__)
 MAX_LLM_ATTEMPTS = 3
 LLM_RETRY_DELAYS_SECONDS = (2, 4)
-GEMINI_MODEL_NAME = "gemini-2.5-flash"
 _CREDENTIAL_PLACEHOLDER_MARKERS = (
     "/pfad/zu/",
     "\\pfad\\zu\\",
@@ -44,6 +43,10 @@ def _llm_configuration_skip_reason() -> Optional[str]:
     project = (settings.GOOGLE_CLOUD_PROJECT or "").strip()
     if not project:
         return "GOOGLE_CLOUD_PROJECT nicht gesetzt"
+
+    model_name = (settings.GEMINI_MODEL_NAME or "").strip()
+    if not model_name:
+        return "GEMINI_MODEL_NAME nicht gesetzt"
 
     credentials_path = (settings.GOOGLE_APPLICATION_CREDENTIALS or "").strip()
     if not credentials_path:
@@ -135,7 +138,7 @@ def _build_generation_config():
 
 def _generate_content(client, prompt: str):
     return client.models.generate_content(
-        model=GEMINI_MODEL_NAME,
+        model=settings.GEMINI_MODEL_NAME.strip(),
         contents=prompt,
         config=_build_generation_config(),
     )
