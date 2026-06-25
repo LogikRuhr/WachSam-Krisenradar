@@ -42,6 +42,11 @@ Service-Account-Keyfile ausserhalb des Repos referenzieren, z.B.
 Prod bleibt beim expliziten Secret-Mount:
 `GOOGLE_APPLICATION_CREDENTIALS=/opt/wachsam/secrets/wachsam-intelligence-key.json`.
 
+Fuer Vertex AI / Google Gen AI nutzt WachSam aktuell den live geprueften Default
+`GEMINI_MODEL_NAME=gemini-3.5-flash` mit `VERTEX_AI_LOCATION=global`.
+Ein lokaler Smoke am 2026-06-25 zeigte fuer `gemini-3.5-flash` in `europe-west3`
+einen `404 NOT_FOUND`; `global` antwortete erfolgreich.
+
 ## Ablauf
 
 1. `verify` Workflow muss auf `main` gruen sein.

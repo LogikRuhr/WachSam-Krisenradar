@@ -6,8 +6,8 @@ class Settings(BaseSettings):
     POSTGRES_URL: str = "postgresql://wachsam:wachsam_dev@localhost:5432/wachsam"
 
     GOOGLE_CLOUD_PROJECT: str = ""
-    VERTEX_AI_LOCATION: str = "europe-west3"
-    GEMINI_MODEL_NAME: str = "gemini-2.5-flash"
+    VERTEX_AI_LOCATION: str = "global"
+    GEMINI_MODEL_NAME: str = "gemini-3.5-flash"
 
     DESTATIS_USERNAME: str = ""
     DESTATIS_PASSWORD: str = ""
