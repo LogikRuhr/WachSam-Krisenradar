@@ -1,4 +1,5 @@
 import asyncio
+import importlib
 import json
 import logging
 import os
@@ -7,7 +8,6 @@ from datetime import datetime
 from typing import Optional
 
 import google.auth
-from google.api_core.exceptions import ResourceExhausted
 from google.auth.exceptions import DefaultCredentialsError
 
 from ..models import (
@@ -26,6 +26,7 @@ from .prompts import SYSTEM_PROMPT, build_extraction_prompt
 logger = logging.getLogger(__name__)
 MAX_LLM_ATTEMPTS = 3
 LLM_RETRY_DELAYS_SECONDS = (2, 4)
+GEMINI_MODEL_NAME = "gemini-2.5-flash"
 _CREDENTIAL_PLACEHOLDER_MARKERS = (
     "/pfad/zu/",
     "\\pfad\\zu\\",
@@ -117,13 +118,36 @@ def _validate_llm_payload(data: dict, source_url: str) -> bool:
     return False
 
 
-def _init_vertex():
-    import vertexai
+def _build_genai_client():
+    genai = importlib.import_module("google.genai")
 
-    vertexai.init(
+    return genai.Client(
+        vertexai=True,
         project=settings.GOOGLE_CLOUD_PROJECT,
         location=settings.VERTEX_AI_LOCATION,
     )
+
+
+def _build_generation_config():
+    genai_types = importlib.import_module("google.genai.types")
+    return genai_types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT)
+
+
+def _generate_content(client, prompt: str):
+    return client.models.generate_content(
+        model=GEMINI_MODEL_NAME,
+        contents=prompt,
+        config=_build_generation_config(),
+    )
+
+
+def _is_quota_error(error: Exception) -> bool:
+    code = getattr(error, "code", None) or getattr(error, "status", None)
+    if code == 429:
+        return True
+
+    error_text = str(error).lower()
+    return "429" in error_text or "resource_exhausted" in error_text or "quota" in error_text
 
 
 async def extract_with_llm(
@@ -146,21 +170,17 @@ async def extract_with_llm(
         return None
 
     try:
-        _init_vertex()
-        from vertexai.generative_models import GenerativeModel
-
-        model = GenerativeModel(
-            "gemini-2.5-flash",
-            system_instruction=SYSTEM_PROMPT,
-        )
-
+        client = _build_genai_client()
         prompt = build_extraction_prompt(raw_content, source_url)
         response = None
         for attempt in range(1, MAX_LLM_ATTEMPTS + 1):
             try:
-                response = model.generate_content(prompt)
+                response = _generate_content(client, prompt)
                 break
-            except ResourceExhausted as e:
+            except Exception as e:
+                if not _is_quota_error(e):
+                    raise
+
                 if attempt >= MAX_LLM_ATTEMPTS:
                     logger.warning(
                         "LLM unavailable after retries",

@@ -1,8 +1,8 @@
 import json
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
-from unittest.mock import patch, MagicMock
-from google.api_core.exceptions import ResourceExhausted
 from google.auth.exceptions import DefaultCredentialsError
 
 import src.extractors.llm_extractor as llm_module
@@ -27,6 +27,13 @@ MOCK_LLM_RESPONSE = """{
 }"""
 
 
+class FakeQuotaError(Exception):
+    def __init__(self):
+        super().__init__("429 quota exhausted")
+        self.code = 429
+        self.status = 429
+
+
 @pytest.fixture(autouse=True)
 def reset_llm_runtime_state():
     llm_module.reset_llm_runtime_state()
@@ -36,6 +43,21 @@ def _configure_valid_settings(mock_settings):
     mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
     mock_settings.VERTEX_AI_LOCATION = "europe-west3"
     mock_settings.GOOGLE_APPLICATION_CREDENTIALS = __file__
+
+
+def _configure_genai_client(mock_build_client, mock_build_config, response_text=MOCK_LLM_RESPONSE, side_effect=None):
+    mock_response = MagicMock()
+    mock_response.text = response_text
+
+    mock_client = MagicMock()
+    if side_effect is None:
+        mock_client.models.generate_content.return_value = mock_response
+    else:
+        mock_client.models.generate_content.side_effect = side_effect
+
+    mock_build_client.return_value = mock_client
+    mock_build_config.return_value = "generation-config"
+    return mock_client
 
 
 @pytest.mark.asyncio
@@ -48,65 +70,60 @@ async def test_extract_skips_without_project(mock_settings):
 
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
-@patch("src.extractors.llm_extractor._init_vertex")
-async def test_extract_skips_placeholder_credentials_before_vertex_init(mock_init, mock_settings, capsys):
+@patch("src.extractors.llm_extractor._build_genai_client", create=True)
+async def test_extract_skips_placeholder_credentials_before_genai_client(mock_build_client, mock_settings, capsys):
     mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
     mock_settings.GOOGLE_APPLICATION_CREDENTIALS = "/pfad/zu/wachsam-intelligence-key.json"
 
     result = await extract_with_llm("Test content", "https://example.com", "medien")
 
     assert result is None
-    mock_init.assert_not_called()
+    mock_build_client.assert_not_called()
     assert "GOOGLE_APPLICATION_CREDENTIALS ist ein Placeholder" in capsys.readouterr().out
 
 
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
-@patch("src.extractors.llm_extractor._init_vertex")
-async def test_extract_skips_missing_credentials_file_before_vertex_init(mock_init, mock_settings):
+@patch("src.extractors.llm_extractor._build_genai_client", create=True)
+async def test_extract_skips_missing_credentials_file_before_genai_client(mock_build_client, mock_settings):
     mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
     mock_settings.GOOGLE_APPLICATION_CREDENTIALS = "C:/does/not/exist/wachsam-intelligence-key.json"
 
     result = await extract_with_llm("Test content", "https://example.com", "medien")
 
     assert result is None
-    mock_init.assert_not_called()
+    mock_build_client.assert_not_called()
 
 
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
-@patch("src.extractors.llm_extractor._init_vertex")
+@patch("src.extractors.llm_extractor._build_generation_config", create=True)
+@patch("src.extractors.llm_extractor._build_genai_client", create=True)
 @patch("google.auth.default")
-async def test_extract_uses_adc_when_credentials_path_unset(mock_google_auth_default, mock_init, mock_settings):
+async def test_extract_uses_adc_when_credentials_path_unset(
+    mock_google_auth_default, mock_build_client, mock_build_config, mock_settings
+):
     mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
     mock_settings.VERTEX_AI_LOCATION = "europe-west3"
     mock_settings.GOOGLE_APPLICATION_CREDENTIALS = ""
     mock_google_auth_default.return_value = (MagicMock(), "test-project")
+    mock_client = _configure_genai_client(mock_build_client, mock_build_config)
 
-    mock_response = MagicMock()
-    mock_response.text = MOCK_LLM_RESPONSE
-
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value = mock_response
-
-    mock_gm_module = MagicMock()
-    mock_gm_module.GenerativeModel.return_value = mock_model
-
-    with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
-        result = await extract_with_llm("Gas prices rising...", "https://example.com", "medien")
+    result = await extract_with_llm("Gas prices rising...", "https://example.com", "medien")
 
     assert result is not None
     assert result.title == "Gaspreise steigen erneut"
     mock_google_auth_default.assert_called_once()
-    mock_init.assert_called_once()
+    mock_build_client.assert_called_once()
+    mock_client.models.generate_content.assert_called_once()
 
 
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
-@patch("src.extractors.llm_extractor._init_vertex")
+@patch("src.extractors.llm_extractor._build_genai_client", create=True)
 @patch("google.auth.default")
 async def test_extract_skips_when_credentials_path_unset_and_adc_missing(
-    mock_google_auth_default, mock_init, mock_settings, capsys
+    mock_google_auth_default, mock_build_client, mock_settings, capsys
 ):
     mock_settings.GOOGLE_CLOUD_PROJECT = "test-project"
     mock_settings.GOOGLE_APPLICATION_CREDENTIALS = ""
@@ -116,59 +133,53 @@ async def test_extract_skips_when_credentials_path_unset_and_adc_missing(
 
     assert result is None
     mock_google_auth_default.assert_called_once()
-    mock_init.assert_not_called()
+    mock_build_client.assert_not_called()
     assert "Google ADC nicht verfuegbar" in capsys.readouterr().out
 
 
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
-@patch("src.extractors.llm_extractor._init_vertex")
-async def test_extract_returns_valid_item(mock_init, mock_settings):
+@patch("src.extractors.llm_extractor._build_generation_config", create=True)
+@patch("src.extractors.llm_extractor._build_genai_client", create=True)
+async def test_extract_returns_valid_item_with_google_genai(mock_build_client, mock_build_config, mock_settings):
     _configure_valid_settings(mock_settings)
+    mock_client = _configure_genai_client(mock_build_client, mock_build_config)
 
-    mock_response = MagicMock()
-    mock_response.text = MOCK_LLM_RESPONSE
-
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value = mock_response
-
-    mock_gm_module = MagicMock()
-    mock_gm_module.GenerativeModel.return_value = mock_model
-
-    with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
-        result = await extract_with_llm("Gas prices rising...", "https://example.com", "medien")
+    result = await extract_with_llm("Gas prices rising...", "https://example.com", "medien")
 
     assert result is not None
     assert result.title == "Gaspreise steigen erneut"
     assert result.germany_relevance.direct is True
     assert result.severity_suggestion == "erhöht"
     assert result.status == "extracted"
+    mock_client.models.generate_content.assert_called_once()
+    call_kwargs = mock_client.models.generate_content.call_args.kwargs
+    assert call_kwargs["model"] == "gemini-2.5-flash"
+    assert call_kwargs["config"] == "generation-config"
+    assert "https://example.com" in call_kwargs["contents"]
+    assert "Gas prices rising..." in call_kwargs["contents"]
 
 
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
-@patch("src.extractors.llm_extractor._init_vertex")
-async def test_extract_handles_invalid_json(mock_init, mock_settings):
+@patch("src.extractors.llm_extractor._build_generation_config", create=True)
+@patch("src.extractors.llm_extractor._build_genai_client", create=True)
+async def test_extract_handles_invalid_json(mock_build_client, mock_build_config, mock_settings):
     _configure_valid_settings(mock_settings)
+    _configure_genai_client(mock_build_client, mock_build_config, response_text="not valid json")
 
-    mock_response = MagicMock()
-    mock_response.text = "not valid json"
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value = mock_response
-
-    mock_gm_module = MagicMock()
-    mock_gm_module.GenerativeModel.return_value = mock_model
-
-    with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
-        result = await extract_with_llm("Content", "https://example.com", "medien")
+    result = await extract_with_llm("Content", "https://example.com", "medien")
 
     assert result is None
 
 
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
-@patch("src.extractors.llm_extractor._init_vertex")
-async def test_extract_retries_resource_exhausted_then_returns_item(mock_init, mock_settings, monkeypatch):
+@patch("src.extractors.llm_extractor._build_generation_config", create=True)
+@patch("src.extractors.llm_extractor._build_genai_client", create=True)
+async def test_extract_retries_quota_error_then_returns_item(
+    mock_build_client, mock_build_config, mock_settings, monkeypatch
+):
     _configure_valid_settings(mock_settings)
     sleep_calls = []
 
@@ -179,26 +190,26 @@ async def test_extract_retries_resource_exhausted_then_returns_item(mock_init, m
 
     mock_response = MagicMock()
     mock_response.text = MOCK_LLM_RESPONSE
-    mock_model = MagicMock()
-    mock_model.generate_content.side_effect = [ResourceExhausted("quota"), mock_response]
+    mock_client = _configure_genai_client(
+        mock_build_client,
+        mock_build_config,
+        side_effect=[FakeQuotaError(), mock_response],
+    )
 
-    mock_gm_module = MagicMock()
-    mock_gm_module.GenerativeModel.return_value = mock_model
-
-    with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
-        result = await extract_with_llm("Content", "https://example.com", "medien")
+    result = await extract_with_llm("Content", "https://example.com", "medien")
 
     assert result is not None
     assert result.title == "Gaspreise steigen erneut"
-    assert mock_model.generate_content.call_count == 2
+    assert mock_client.models.generate_content.call_count == 2
     assert sleep_calls == [2]
 
 
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
-@patch("src.extractors.llm_extractor._init_vertex")
-async def test_extract_returns_none_after_repeated_resource_exhausted(
-    mock_init, mock_settings, monkeypatch, caplog
+@patch("src.extractors.llm_extractor._build_generation_config", create=True)
+@patch("src.extractors.llm_extractor._build_genai_client", create=True)
+async def test_extract_returns_none_after_repeated_quota_error(
+    mock_build_client, mock_build_config, mock_settings, monkeypatch, caplog
 ):
     _configure_valid_settings(mock_settings)
     sleep_calls = []
@@ -207,28 +218,23 @@ async def test_extract_returns_none_after_repeated_resource_exhausted(
         sleep_calls.append(seconds)
 
     monkeypatch.setattr(llm_module, "asyncio", MagicMock(sleep=fake_sleep), raising=False)
-
-    mock_model = MagicMock()
-    mock_model.generate_content.side_effect = ResourceExhausted("quota")
-
-    mock_gm_module = MagicMock()
-    mock_gm_module.GenerativeModel.return_value = mock_model
+    mock_client = _configure_genai_client(mock_build_client, mock_build_config, side_effect=FakeQuotaError())
 
     with caplog.at_level("WARNING"):
-        with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
-            result = await extract_with_llm("Content", "https://example.com", "medien")
+        result = await extract_with_llm("Content", "https://example.com", "medien")
 
     assert result is None
-    assert mock_model.generate_content.call_count == 3
+    assert mock_client.models.generate_content.call_count == 3
     assert sleep_calls == [2, 4]
     assert "LLM unavailable after retries" in caplog.text
 
 
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
-@patch("src.extractors.llm_extractor._init_vertex")
+@patch("src.extractors.llm_extractor._build_generation_config", create=True)
+@patch("src.extractors.llm_extractor._build_genai_client", create=True)
 async def test_extract_skips_later_calls_after_quota_exhausted(
-    mock_init, mock_settings, monkeypatch
+    mock_build_client, mock_build_config, mock_settings, monkeypatch
 ):
     _configure_valid_settings(mock_settings)
     sleep_calls = []
@@ -237,39 +243,26 @@ async def test_extract_skips_later_calls_after_quota_exhausted(
         sleep_calls.append(seconds)
 
     monkeypatch.setattr(llm_module, "asyncio", MagicMock(sleep=fake_sleep), raising=False)
+    mock_client = _configure_genai_client(mock_build_client, mock_build_config, side_effect=FakeQuotaError())
 
-    mock_model = MagicMock()
-    mock_model.generate_content.side_effect = ResourceExhausted("quota")
-
-    mock_gm_module = MagicMock()
-    mock_gm_module.GenerativeModel.return_value = mock_model
-
-    with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
-        first = await extract_with_llm("Content", "https://example.com/1", "medien")
-        second = await extract_with_llm("Content", "https://example.com/2", "medien")
+    first = await extract_with_llm("Content", "https://example.com/1", "medien")
+    second = await extract_with_llm("Content", "https://example.com/2", "medien")
 
     assert first is None
     assert second is None
-    assert mock_model.generate_content.call_count == 3
+    assert mock_client.models.generate_content.call_count == 3
     assert sleep_calls == [2, 4]
 
 
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
-@patch("src.extractors.llm_extractor._init_vertex")
-async def test_extract_handles_json_fenced_response(mock_init, mock_settings):
+@patch("src.extractors.llm_extractor._build_generation_config", create=True)
+@patch("src.extractors.llm_extractor._build_genai_client", create=True)
+async def test_extract_handles_json_fenced_response(mock_build_client, mock_build_config, mock_settings):
     _configure_valid_settings(mock_settings)
+    _configure_genai_client(mock_build_client, mock_build_config, response_text=f"```json\n{MOCK_LLM_RESPONSE}\n```")
 
-    mock_response = MagicMock()
-    mock_response.text = f"```json\n{MOCK_LLM_RESPONSE}\n```"
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value = mock_response
-
-    mock_gm_module = MagicMock()
-    mock_gm_module.GenerativeModel.return_value = mock_model
-
-    with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
-        result = await extract_with_llm("Content", "https://example.com", "medien")
+    result = await extract_with_llm("Content", "https://example.com", "medien")
 
     assert result is not None
     assert result.title == "Gaspreise steigen erneut"
@@ -277,23 +270,16 @@ async def test_extract_handles_json_fenced_response(mock_init, mock_settings):
 
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
-@patch("src.extractors.llm_extractor._init_vertex")
-async def test_extract_rejects_invalid_severity_from_llm(mock_init, mock_settings, caplog):
+@patch("src.extractors.llm_extractor._build_generation_config", create=True)
+@patch("src.extractors.llm_extractor._build_genai_client", create=True)
+async def test_extract_rejects_invalid_severity_from_llm(mock_build_client, mock_build_config, mock_settings, caplog):
     _configure_valid_settings(mock_settings)
     payload = json.loads(MOCK_LLM_RESPONSE)
     payload["severity_suggestion"] = "panik"
-
-    mock_response = MagicMock()
-    mock_response.text = json.dumps(payload)
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value = mock_response
-
-    mock_gm_module = MagicMock()
-    mock_gm_module.GenerativeModel.return_value = mock_model
+    _configure_genai_client(mock_build_client, mock_build_config, response_text=json.dumps(payload))
 
     with caplog.at_level("WARNING"):
-        with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
-            result = await extract_with_llm("Content", "https://example.com", "medien")
+        result = await extract_with_llm("Content", "https://example.com", "medien")
 
     assert result is None
     assert "LLM schema validation failed" in caplog.text
@@ -301,23 +287,16 @@ async def test_extract_rejects_invalid_severity_from_llm(mock_init, mock_setting
 
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
-@patch("src.extractors.llm_extractor._init_vertex")
-async def test_extract_rejects_unknown_system_from_llm(mock_init, mock_settings, caplog):
+@patch("src.extractors.llm_extractor._build_generation_config", create=True)
+@patch("src.extractors.llm_extractor._build_genai_client", create=True)
+async def test_extract_rejects_unknown_system_from_llm(mock_build_client, mock_build_config, mock_settings, caplog):
     _configure_valid_settings(mock_settings)
     payload = json.loads(MOCK_LLM_RESPONSE)
     payload["germany_relevance"]["systems_affected"] = ["weltraum"]
-
-    mock_response = MagicMock()
-    mock_response.text = json.dumps(payload)
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value = mock_response
-
-    mock_gm_module = MagicMock()
-    mock_gm_module.GenerativeModel.return_value = mock_model
+    _configure_genai_client(mock_build_client, mock_build_config, response_text=json.dumps(payload))
 
     with caplog.at_level("WARNING"):
-        with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
-            result = await extract_with_llm("Content", "https://example.com", "medien")
+        result = await extract_with_llm("Content", "https://example.com", "medien")
 
     assert result is None
     assert "LLM schema validation failed" in caplog.text
@@ -325,22 +304,15 @@ async def test_extract_rejects_unknown_system_from_llm(mock_init, mock_settings,
 
 @pytest.mark.asyncio
 @patch("src.extractors.llm_extractor.settings")
-@patch("src.extractors.llm_extractor._init_vertex")
-async def test_extract_never_accepts_published_status_from_llm(mock_init, mock_settings):
+@patch("src.extractors.llm_extractor._build_generation_config", create=True)
+@patch("src.extractors.llm_extractor._build_genai_client", create=True)
+async def test_extract_never_accepts_published_status_from_llm(mock_build_client, mock_build_config, mock_settings):
     _configure_valid_settings(mock_settings)
     payload = json.loads(MOCK_LLM_RESPONSE)
     payload["status"] = "published"
+    _configure_genai_client(mock_build_client, mock_build_config, response_text=json.dumps(payload))
 
-    mock_response = MagicMock()
-    mock_response.text = json.dumps(payload)
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value = mock_response
-
-    mock_gm_module = MagicMock()
-    mock_gm_module.GenerativeModel.return_value = mock_model
-
-    with patch.dict("sys.modules", {"vertexai.generative_models": mock_gm_module}):
-        result = await extract_with_llm("Content", "https://example.com", "medien")
+    result = await extract_with_llm("Content", "https://example.com", "medien")
 
     assert result is not None
     assert result.status == "extracted"
@@ -353,3 +325,10 @@ def test_prompt_declares_version_and_exact_kanon_values():
     assert "rss-evidence-v1" in SYSTEM_PROMPT
     assert '"beobachten"' in SYSTEM_PROMPT
     assert '"gesellschaft"' in SYSTEM_PROMPT
+
+
+def test_extractor_no_longer_references_deprecated_vertexai_generative_models():
+    source = Path(llm_module.__file__).read_text(encoding="utf-8")
+
+    assert "vertexai.generative_models" not in source
+    assert "import vertexai" not in source
