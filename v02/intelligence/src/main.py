@@ -266,7 +266,7 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
         print(json.dumps(build_shadow_log(shim, verdict), ensure_ascii=False))
 
     if invalid:
-        print(f"⚠ {invalid}/{len(items)} Items mit Kanon-Fehlern (nicht blockiert, Review im Editorial-Gate).")
+        print(f"WARNUNG: {invalid}/{len(items)} Items mit Kanon-Fehlern (nicht blockiert, Review im Editorial-Gate).")
 
     label = "geplant (Dry-Run, kein Write)" if dry_run else "in DB gespeichert"
     print(f"{saved}/{len(items)} Drafts {label}.")

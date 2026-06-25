@@ -120,7 +120,7 @@ Fehlende Quelle, fehlender Stand oder Schemafehler fuehren zu `validation_status
 ```bash
 git diff --check
 PATTERN='(AI''za|ya''29|-----BE''GIN|pass''word|tok''en|sec''ret|bear''er)'
-rg -n "$PATTERN" docs/specs/2026-06-25-agent-platform-intelligence-pilot.md
+! rg -n "$PATTERN" docs/specs/2026-06-25-agent-platform-intelligence-pilot.md
 bash scripts/verify.sh
 ```
 

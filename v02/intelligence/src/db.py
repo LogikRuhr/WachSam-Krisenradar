@@ -273,7 +273,7 @@ def insert_draft(item: IngestionItem, item_type: str = "lagebild_items") -> Opti
         op = "UPDATE" if is_indicator else "INSERT"
         item_id = item.indicator_id if is_indicator else "(neue uuid)"
         detail = f" current_value={item.current_value}" if is_indicator else ""
-        print(f"[DRY-RUN] {op} {item_type} → {item_id}{detail} — {item.title}")
+        print(f"[DRY-RUN] {op} {item_type} -> {item_id}{detail} -- {item.title}")
         return item_id
 
     item_id = str(uuid.uuid4())

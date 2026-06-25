@@ -30,6 +30,22 @@ def _make_indicator_item(**kwargs):
     return IngestionItem(**base)
 
 
+def test_dry_run_log_output_is_windows_console_safe(capsys):
+    item = _make_indicator_item()
+
+    try:
+        set_dry_run(True)
+        result = insert_draft(item, "indicators")
+    finally:
+        set_dry_run(False)
+
+    assert result == "gas_storage_level"
+    output = capsys.readouterr().out
+    assert "->" in output
+    assert "--" in output
+    output.encode("cp1252")
+
+
 @patch("src.db.get_connection")
 def test_insert_draft_calls_db(mock_get_conn, sample_item):
     mock_conn = MagicMock()
