@@ -90,6 +90,8 @@ Jeder Agent-Draft muss enthalten:
 
 Fehlende Quelle, fehlender Stand oder Schemafehler fuehren zu `validation_status = "rejected"` oder `needs_review`, nie zu Publish.
 
+Fuer Deep-Research-Laeufe gilt zusaetzlich der fachliche Output-Vertrag in `docs/intelligence/deep-research-agent-instructions.md`. Diese Anweisung fuehrt Quellenhierarchie, Mindestquellen, Social-Media-Verifikation, Severity-/Confidence-Rubric, PASS/FAIL-Regeln und das Markdown-Reportformat. Die Agent-Platform-Spec regelt Runtime/Tooling; die Deep-Research-Anweisung regelt fachliche Reproduzierbarkeit.
+
 ## Acceptance Criteria
 - [ ] Pilot nutzt nur erlaubte Quellen/Tools aus einer expliziten Allowlist.
 - [ ] Jeder Draft enthaelt mindestens eine echte Quelle mit URL und Stand.
