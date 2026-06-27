@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const publicRoutes = [
-  { path: "/", title: /globale Entwicklungen/i },
+  { path: "/", title: /Was betrifft meinen Haushalt jetzt/i },
   { path: "/lagebild", title: /Deutschland in zehn Bereichen/i },
   { path: "/kosten", title: /Was teurer werden kann/i },
   { path: "/massnahmen", title: /Was ich tun kann/i },
@@ -43,6 +43,30 @@ test.describe("public WachSam smoke", () => {
     await page.locator(".pfad-hub").getByRole("link", { name: /Aktuelle Lage ansehen/ }).click();
     await expect(page).toHaveURL(/\/lagebild$/);
     await expect(page.getByRole("main")).toContainText(/Deutschland in zehn Bereichen/i);
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("starts home as household cockpit", async ({ page }) => {
+    await page.goto("/");
+
+    const heading = page.getByRole("heading", { name: /Was betrifft meinen Haushalt jetzt/i, level: 1 });
+    const householdType = page.getByLabel("Haushaltstyp");
+    const dataStatus = page.getByLabel("Datenstatus des Haushalts-Checks");
+
+    await expect(heading).toBeVisible();
+    await expect(householdType).toBeVisible();
+    await expect(dataStatus).toBeVisible();
+
+    const viewport = page.viewportSize();
+    const headingBox = await heading.boundingBox();
+    const inputBox = await householdType.boundingBox();
+
+    expect(headingBox?.y ?? Number.POSITIVE_INFINITY, "home cockpit heading is in the first viewport").toBeLessThan(
+      viewport?.height ?? 900,
+    );
+    expect(inputBox?.y ?? Number.POSITIVE_INFINITY, "household input starts in the first viewport").toBeLessThan(
+      viewport?.height ?? 900,
+    );
     await expectNoHorizontalOverflow(page);
   });
 });

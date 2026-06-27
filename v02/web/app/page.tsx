@@ -91,25 +91,29 @@ export default async function HomePage() {
 
   return (
     <main className="page-shell" aria-labelledby="page-title">
-      <section className="home-hero" aria-labelledby="page-title">
-        <div className="strich" aria-hidden="true" />
-        <p className="mono-label">WachSam · Lage- und Auswirkungenradar</p>
-        <h1 id="page-title" className="bebas-title">Was globale Entwicklungen für deinen Alltag in Deutschland bedeuten.</h1>
-        <p className="lead">
-          Energie, Preise, Lieferketten, Infrastruktur und Arbeitsmarkt wirken oft zusammen. WachSam ordnet Entwicklungen nach Deutschland-Relevanz, Haushaltsauswirkung, Quellenlage und realistischen Maßnahmen ein.
-        </p>
-        <p className="home-trustline">Keine Panik. Kein Newsfeed. Eine ruhige Lageeinordnung mit Quellenstand.</p>
+      <HouseholdCheck
+        chains={checkChains}
+        connected={signals.connected}
+        titleId="page-title"
+        headingLevel="h1"
+        sourceCount={sourceCount}
+        latestStand={formatStand(latestStand)}
+      />
+
+      <section className="home-context-strip" aria-label="WachSam Kontext">
+        <div>
+          <p className="mono-label">WachSam · Lage- und Auswirkungenradar</p>
+          <p>
+            Energie, Preise, Lieferketten, Infrastruktur und Arbeitsmarkt wirken oft zusammen.
+            WachSam ordnet Entwicklungen nach Deutschland-Relevanz, Haushaltsauswirkung,
+            Quellenlage und realistischen Maßnahmen ein.
+          </p>
+        </div>
         <div className="home-actions">
           <Link className="btn-rost" href="#aktuelle-lage">Aktuelle Lage ansehen</Link>
           <Link className="text-link" href="/massnahmen">Maßnahmen prüfen</Link>
         </div>
       </section>
-
-      <HouseholdCheck chains={checkChains} connected={signals.connected} />
-
-      <HomeStorySteps />
-
-      <NutzenBoard activeModus={profile.modus} />
 
       {!signals.connected ? <DbNotice error={signals.error} /> : null}
 
@@ -178,6 +182,10 @@ export default async function HomePage() {
           <Link className="text-link" href="/lagebild">Zum Lagebild</Link>
         </section>
       ) : null}
+
+      <NutzenBoard activeModus={profile.modus} />
+
+      <HomeStorySteps />
 
       <section className="home-impact-band" aria-labelledby="haushalt-title">
         <div>

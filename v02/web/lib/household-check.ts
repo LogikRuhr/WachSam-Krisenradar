@@ -15,6 +15,8 @@ export type AnonymousHouseholdProfile = {
 export type HouseholdCheckResult = {
   relevant: HouseholdCheckChain[];
   costOrSupply: HouseholdCheckChain[];
+  primaryConcern: HouseholdCheckChain | null;
+  primaryImpact: HouseholdCheckChain | null;
   nextStep: { key: string; text: string } | null;
   notDirectlyRelevant: HouseholdCheckChain[];
   boundary: string;
@@ -36,10 +38,14 @@ export function deriveHouseholdCheck(input: {
   const nextStep = householdCheckSteps(input.profile)[0] ?? null;
   const relevantIds = new Set(prioritized.map((chain) => chain.signal.id));
   const notDirectlyRelevant = input.chains.filter((chain) => !relevantIds.has(chain.signal.id)).slice(0, 2);
+  const primaryConcern = prioritized[0] ?? null;
+  const primaryImpact = costOrSupply[0] ?? null;
 
   return {
     relevant: prioritized,
     costOrSupply,
+    primaryConcern,
+    primaryImpact,
     nextStep,
     notDirectlyRelevant,
     boundary: BOUNDARY,

@@ -32,12 +32,16 @@ const result = deriveHouseholdCheck({
 
 assert.equal(result.relevant[0]?.signal.bereich, "energie", "Gas-Haushalt sieht Energie zuerst trotz niedrigerer Severity");
 assert.equal(result.costOrSupply[0]?.impact?.bereich, "energie", "Kosten-/Versorgungsblock folgt der priorisierten Haushaltsrelevanz");
+assert.equal(result.primaryConcern?.signal.bereich, "energie", "Cockpit-Zusammenfassung nutzt die erste Haushaltsprioritaet");
+assert.equal(result.primaryImpact?.impact?.bereich, "energie", "Cockpit-Zusammenfassung nutzt die erste konkrete Haushaltswirkung");
 assert.ok(result.nextStep?.text.includes("Gas") || result.nextStep?.text.includes("gas"), "nächster Prüfschritt nutzt vorhandene Heizart-Checkliste");
 assert.ok(result.boundary.includes("keine Beratung"), "Grenzhinweis nennt Beratungsausschluss");
 assert.ok(result.privacy.includes("nicht gespeichert"), "Privacy-Hinweis stellt klar, dass anonyme Eingaben nicht gespeichert werden");
 
 const empty = deriveHouseholdCheck({ profile: { modus: null, heizart: null, plz: null }, chains: [] });
 assert.deepEqual(empty.relevant, [], "ohne Daten keine erfundenen relevanten Signale");
+assert.equal(empty.primaryConcern, null, "ohne Daten gibt es keine erfundene primaere Lagekarte");
+assert.equal(empty.primaryImpact, null, "ohne Daten gibt es keine erfundene primaere Haushaltswirkung");
 assert.equal(empty.nextStep?.key, "uni-abschlag", "ohne Profil bleibt nur universeller Prüfschritt");
 
 console.log("household-check.test.ts: PASS");
