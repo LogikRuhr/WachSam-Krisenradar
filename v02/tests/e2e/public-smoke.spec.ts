@@ -52,11 +52,17 @@ test.describe("public WachSam smoke", () => {
     const heading = page.getByRole("heading", { name: /Was betrifft meinen Haushalt jetzt/i, level: 1 });
     const householdType = page.getByLabel("Haushaltstyp");
     const dataStatus = page.getByLabel("Datenstatus des Haushalts-Checks");
+    const onboarding = page.getByLabel("In drei Schritten zum ersten WachSam-Wert");
     const results = page.locator(".household-check-results");
 
     await expect(heading).toBeVisible();
     await expect(householdType).toBeVisible();
     await expect(dataStatus).toBeVisible();
+    await expect(onboarding).toBeVisible();
+    await expect(onboarding).toContainText("Haushalt einordnen");
+    await expect(onboarding).toContainText("Wirkung verstehen");
+    await expect(onboarding).toContainText("Prüfschritt mitnehmen");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(results).toContainText(/Aktueller Status|Deine erste Einordnung/);
     await expect(results).toContainText(/Nächster Prüfschritt/);
     await expect(results).toContainText(/Orientierung, keine Beratung/);

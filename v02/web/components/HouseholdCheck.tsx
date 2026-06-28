@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { deriveHouseholdCheck, type HouseholdCheckChain } from "@/lib/household-check";
+import { buildPublicOnboardingSteps } from "@/lib/onboarding";
 import { bereichLabel } from "@/lib/personalization";
 import type { HouseholdHeizart, HouseholdModus } from "@/lib/profile";
+import { OnboardingChecklist } from "./OnboardingChecklist";
 
 const MODUS_OPTIONS: Array<{ value: HouseholdModus; label: string }> = [
   { value: "single", label: "Single" },
@@ -41,6 +43,7 @@ export function HouseholdCheck({
   const [modus, setModus] = useState<HouseholdModus>("familie");
   const [heizart, setHeizart] = useState<HouseholdHeizart>("unbekannt");
   const [plz, setPlz] = useState("");
+  const [hasAdjustedProfile, setHasAdjustedProfile] = useState(false);
 
   const result = useMemo(
     () => deriveHouseholdCheck({ profile: { modus, heizart, plz: plz.trim() || null }, chains }),
@@ -54,6 +57,14 @@ export function HouseholdCheck({
   const nextStepText = result.nextStep?.text ?? "Aktuelle Abschläge und Fixkosten ruhig gegen den letzten Verbrauch prüfen.";
   const hasResultDetails =
     result.secondaryRelevant.length > 0 || result.secondaryCostOrSupply.length > 0 || result.indirectAreas.length > 0;
+  const hasProfileInput = hasAdjustedProfile || heizart !== "unbekannt" || plz.length === 5;
+  const onboardingSteps = buildPublicOnboardingSteps({
+    hasProfileInput,
+    connected,
+    hasPublishedSignals: chains.length > 0,
+    hasResult: result.primaryConcern !== null,
+    hasNextStep: result.nextStep !== null,
+  });
 
   return (
     <section className="household-check" aria-labelledby={titleId}>
@@ -80,6 +91,14 @@ export function HouseholdCheck({
         </div>
       </div>
 
+      <OnboardingChecklist
+        title="In drei Schritten zum ersten WachSam-Wert"
+        label="Erste Schritte"
+        description="Kein Rundgang, kein Zwang: erst Haushalt einordnen, dann Wirkung lesen, dann einen ruhigen Prüfschritt mitnehmen."
+        steps={onboardingSteps}
+        compact
+      />
+
       <div className="household-check-grid">
         <form className="household-check-form" aria-label="Anonymer Haushalts-Check">
           <div className="household-field">
@@ -88,7 +107,10 @@ export function HouseholdCheck({
               className="input-mono"
               id="check-modus"
               value={modus}
-              onChange={(event) => setModus(event.target.value as HouseholdModus)}
+              onChange={(event) => {
+                setModus(event.target.value as HouseholdModus);
+                setHasAdjustedProfile(true);
+              }}
             >
               {MODUS_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -102,7 +124,10 @@ export function HouseholdCheck({
               className="input-mono"
               id="check-heizart"
               value={heizart}
-              onChange={(event) => setHeizart(event.target.value as HouseholdHeizart)}
+              onChange={(event) => {
+                setHeizart(event.target.value as HouseholdHeizart);
+                setHasAdjustedProfile(true);
+              }}
             >
               {HEIZART_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -122,7 +147,10 @@ export function HouseholdCheck({
               maxLength={5}
               placeholder="z.B. 45127"
               value={plz}
-              onChange={(event) => setPlz(event.target.value.replace(/\D/g, "").slice(0, 5))}
+              onChange={(event) => {
+                setPlz(event.target.value.replace(/\D/g, "").slice(0, 5));
+                setHasAdjustedProfile(true);
+              }}
             />
           </div>
           <p className="household-check-note">{result.privacy}</p>

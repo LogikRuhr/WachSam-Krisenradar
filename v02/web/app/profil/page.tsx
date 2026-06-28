@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DbNotice } from "@/components/DbNotice";
 import { PainCard } from "@/components/PainCard";
+import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { ProfileStatus } from "@/components/ProfileStatus";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SignalChain } from "@/components/SignalChain";
@@ -16,6 +17,7 @@ import {
   prioritizeSignalsForProfile,
   profileCompleteness,
 } from "@/lib/personalization";
+import { buildProfileOnboardingSteps } from "@/lib/onboarding";
 import { getHouseholdByUserId, upsertHouseholdAction } from "@/lib/profile";
 import { getCitizenActions, getSignalChains } from "@/lib/public-data";
 import { getCurrentUserProfile } from "@/lib/use-user-modus";
@@ -52,6 +54,13 @@ export default async function ProfilPage() {
   const actions = prioritizeActionsForProfile(actionsState.rows, profile, 4);
   const checkSteps = householdCheckSteps(profile);
   const modusIntro = modusLead(profile.modus);
+  const onboardingSteps = buildProfileOnboardingSteps({
+    profileFieldsFilled: completeness.filled,
+    profileFieldsTotal: completeness.total,
+    hasRelevantSignals: topChains.length > 0,
+    hasActions: actions.length > 0,
+    hasCheckSteps: checkSteps.length > 0,
+  });
 
   return (
     <main className="page-shell">
@@ -63,6 +72,13 @@ export default async function ProfilPage() {
       </SectionHeader>
 
       <ProfileStatus completeness={completeness} />
+
+      <OnboardingChecklist
+        title="Deine ersten WachSam-Schritte"
+        label="Onboarding"
+        description="WachSam wird nützlicher, sobald Profil, Lage, Maßnahmen und Prüfliste zusammen gelesen werden."
+        steps={onboardingSteps}
+      />
 
       <section className="home-section" aria-labelledby="relevanz-title">
         <div className="home-section-head">
