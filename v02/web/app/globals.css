@@ -422,7 +422,7 @@ strong { color: var(--on-surface); font-weight: 700; }
 .signal-stand { margin-left: auto; }
 .chain-row { margin-top: 18px; padding-left: 14px; border-left: 2px solid var(--outline); }
 .chain-row > p { margin: 4px 0; color: var(--on-surface); line-height: 1.6; }
-.chain-label { display: block; font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--primary); margin-bottom: 4px; }
+.chain-label { display: block; overflow-wrap: anywhere; font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--primary); margin-bottom: 4px; }
 .chain-personal { color: var(--on-surface) !important; font-weight: 600; }
 .chain-muted { color: var(--on-surface-variant) !important; font-style: italic; }
 .chain-action { border-left-color: var(--primary); }
@@ -433,8 +433,8 @@ strong { color: var(--on-surface); font-weight: 700; }
 .household-check { display: grid; gap: 18px; margin: 0 0 22px; border: 1px solid var(--outline); border-left: 3px solid var(--primary); border-radius: 0 4px 4px 0; background: linear-gradient(135deg, rgba(27,30,37,.96), rgba(13,13,13,.9)); padding: clamp(20px, 3vw, 28px); box-shadow: 0 10px 30px rgba(0,0,0,.34); }
 .household-check-head { display: grid; gap: 10px; min-width: 0; }
 .household-check-head p { margin-bottom: 0; }
-.household-status-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 4px; }
-.household-status-card { min-width: 0; border: 1px solid var(--outline); border-radius: 4px; background: rgba(13,13,13,.64); padding: 10px 12px; }
+.household-status-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.household-status-card { flex: 1 1 150px; min-width: 0; border: 1px solid var(--outline); border-radius: 4px; background: rgba(13,13,13,.64); padding: 8px 10px; }
 .household-status-card-ready { border-color: rgba(34,197,94,.5); }
 .household-status-card strong { display: block; overflow-wrap: anywhere; font-size: 13px; line-height: 1.3; }
 .household-status-card small { display: block; margin-top: 3px; color: var(--on-surface-variant); font-size: 11px; line-height: 1.35; }
@@ -448,6 +448,13 @@ strong { color: var(--on-surface); font-weight: 700; }
 .household-result-summary { min-width: 0; border: 1px solid rgba(212,84,10,.55); border-left: 3px solid var(--primary); border-radius: 0 4px 4px 0; background: rgba(212,84,10,.08); padding: 14px; }
 .household-result-summary strong { display: block; margin-top: 4px; font-size: 18px; line-height: 1.28; overflow-wrap: anywhere; }
 .household-result-summary p { margin: 7px 0 0; max-width: none; color: var(--on-surface); font-size: 14px; line-height: 1.55; }
+.household-result-next { margin-top: 12px; border-top: 1px solid rgba(241,242,244,.14); padding-top: 10px; }
+.household-result-next span { display: block; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--on-surface-variant); overflow-wrap: anywhere; }
+.household-result-details { min-width: 0; border: 1px solid var(--outline); border-radius: 4px; background: rgba(13,13,13,.42); }
+.household-result-details summary { cursor: pointer; padding: 12px 14px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: .04em; color: var(--on-surface); outline-offset: 3px; overflow-wrap: anywhere; }
+.household-result-details summary:hover { color: var(--primary); }
+.household-result-details[open] summary { border-bottom: 1px solid var(--outline); }
+.household-detail-stack { display: grid; gap: 10px; padding: 12px; }
 .household-result-blocked { border-color: rgba(234,179,8,.5); background: rgba(234,179,8,.08); }
 .household-mini-card { min-width: 0; margin-top: 10px; border-top: 1px solid var(--outline); padding-top: 10px; }
 .household-mini-card:first-of-type { border-top: 0; padding-top: 0; }
@@ -460,6 +467,7 @@ strong { color: var(--on-surface); font-weight: 700; }
   .household-check { gap: 14px; padding: 16px; }
   .household-check-head { gap: 8px; }
   .app-title { margin-bottom: 4px; font-size: clamp(34px, 10vw, 40px); line-height: 1; }
+  .household-check .app-title { font-size: clamp(30px, 8vw, 38px); }
   .household-status-card { padding: 8px; }
   .household-status-card strong { font-size: 11px; }
   .household-status-card small { font-size: 10px; }
@@ -467,6 +475,13 @@ strong { color: var(--on-surface); font-weight: 700; }
   .household-check-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .household-field-wide, .household-check-note { grid-column: 1 / -1; }
   .household-check-form .input-mono { padding: 12px 10px; font-size: 13px; }
+}
+
+@media (max-width: 520px) {
+  .household-status-card { flex-basis: 100%; }
+  .household-check-form { grid-template-columns: 1fr; }
+  .household-result-summary { padding: 12px; }
+  .household-result-summary strong { font-size: 16px; }
 }
 
 /* --- Gesamtstand: Vitals Board --- */

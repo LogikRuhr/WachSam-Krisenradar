@@ -51,6 +51,9 @@ export function HouseholdCheck({
   const statusText = connected ? (chains.length > 0 ? "Daten verbunden" : "Keine Lagekarten freigegeben") : "Datenpfad blockiert";
   const sourceText = connected && sourceCount > 0 ? `${sourceCount} Quellen` : "Quellen ausstehend";
   const standText = latestStand ?? "Stand ausstehend";
+  const nextStepText = result.nextStep?.text ?? "Aktuelle Abschläge und Fixkosten ruhig gegen den letzten Verbrauch prüfen.";
+  const hasResultDetails =
+    result.secondaryRelevant.length > 0 || result.secondaryCostOrSupply.length > 0 || result.indirectAreas.length > 0;
 
   return (
     <section className="household-check" aria-labelledby={titleId}>
@@ -125,24 +128,36 @@ export function HouseholdCheck({
           <p className="household-check-note">{result.privacy}</p>
         </form>
 
-        <div className="household-check-results" aria-live="polite">
+        <div className="household-check-results">
           {!connected ? (
-            <div className="household-result-summary household-result-blocked">
-              <span className="chain-label">Aktueller Status</span>
-              <strong>Datenbank nicht verbunden</strong>
-              <p>Der Check bleibt nutzbar als Eingabe, zeigt aber keine Treffer, solange keine veroeffentlichten Daten geladen sind.</p>
-              <p>{result.nextStep?.text ?? "Aktuelle Abschlaege und Fixkosten ruhig gegen den letzten Verbrauch pruefen."}</p>
-            </div>
+            <>
+              <div className="household-result-summary household-result-blocked" aria-live="polite">
+                <span className="chain-label">Aktueller Status</span>
+                <strong>Datenbank nicht verbunden</strong>
+                <p>Der Check bleibt nutzbar als Eingabe, zeigt aber keine Treffer, solange keine veroeffentlichten Daten geladen sind.</p>
+                <div className="household-result-next">
+                  <span>Nächster Prüfschritt</span>
+                  <p>{nextStepText}</p>
+                </div>
+              </div>
+              <p className="household-check-boundary">{result.boundary}</p>
+            </>
           ) : chains.length === 0 ? (
-            <div className="household-result-summary household-result-blocked">
-              <span className="chain-label">Aktueller Status</span>
-              <strong>Keine Haushaltswirkung freigegeben</strong>
-              <p>Aktuell liegen keine veroeffentlichten Lagekarten mit Haushaltswirkung vor.</p>
-              <p>{result.nextStep?.text ?? "Aktuelle Abschlaege und Fixkosten ruhig gegen den letzten Verbrauch pruefen."}</p>
-            </div>
+            <>
+              <div className="household-result-summary household-result-blocked" aria-live="polite">
+                <span className="chain-label">Aktueller Status</span>
+                <strong>Keine Haushaltswirkung freigegeben</strong>
+                <p>Aktuell liegen keine veroeffentlichten Lagekarten mit Haushaltswirkung vor.</p>
+                <div className="household-result-next">
+                  <span>Nächster Prüfschritt</span>
+                  <p>{nextStepText}</p>
+                </div>
+              </div>
+              <p className="household-check-boundary">{result.boundary}</p>
+            </>
           ) : (
             <>
-              <div className="household-result-summary">
+              <div className="household-result-summary" aria-live="polite">
                 <span className="chain-label">Deine erste Einordnung</span>
                 <strong>{result.primaryConcern?.signal.titel ?? "Keine priorisierte Lagekarte"}</strong>
                 <p>
@@ -150,55 +165,52 @@ export function HouseholdCheck({
                     ? `${result.primaryImpact.impact.titel}: ${result.primaryImpact.impact.beschreibung}`
                     : "Fuer diese Auswahl ist noch keine konkrete Kosten- oder Versorgungswirkung freigegeben."}
                 </p>
-              </div>
-
-              <div className="household-result-block">
-                <span className="chain-label">Für dich wahrscheinlich relevant</span>
-                {result.relevant.length > 0 ? (
-                  result.relevant.slice(0, 2).map((chain) => (
-                    <article key={chain.signal.id} className="household-mini-card">
-                      <strong>{chain.signal.titel}</strong>
-                      <p>{bereichLabel(chain.signal.bereich)} · {chain.signal.beschreibung}</p>
-                    </article>
-                  ))
-                ) : (
-                  <p>Keine priorisierten Treffer fuer diese Auswahl.</p>
-                )}
-              </div>
-
-              <div className="household-result-block">
-                <span className="chain-label">Kosten / Versorgung beobachten</span>
-                {result.costOrSupply.length > 0 ? (
-                  result.costOrSupply.slice(0, 2).map((chain) => (
-                    <article key={`${chain.signal.id}-impact`} className="household-mini-card">
-                      <strong>{chain.impact?.titel ?? "Auswirkung in Prüfung"}</strong>
-                      <p>{chain.impact?.beschreibung ?? "Noch keine konkrete Haushaltsauswirkung veröffentlicht."}</p>
-                    </article>
-                  ))
-                ) : (
-                  <p>Noch keine konkrete Kosten- oder Versorgungswirkung veroeffentlicht.</p>
-                )}
-              </div>
-
-              <div className="household-result-block">
-                <span className="chain-label">Nächster ruhiger Prüfschritt</span>
-                <p>{result.nextStep?.text ?? "Aktuelle Abschläge und Fixkosten ruhig gegen den letzten Verbrauch prüfen."}</p>
-              </div>
-
-              {result.notDirectlyRelevant.length > 0 ? (
-                <div className="household-result-block">
-                  <span className="chain-label">Eher indirekt betroffen</span>
-                  <p>
-                    {result.notDirectlyRelevant
-                      .map((chain) => bereichLabel(chain.signal.bereich))
-                      .filter((value, index, all) => all.indexOf(value) === index)
-                      .join(", ")}
-                  </p>
+                <div className="household-result-next">
+                  <span>Nächster Prüfschritt</span>
+                  <p>{nextStepText}</p>
                 </div>
+              </div>
+              <p className="household-check-boundary">{result.boundary}</p>
+
+              {hasResultDetails ? (
+                <details className="household-result-details">
+                  <summary>Weitere Treffer anzeigen</summary>
+                  <div className="household-detail-stack">
+                    {result.secondaryRelevant.length > 0 ? (
+                      <section className="household-result-block">
+                        <span className="chain-label">Weitere relevante Lagekarten</span>
+                        {result.secondaryRelevant.map((chain) => (
+                          <article key={chain.signal.id} className="household-mini-card">
+                            <strong>{chain.signal.titel}</strong>
+                            <p>{bereichLabel(chain.signal.bereich)} · {chain.signal.beschreibung}</p>
+                          </article>
+                        ))}
+                      </section>
+                    ) : null}
+
+                    {result.secondaryCostOrSupply.length > 0 ? (
+                      <section className="household-result-block">
+                        <span className="chain-label">Kosten / Versorgung beobachten</span>
+                        {result.secondaryCostOrSupply.map((chain) => (
+                          <article key={`${chain.signal.id}-impact`} className="household-mini-card">
+                            <strong>{chain.impact?.titel ?? "Auswirkung in Prüfung"}</strong>
+                            <p>{chain.impact?.beschreibung ?? "Noch keine konkrete Haushaltsauswirkung veröffentlicht."}</p>
+                          </article>
+                        ))}
+                      </section>
+                    ) : null}
+
+                    {result.indirectAreas.length > 0 ? (
+                      <section className="household-result-block">
+                        <span className="chain-label">Eher indirekt betroffen</span>
+                        <p>{result.indirectAreas.map((area) => bereichLabel(area)).join(", ")}</p>
+                      </section>
+                    ) : null}
+                  </div>
+                </details>
               ) : null}
             </>
           )}
-          <p className="household-check-boundary">{result.boundary}</p>
         </div>
       </div>
     </section>

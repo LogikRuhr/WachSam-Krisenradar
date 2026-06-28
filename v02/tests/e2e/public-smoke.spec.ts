@@ -52,14 +52,19 @@ test.describe("public WachSam smoke", () => {
     const heading = page.getByRole("heading", { name: /Was betrifft meinen Haushalt jetzt/i, level: 1 });
     const householdType = page.getByLabel("Haushaltstyp");
     const dataStatus = page.getByLabel("Datenstatus des Haushalts-Checks");
+    const results = page.locator(".household-check-results");
 
     await expect(heading).toBeVisible();
     await expect(householdType).toBeVisible();
     await expect(dataStatus).toBeVisible();
+    await expect(results).toContainText(/Aktueller Status|Deine erste Einordnung/);
+    await expect(results).toContainText(/Nächster Prüfschritt/);
+    await expect(results).toContainText(/Orientierung, keine Beratung/);
 
     const viewport = page.viewportSize();
     const headingBox = await heading.boundingBox();
     const inputBox = await householdType.boundingBox();
+    const resultBox = await results.boundingBox();
 
     expect(headingBox?.y ?? Number.POSITIVE_INFINITY, "home cockpit heading is in the first viewport").toBeLessThan(
       viewport?.height ?? 900,
@@ -67,6 +72,19 @@ test.describe("public WachSam smoke", () => {
     expect(inputBox?.y ?? Number.POSITIVE_INFINITY, "household input starts in the first viewport").toBeLessThan(
       viewport?.height ?? 900,
     );
+    expect(resultBox?.height ?? Number.POSITIVE_INFINITY, "household result stays compact before details").toBeLessThan(
+      420,
+    );
+
+    const details = results.locator("details.household-result-details");
+    if ((await details.count()) > 0) {
+      const summary = details.locator("summary").first();
+      await expect(summary).toBeVisible();
+      await expect(details.first()).not.toHaveAttribute("open", "");
+      await summary.click();
+      await expect(details.first()).toHaveAttribute("open", "");
+    }
+
     await expectNoHorizontalOverflow(page);
   });
 });
