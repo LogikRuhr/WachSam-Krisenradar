@@ -78,3 +78,47 @@ jobs:
           ssh -i ~/.ssh/deploy_key -o BatchMode=yes "$VPS_USER@$VPS_HOST" \
             "REPO_URL='$REPO_URL' TARGET_DIR='$VPS_APP_DIR' EXPECTED_SHA='$EXPECTED_SHA' bash -s" \
             < scripts/deploy-source.sh
+
+      - name: Promote v02 runtime
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_APP_DIR: ${{ secrets.VPS_APP_DIR }}
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "$VPS_USER@$VPS_HOST" \
+            "TARGET_DIR='$VPS_APP_DIR' EXPECTED_SHA='$EXPECTED_SHA' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          state_file="$TARGET_DIR/.deploy-state"
+          test -f "$state_file"
+          deployed_sha="$(awk -F= '$1 == "sha" { print $2 }' "$state_file")"
+          if [ "$deployed_sha" != "$EXPECTED_SHA" ]; then
+            echo "promote-runtime: FAIL - source sha $deployed_sha, expected $EXPECTED_SHA" >&2
+            exit 1
+          fi
+
+          app_root="$(dirname "$TARGET_DIR")"
+          source_v02="$TARGET_DIR/v02"
+          runtime_v02="$app_root/v02"
+          compose_file="$app_root/docker-compose.v02.yml"
+          backup_root="$app_root/backups"
+          backup_dir="$backup_root/v02-pre-promote-$(date -u +%Y%m%dT%H%M%SZ)-${EXPECTED_SHA:0:7}"
+
+          test -d "$source_v02"
+          test -f "$compose_file"
+          command -v rsync >/dev/null 2>&1
+          docker compose version >/dev/null
+
+          mkdir -p "$backup_root"
+          if [ -d "$runtime_v02" ]; then
+            mkdir -p "$backup_dir"
+            rsync -a --delete "$runtime_v02/" "$backup_dir/"
+          fi
+
+          rsync -a --delete "$source_v02/" "$runtime_v02/"
+          docker compose -f "$compose_file" up -d --build web
+          docker compose -f "$compose_file" ps web
+
+          echo "promote-runtime: PASS $EXPECTED_SHA -> $runtime_v02 (backup: $backup_dir)"
+          REMOTE
