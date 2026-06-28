@@ -27,11 +27,14 @@ const mkChain = (
           confidence: "mittel",
           zeithorizont: "wochen",
         },
-  action: {
-    titel: `${bereich} prüfen`,
-    beschreibung: `${bereich} ruhig prüfen`,
-    aufwand: "niedrig",
-  },
+  action:
+    options.hasImpact === false && id.endsWith("no-action")
+      ? null
+      : {
+          titel: `${bereich} prüfen`,
+          beschreibung: `${bereich} ruhig prüfen`,
+          aufwand: "niedrig",
+        },
 });
 
 const result = deriveHouseholdCheck({
@@ -43,6 +46,7 @@ assert.equal(result.relevant[0]?.signal.bereich, "energie", "Gas-Haushalt sieht 
 assert.equal(result.costOrSupply[0]?.impact?.bereich, "energie", "Kosten-/Versorgungsblock folgt der priorisierten Haushaltsrelevanz");
 assert.equal(result.primaryConcern?.signal.bereich, "energie", "Cockpit-Zusammenfassung nutzt die erste Haushaltsprioritaet");
 assert.equal(result.primaryImpact?.impact?.bereich, "energie", "Cockpit-Zusammenfassung nutzt die erste konkrete Haushaltswirkung");
+assert.equal(result.primaryAction?.action?.titel, "energie prüfen", "Cockpit-Zusammenfassung nutzt eine passende echte Massnahme");
 assert.equal(result.secondaryRelevant.length, 1, "kompakte Details zeigen nur weitere priorisierte Treffer");
 assert.equal(result.secondaryCostOrSupply.length, 1, "kompakte Details zeigen nur weitere Kosten-/Versorgungswirkungen");
 assert.ok(result.nextStep?.text.includes("Gas") || result.nextStep?.text.includes("gas"), "nächster Prüfschritt nutzt vorhandene Heizart-Checkliste");
@@ -79,7 +83,19 @@ const lateImpact = deriveHouseholdCheck({
 assert.equal(lateImpact.relevant.length, 3, "Top-3 Lagekarten bleiben ohne spaeten Nachruecker stabil");
 assert.equal(lateImpact.primaryConcern?.signal.id, "energy-no-impact", "primaere Lagekarte bleibt der erste Haushalts-Treffer");
 assert.equal(lateImpact.primaryImpact?.signal.id, "finance-impact", "erste echte Haushaltswirkung darf auch nach den Top-3 kommen");
+assert.equal(lateImpact.primaryAction?.signal.id, "energy-no-impact", "primaere Massnahme folgt zuerst der Haushaltsprioritaet");
 assert.equal(lateImpact.costOrSupply.length, 1, "spaete echte Haushaltswirkung wird nicht ausgeblendet");
+
+const lateAction = deriveHouseholdCheck({
+  profile: { modus: "single", heizart: "unbekannt", plz: null },
+  chains: [
+    mkChain("energy-no-action", "energie", "kritisch", "steigend", { hasImpact: false }),
+    mkChain("food-no-action", "lebensmittel", "kritisch", "gleichbleibend", { hasImpact: false }),
+    mkChain("finance-action", "finanzen", "beobachten"),
+  ],
+});
+
+assert.equal(lateAction.primaryAction?.signal.id, "finance-action", "wenn Top-Signale keine Massnahme haben, wird die naechste echte Massnahme genutzt");
 
 const empty = deriveHouseholdCheck({ profile: { modus: null, heizart: null, plz: null }, chains: [] });
 assert.deepEqual(empty.relevant, [], "ohne Daten keine erfundenen relevanten Signale");
@@ -89,6 +105,7 @@ assert.deepEqual(empty.secondaryCostOrSupply, [], "ohne Daten keine erfundenen D
 assert.deepEqual(empty.notDirectlyRelevant, [], "ohne Daten keine indirekten Platzhalter");
 assert.equal(empty.primaryConcern, null, "ohne Daten gibt es keine erfundene primaere Lagekarte");
 assert.equal(empty.primaryImpact, null, "ohne Daten gibt es keine erfundene primaere Haushaltswirkung");
+assert.equal(empty.primaryAction, null, "ohne Daten gibt es keine erfundene Massnahme");
 assert.equal(empty.nextStep?.key, "uni-abschlag", "ohne Profil bleibt nur universeller Prüfschritt");
 
 console.log("household-check.test.ts: PASS");

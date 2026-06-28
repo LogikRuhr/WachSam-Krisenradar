@@ -11,6 +11,7 @@ const initialPublic = buildPublicOnboardingSteps({
   hasPublishedSignals: true,
   hasResult: true,
   hasNextStep: true,
+  hasAction: true,
 });
 
 assert.equal(initialPublic[0].status, "active", "Public-Onboarding startet bei der Haushalts-Eingabe");
@@ -24,11 +25,13 @@ const usefulPublic = buildPublicOnboardingSteps({
   hasPublishedSignals: true,
   hasResult: true,
   hasNextStep: true,
+  hasAction: true,
 });
 
 assert.equal(usefulPublic[0].status, "done", "Haushalts-Eingabe ist nach Nutzeraktion bereit");
 assert.equal(usefulPublic[1].status, "done", "Vorhandene Wirkung wird nach Nutzeraktion als bereit markiert");
 assert.equal(usefulPublic[2].status, "active", "Der naechste Pruefschritt bleibt die aktive Handlung");
+assert.match(usefulPublic[2].text, /vorhandene Maßnahme/, "Vorhandene Massnahme wird im aktiven Schritt benannt");
 assert.deepEqual(onboardingSummary(usefulPublic), { completed: 2, total: 3, label: "2/3 bereit" });
 
 const blockedPublic = buildPublicOnboardingSteps({
@@ -37,10 +40,12 @@ const blockedPublic = buildPublicOnboardingSteps({
   hasPublishedSignals: false,
   hasResult: false,
   hasNextStep: true,
+  hasAction: false,
 });
 
 assert.equal(blockedPublic[1].status, "blocked", "Bei blockiertem Datenpfad gibt es keine Fake-Wirkung");
 assert.equal(blockedPublic[2].status, "active", "Ein profilbasierter Pruefschritt bleibt auch ohne Daten nutzbar");
+assert.doesNotMatch(blockedPublic[2].text, /vorhandene Maßnahme/, "Ohne echte Massnahme gibt es keinen Fake-Massnahmenhinweis");
 
 const incompleteProfile = buildProfileOnboardingSteps({
   profileFieldsFilled: 1,

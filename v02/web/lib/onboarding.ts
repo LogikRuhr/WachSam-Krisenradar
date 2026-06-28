@@ -26,6 +26,7 @@ export function buildPublicOnboardingSteps(input: {
   hasPublishedSignals: boolean;
   hasResult: boolean;
   hasNextStep: boolean;
+  hasAction: boolean;
 }): OnboardingStep[] {
   const resultAvailable = input.connected && input.hasPublishedSignals;
   const hasUsefulResult = input.hasProfileInput && input.hasResult;
@@ -48,7 +49,9 @@ export function buildPublicOnboardingSteps(input: {
     {
       id: "next-step",
       title: "Prüfschritt mitnehmen",
-      text: "Der nächste ruhige Schritt bleibt Orientierung und keine individuelle Beratung.",
+      text: input.hasAction
+        ? "Eine passende vorhandene Maßnahme ist sichtbar; sie bleibt ein Prüfschritt, keine Beratung."
+        : "Der nächste ruhige Schritt bleibt Orientierung und keine individuelle Beratung.",
       status: input.hasNextStep && input.hasProfileInput ? "active" : resultAvailable ? "open" : "blocked",
       href: "/massnahmen",
       actionLabel: "Maßnahmen ansehen",

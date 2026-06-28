@@ -466,10 +466,14 @@ strong { color: var(--on-surface); font-weight: 700; }
 .household-result-block { min-width: 0; border: 1px solid var(--outline); border-radius: 4px; background: rgba(13,13,13,.58); padding: 14px; }
 .household-result-block p { margin: 6px 0 0; max-width: none; font-size: 14px; line-height: 1.6; }
 .household-result-summary { min-width: 0; border: 1px solid rgba(212,84,10,.55); border-left: 3px solid var(--primary); border-radius: 0 4px 4px 0; background: rgba(212,84,10,.08); padding: 14px; }
+.household-result-kicker { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+.household-activation-chip { flex: 0 1 auto; min-width: 0; border: 1px solid rgba(34,197,94,.5); border-radius: 999px; padding: 4px 8px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--success); overflow-wrap: anywhere; }
 .household-result-summary strong { display: block; margin-top: 4px; font-size: 18px; line-height: 1.28; overflow-wrap: anywhere; }
 .household-result-summary p { margin: 7px 0 0; max-width: none; color: var(--on-surface); font-size: 14px; line-height: 1.55; }
-.household-result-next { margin-top: 12px; border-top: 1px solid rgba(241,242,244,.14); padding-top: 10px; }
-.household-result-next span { display: block; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--on-surface-variant); overflow-wrap: anywhere; }
+.household-result-next, .household-result-action { margin-top: 12px; border-top: 1px solid rgba(241,242,244,.14); padding-top: 10px; }
+.household-result-next span, .household-result-action > span { display: block; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--on-surface-variant); overflow-wrap: anywhere; }
+.household-result-action strong { font-size: 15px; line-height: 1.35; }
+.household-action-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 8px; }
 .household-result-details { min-width: 0; border: 1px solid var(--outline); border-radius: 4px; background: rgba(13,13,13,.42); }
 .household-result-details summary { cursor: pointer; padding: 12px 14px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: .04em; color: var(--on-surface); outline-offset: 3px; overflow-wrap: anywhere; }
 .household-result-details summary:hover { color: var(--primary); }
@@ -517,6 +521,7 @@ strong { color: var(--on-surface); font-weight: 700; }
   .household-check-form { grid-template-columns: 1fr; }
   .household-result-summary { padding: 12px; }
   .household-result-summary strong { font-size: 16px; }
+  .household-result-kicker { align-items: flex-start; flex-direction: column; gap: 6px; }
 }
 
 /* --- Gesamtstand: Vitals Board --- */

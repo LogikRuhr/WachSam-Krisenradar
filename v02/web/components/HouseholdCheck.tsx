@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { deriveHouseholdCheck, type HouseholdCheckChain } from "@/lib/household-check";
 import { buildPublicOnboardingSteps } from "@/lib/onboarding";
-import { bereichLabel } from "@/lib/personalization";
+import { aufwandLabel, bereichLabel } from "@/lib/personalization";
 import type { HouseholdHeizart, HouseholdModus } from "@/lib/profile";
 import { OnboardingChecklist } from "./OnboardingChecklist";
 
@@ -58,12 +59,16 @@ export function HouseholdCheck({
   const hasResultDetails =
     result.secondaryRelevant.length > 0 || result.secondaryCostOrSupply.length > 0 || result.indirectAreas.length > 0;
   const hasProfileInput = hasAdjustedProfile || heizart !== "unbekannt" || plz.length === 5;
+  const hasFirstValue =
+    connected && hasProfileInput && (result.primaryConcern !== null || result.primaryImpact !== null || result.primaryAction !== null);
+  const primaryAction = result.primaryAction?.action ?? null;
   const onboardingSteps = buildPublicOnboardingSteps({
     hasProfileInput,
     connected,
     hasPublishedSignals: chains.length > 0,
     hasResult: result.primaryConcern !== null,
     hasNextStep: result.nextStep !== null,
+    hasAction: primaryAction !== null,
   });
 
   return (
@@ -186,7 +191,10 @@ export function HouseholdCheck({
           ) : (
             <>
               <div className="household-result-summary" aria-live="polite">
-                <span className="chain-label">Deine erste Einordnung</span>
+                <div className="household-result-kicker">
+                  <span className="chain-label">Deine erste Einordnung</span>
+                  {hasFirstValue ? <span className="household-activation-chip">Erster WachSam-Wert erreicht</span> : null}
+                </div>
                 <strong>{result.primaryConcern?.signal.titel ?? "Keine priorisierte Lagekarte"}</strong>
                 <p>
                   {result.primaryImpact?.impact?.titel
@@ -197,6 +205,19 @@ export function HouseholdCheck({
                   <span>Nächster Prüfschritt</span>
                   <p>{nextStepText}</p>
                 </div>
+                {primaryAction ? (
+                  <div className="household-result-action">
+                    <span>Passende Maßnahme</span>
+                    <strong>{primaryAction.titel}</strong>
+                    <p>{primaryAction.beschreibung}</p>
+                    <div className="household-action-footer">
+                      <span className="mono-label">Aufwand: {aufwandLabel(primaryAction.aufwand)}</span>
+                      <Link className="text-link" href="/massnahmen">
+                        Maßnahme einordnen
+                      </Link>
+                    </div>
+                  </div>
+                ) : null}
               </div>
               <p className="household-check-boundary">{result.boundary}</p>
 

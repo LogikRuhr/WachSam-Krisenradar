@@ -66,6 +66,15 @@ test.describe("public WachSam smoke", () => {
     await expect(results).toContainText(/Aktueller Status|Deine erste Einordnung/);
     await expect(results).toContainText(/Nächster Prüfschritt/);
     await expect(results).toContainText(/Orientierung, keine Beratung/);
+    if ((await results.getByText("Deine erste Einordnung").count()) > 0) {
+      await householdType.selectOption("single");
+      await expect(onboarding).toContainText("2/3 bereit");
+      if ((await results.getByText("Passende Maßnahme").count()) > 0) {
+        await expect(results.getByRole("link", { name: "Maßnahme einordnen" })).toBeVisible();
+      }
+    } else {
+      await expect(results.getByText("Passende Maßnahme")).toHaveCount(0);
+    }
 
     const viewport = page.viewportSize();
     const headingBox = await heading.boundingBox();

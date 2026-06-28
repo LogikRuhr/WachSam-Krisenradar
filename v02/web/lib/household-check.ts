@@ -17,6 +17,7 @@ export type HouseholdCheckResult = {
   costOrSupply: HouseholdCheckChain[];
   primaryConcern: HouseholdCheckChain | null;
   primaryImpact: HouseholdCheckChain | null;
+  primaryAction: HouseholdCheckChain | null;
   secondaryRelevant: HouseholdCheckChain[];
   secondaryCostOrSupply: HouseholdCheckChain[];
   indirectAreas: string[];
@@ -39,9 +40,15 @@ export function deriveHouseholdCheck(input: {
   const sorted = prioritizeSignalsForProfile(input.chains, { heizart: input.profile.heizart });
   const prioritized = sorted.slice(0, 3);
   const costOrSupply = sorted.filter((chain) => chain.impact !== null).slice(0, 3);
+  const actionable = sorted.filter((chain) => chain.action !== null);
   const nextStep = householdCheckSteps(input.profile)[0] ?? null;
   const primaryConcern = prioritized[0] ?? null;
   const primaryImpact = costOrSupply[0] ?? null;
+  const primaryAction =
+    actionable.find((chain) => chain.signal.id === primaryConcern?.signal.id) ??
+    actionable.find((chain) => chain.signal.id === primaryImpact?.signal.id) ??
+    actionable[0] ??
+    null;
   const secondaryRelevant = primaryConcern
     ? prioritized.filter((chain) => chain.signal.id !== primaryConcern.signal.id).slice(0, 2)
     : [];
@@ -57,6 +64,7 @@ export function deriveHouseholdCheck(input: {
     costOrSupply,
     primaryConcern,
     primaryImpact,
+    primaryAction,
     secondaryRelevant,
     secondaryCostOrSupply,
     indirectAreas,
