@@ -33,7 +33,7 @@
     "eslint": "9.39.4",
     "next": "15.5.18",
     "tsx": "4.22.3",
-    "typescript": "5.9.3"
+    "typescript": "6.0.3"
   },
   "pnpm": {
     "overrides": {
