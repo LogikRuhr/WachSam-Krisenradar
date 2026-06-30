@@ -40,13 +40,13 @@ sources:
     adapter: src.adapters.destatis.DestatisAdapter
     indicator_ids: [wi-inflation-vpi-de]
     status: active
-    format: datencsv via GENESIS REST
+    format: GENESIS REST with official Destatis HTML table fallback
     auth_required: optional-credentials
     freshness_expectation: monthly
     household_relevance: hoch
-    current_quality: live-dry-run-ok-with-credentials-zip-csv
-    risk_notes: GENESIS may return zipped DATENCSV even with compress=false; adapter decodes ZIP and maps source_stand.
-    next_step: Add runtime source-health persistence before auto-published indicator updates.
+    current_quality: live-dry-run-ok-with-html-fallback-2026-06-30
+    risk_notes: GENESIS tablefile currently returns a valid JSON source error for 61111-0002; adapter detects it and calculates YoY from the official Destatis VPI HTML table.
+    next_step: Re-check GENESIS cube/timeseries access; keep HTML fallback until the API data endpoint is stable.
   - id: gie-agsi-gas-storage
     name: GIE AGSI+ Gasspeicher Deutschland
     layer: energy
