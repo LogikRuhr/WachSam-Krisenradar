@@ -187,4 +187,8 @@ def test_tankerkoenig_records_both_fuels_without_api_key(monkeypatch):
     # Produktiv unverändert: ohne Key kein Item.
     assert items == []
     ids = {e["indicator_id"] for e in adapter.source_errors}
-    assert ids == {"wi-kraftstoffpreis-super-e10", "wi-kraftstoffpreis-diesel"}
+    assert ids == {
+        "wi-kraftstoffpreis-super-e5",
+        "wi-kraftstoffpreis-super-e10",
+        "wi-kraftstoffpreis-diesel",
+    }

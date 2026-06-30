@@ -47,10 +47,12 @@ REQUEST_DELAY_SECONDS = 2.0
 SEARCH_RADIUS_KM = 10
 
 FUEL_INDICATORS = {
+    "e5": "wi-kraftstoffpreis-super-e5",
     "e10": "wi-kraftstoffpreis-super-e10",
     "diesel": "wi-kraftstoffpreis-diesel",
 }
 FUEL_LABELS = {
+    "e5": "Super E5",
     "e10": "Super E10",
     "diesel": "Diesel",
 }
@@ -61,11 +63,11 @@ def _valid_price(value) -> bool:
 
 
 def average_fuel_prices(stations: List[dict]) -> dict:
-    """Mittelt e10/diesel ueber alle offenen Stationen mit gueltigem Preis.
+    """Mittelt e5/e10/diesel ueber alle offenen Stationen mit gueltigem Preis.
 
-    Liefert {"e10": float|None, "diesel": float|None, "station_count": int}.
+    Liefert {"e5": float|None, "e10": float|None, "diesel": float|None, "station_count": int}.
     """
-    fuel_values: dict[str, list[float]] = {"e10": [], "diesel": []}
+    fuel_values: dict[str, list[float]] = {fuel: [] for fuel in FUEL_INDICATORS}
     counted_stations = 0
 
     for station in stations:
@@ -81,6 +83,7 @@ def average_fuel_prices(stations: List[dict]) -> dict:
             counted_stations += 1
 
     return {
+        "e5": round(mean(fuel_values["e5"]), 3) if fuel_values["e5"] else None,
         "e10": round(mean(fuel_values["e10"]), 3) if fuel_values["e10"] else None,
         "diesel": round(mean(fuel_values["diesel"]), 3) if fuel_values["diesel"] else None,
         "station_count": counted_stations,
@@ -88,7 +91,7 @@ def average_fuel_prices(stations: List[dict]) -> dict:
 
 
 class TankerkoenigAdapter(BaseAdapter):
-    """Tankerkoenig (MTS-K) — Kraftstoffpreise Super E10 und Diesel.
+    """Tankerkoenig (MTS-K) — Kraftstoffpreise Super E5, Super E10 und Diesel.
 
     Kein nationaler Durchschnitts-Endpoint vorhanden: gemittelt wird ueber eine
     feste Stichprobe aus 16 PLZ-Gebieten (je Bundesland eines).
@@ -96,7 +99,7 @@ class TankerkoenigAdapter(BaseAdapter):
 
     BASE_URL = "https://creativecommons.tankerkoenig.de/json/list.php"
     SOURCE_URL = "https://creativecommons.tankerkoenig.de/"
-    source_label = "Tankerkoenig MTS-K (E10/Diesel, 16 PLZ)"
+    source_label = "Tankerkoenig MTS-K (E5/E10/Diesel, 16 PLZ)"
     requires_api_key = True  # TANKERKOENIG_API_KEY zwingend
     output_target = "indicators"
 

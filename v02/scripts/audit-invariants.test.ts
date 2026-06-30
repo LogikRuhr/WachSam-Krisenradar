@@ -83,6 +83,13 @@ assert.equal(destatisFuel.valueNumeric, "26.2", "Destatis fuel fact must use the
 
 const expectedFuelIndicators = [
   {
+    id: "wi-kraftstoffpreis-super-e5",
+    baselineValue: null,
+    crisisReferenceValue: null,
+    thresholdWarn: null,
+    thresholdCritical: null,
+  },
+  {
     id: "wi-kraftstoffpreis-super-e10",
     baselineValue: "1.405",
     crisisReferenceValue: "1.86",
@@ -101,13 +108,30 @@ const expectedFuelIndicators = [
 for (const expected of expectedFuelIndicators) {
   const indicator = seedData.indicators.find((item) => item.id === expected.id);
   assert.ok(indicator, `${expected.id} must exist`);
-  assert.equal(indicator.baselineValue, expected.baselineValue, `${expected.id} must use ADAC 2019 as baseline`);
-  assert.equal(indicator.baselinePeriod, "2019", `${expected.id} baseline period must be explicit`);
-  assert.equal(indicator.crisisReferenceValue, expected.crisisReferenceValue, `${expected.id} must use ADAC 2022 as crisis reference`);
-  assert.equal(indicator.crisisReferencePeriod, "2022", `${expected.id} crisis period must be explicit`);
-  assert.equal(indicator.thresholdWarn, expected.thresholdWarn, `${expected.id} warn threshold must be midpoint between baseline and crisis`);
-  assert.equal(indicator.thresholdCritical, expected.thresholdCritical, `${expected.id} critical threshold must equal crisis reference`);
-  assert.match(indicator.thresholdMethod ?? "", /baseline \+ 50%/, `${expected.id} must document threshold derivation`);
+  assert.equal(indicator.baselineValue, expected.baselineValue, `${expected.id} baseline must match calibration state`);
+  assert.equal(indicator.crisisReferenceValue, expected.crisisReferenceValue, `${expected.id} crisis reference must match calibration state`);
+  assert.equal(indicator.thresholdWarn, expected.thresholdWarn, `${expected.id} warn threshold must match calibration state`);
+  assert.equal(indicator.thresholdCritical, expected.thresholdCritical, `${expected.id} critical threshold must match calibration state`);
+  if (expected.id === "wi-kraftstoffpreis-super-e5") {
+    assert.match(indicator.thresholdMethod ?? "", /keine WachSam-Schwellenzone/i, "Super E5 must not invent ADAC thresholds");
+  } else {
+    assert.equal(indicator.baselinePeriod, "2019", `${expected.id} baseline period must be explicit`);
+    assert.equal(indicator.crisisReferencePeriod, "2022", `${expected.id} crisis period must be explicit`);
+    assert.match(indicator.thresholdMethod ?? "", /baseline \+ 50%/, `${expected.id} must document threshold derivation`);
+  }
+}
+
+const householdEnergyPrices = [
+  { id: "wi-strompreis-haushalt", value: "37", unit: "ct/kWh" },
+  { id: "wi-gaspreis-haushalt-efh", value: "11.1", unit: "ct/kWh" },
+];
+for (const expected of householdEnergyPrices) {
+  const indicator = seedData.indicators.find((item) => item.id === expected.id);
+  assert.ok(indicator, `${expected.id} must exist`);
+  assert.equal(indicator.currentValue, expected.value, `${expected.id} must carry the BDEW editorial price stand`);
+  assert.equal(indicator.unit, expected.unit, `${expected.id} must use household energy units`);
+  assert.equal(indicator.thresholdWarn, null, `${expected.id} must not invent a WachSam threshold`);
+  assert.match(indicator.thresholdMethod ?? "", /redaktioneller Preisstand/i, `${expected.id} must document editorial-only status`);
 }
 
 const factRefs = (seedData as typeof seedData & { factRefs?: Array<{ factId: string }> }).factRefs ?? [];

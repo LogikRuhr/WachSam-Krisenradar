@@ -59,6 +59,15 @@
       ]
     },
     {
+      "id": "cil-cascade-d-wi-kraftstoffpreis-super-e5",
+      "cascade_id": "cascade-d",
+      "indicator_id": "wi-kraftstoffpreis-super-e5",
+      "role": "affected",
+      "relation": "folgt",
+      "lag_hint": "ca. 2 Wochen (Tankstellenpreis folgt dem Großhandel)",
+      "revision_criteria": null
+    },
+    {
       "id": "cil-cascade-d-wi-kraftstoffpreis-super-e10",
       "cascade_id": "cascade-d",
       "indicator_id": "wi-kraftstoffpreis-super-e10",

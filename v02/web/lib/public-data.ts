@@ -2,6 +2,7 @@ import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { db, schema } from "./db";
 import { aufwandRank, confidenceRank, isRising } from "./personalization";
+import { buildPriceRadar, PRICE_RADAR_INDICATOR_IDS, type PriceRadarCard } from "./price-radar";
 
 const PUBLISHED = "published" as const;
 
@@ -420,6 +421,31 @@ export async function getSourceHealthOverview(): Promise<DbState<SourceHealthPub
       .from(schema.sourceHealth)
       .orderBy(asc(schema.sourceHealth.sourceName)),
   );
+}
+
+/** Kompakter Preisradar für die Startseite: nur publizierte Indikatoren, kein API-Call im Renderpfad. */
+export async function getPriceRadar(): Promise<DbState<PriceRadarCard>> {
+  const indicators = await safe(() =>
+    database()!
+      .select()
+      .from(schema.indicators)
+      .where(
+        and(
+          eq(schema.indicators.editorialStatus, PUBLISHED),
+          inArray(schema.indicators.id, PRICE_RADAR_INDICATOR_IDS),
+        ),
+      ),
+  );
+  if (!indicators.connected) {
+    return { rows: buildPriceRadar([]), connected: false, error: indicators.error };
+  }
+
+  const health = await getSourceHealthOverview();
+  return {
+    rows: buildPriceRadar(indicators.rows, health.connected ? health.rows : []),
+    connected: true,
+    error: health.error,
+  };
 }
 
 export async function getHeroLagebild() {

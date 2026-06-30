@@ -5,11 +5,12 @@ import { HomeStorySteps } from "@/components/HomeStorySteps";
 import { MethodikHinweis } from "@/components/MethodikHinweis";
 import { NutzenBoard } from "@/components/NutzenBoard";
 import { PfadHub } from "@/components/PfadHub";
+import { PriceRadar } from "@/components/PriceRadar";
 import { SignalChain } from "@/components/SignalChain";
 import { Verdict } from "@/components/Verdict";
 import { VitalsBoard } from "@/components/VitalsBoard";
 import { computeVerdict, personalNote, type Verdict as VerdictData, type VerdictTone } from "@/lib/personalization";
-import { getFrontDoorSignals, getHeadlineVitals, getNationalState } from "@/lib/public-data";
+import { getFrontDoorSignals, getHeadlineVitals, getNationalState, getPriceRadar } from "@/lib/public-data";
 import { getCurrentUserProfile } from "@/lib/use-user-modus";
 import type { HouseholdCheckChain } from "@/lib/household-check";
 
@@ -35,10 +36,11 @@ function formatStand(value: Date | string | null | undefined): string | null {
 
 export default async function HomePage() {
   const profile = await getCurrentUserProfile();
-  const [signals, national, vitals] = await Promise.all([
+  const [signals, national, vitals, priceRadar] = await Promise.all([
     getFrontDoorSignals(8),
     getNationalState(),
     getHeadlineVitals(),
+    getPriceRadar(),
   ]);
   const verdict = computeVerdict(signals.rows.map((chain) => chain.signal));
   const chainsWithImpact = signals.rows.filter((chain) => chain.impact).slice(0, 3);
@@ -114,6 +116,8 @@ export default async function HomePage() {
           <Link className="text-link" href="/massnahmen">Maßnahmen prüfen</Link>
         </div>
       </section>
+
+      {priceRadar.rows.length > 0 ? <PriceRadar cards={priceRadar.rows} /> : null}
 
       {!signals.connected ? <DbNotice error={signals.error} /> : null}
 

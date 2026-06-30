@@ -2,8 +2,8 @@
   "meta": {
     "version": "v0.3",
     "stand": "2026-06-16",
-    "count": 15,
-    "note": "15 Frühwarnindikatoren inkl. 4 neue Makro-Vitalwerte (Welle 2). Basis: docs/warning-indicators.md"
+    "count": 18,
+    "note": "18 Frühwarnindikatoren inkl. Preisradar-Erweiterung für Tankstellen- und Haushaltsenergiepreise. Basis: docs/warning-indicators.md"
   },
   "indicators": [
     {
@@ -129,6 +129,27 @@
       "germany_relevance": "Kraftstoffpreise folgen ~2 Wochen verzögert",
       "linked_cascade": "cascade-d",
       "scale_direction": "higher_is_worse"
+    },
+    {
+      "id": "wi-kraftstoffpreis-super-e5",
+      "label": "Kraftstoffpreis Super E5 Deutschland",
+      "threshold_warn": null,
+      "threshold_critical": null,
+      "unit": "Euro/Liter",
+      "system": "mobilitaet",
+      "severity_trigger": "beobachten",
+      "quelle": "Tankerkönig MTS-K; Live-Stichprobe ohne kalibrierte Jahresmittel-Schwellen",
+      "sources": [
+        {
+          "name": "Tankerkönig — Markttransparenzstelle Kraftstoffe API",
+          "url": "https://creativecommons.tankerkoenig.de/",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "Direkte Haushaltsbelastung für Pendeln und regionale Mobilität; Super E5 ist an Tankstellen weiter verbreitet, aber noch nicht mit historischen WachSam-Schwellen kalibriert",
+      "linked_cascade": "cascade-d",
+      "scale_direction": "higher_is_worse",
+      "threshold_method": "Noch keine WachSam-Schwellenzone: Tankerkönig liefert Live-Super-E5-Felder, aber der bestehende ADAC-Jahresmittel-Schwellenpfad ist im Repo nur für Super E10 und Diesel kalibriert."
     },
     {
       "id": "wi-kraftstoffpreis-super-e10",
@@ -321,6 +342,52 @@
       "linked_cascade": "cascade-h",
       "scale_direction": "higher_is_worse",
       "threshold_method": "warn = 15 USD/MMBtu (ca. 2× Vorkrisenniveau 2019-2021 ~7 USD); critical = 25 USD/MMBtu (Orientierung an Extremphase Aug–Dez 2022 >30 USD, Rückrechnung für strukturell erhöhtes Niveau)"
+    },
+    {
+      "id": "wi-strompreis-haushalt",
+      "label": "Strompreis Haushalte Deutschland",
+      "threshold_warn": null,
+      "threshold_critical": null,
+      "unit": "ct/kWh",
+      "system": "energie",
+      "severity_trigger": "beobachten",
+      "quelle": "BDEW Strompreisanalyse April 2026 (redaktioneller Monatsstand)",
+      "sources": [
+        {
+          "name": "BDEW — Strompreisanalyse",
+          "url": "https://www.bdew.de/service/daten-und-grafiken/bdew-strompreisanalyse/",
+          "stand": "April 2026"
+        }
+      ],
+      "germany_relevance": "Direkte Haushaltsbelastung für Stromkosten; Durchschnittswert ersetzt keinen individuellen Tarifvertrag",
+      "linked_cascade": null,
+      "scale_direction": "higher_is_worse",
+      "current_value": 37.0,
+      "current_value_date": "2026-04-01T00:00:00Z",
+      "threshold_method": "Keine WachSam-Schwellenzone: BDEW-Haushaltsstrompreis wird als redaktioneller Preisstand gezeigt, nicht als Live-Marktindikator."
+    },
+    {
+      "id": "wi-gaspreis-haushalt-efh",
+      "label": "Gaspreis Haushalte Deutschland (Einfamilienhaus)",
+      "threshold_warn": null,
+      "threshold_critical": null,
+      "unit": "ct/kWh",
+      "system": "energie",
+      "severity_trigger": "beobachten",
+      "quelle": "BDEW Gaspreisanalyse April 2026 (redaktioneller Monatsstand)",
+      "sources": [
+        {
+          "name": "BDEW — Gaspreisanalyse",
+          "url": "https://www.bdew.de/service/daten-und-grafiken/bdew-gaspreisanalyse/",
+          "stand": "April 2026"
+        }
+      ],
+      "germany_relevance": "Direkte Haushaltsbelastung für Heizkosten; Durchschnittswert ersetzt keinen individuellen Tarifvertrag",
+      "linked_cascade": null,
+      "scale_direction": "higher_is_worse",
+      "current_value": 11.1,
+      "current_value_date": "2026-04-01T00:00:00Z",
+      "threshold_method": "Keine WachSam-Schwellenzone: BDEW-Haushaltsgaspreis wird als redaktioneller Preisstand gezeigt, nicht als Live-Marktindikator."
     },
     {
       "id": "wi-bip-wachstum-de",

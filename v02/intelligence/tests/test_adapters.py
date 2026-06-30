@@ -259,22 +259,24 @@ def test_tankerkoenig_basket_has_one_point_per_bundesland():
 
 def test_average_fuel_prices_filters_closed_and_invalid():
     stations = [
-        {"isOpen": True, "e10": 1.759, "diesel": 1.659},
-        {"isOpen": True, "e10": 1.779, "diesel": 1.679},
-        {"isOpen": False, "e10": 1.700, "diesel": 1.600},  # geschlossen → ignoriert
-        {"isOpen": True, "e10": False, "diesel": 1.689},    # e10 ungueltig → nur diesel
+        {"isOpen": True, "e5": 1.819, "e10": 1.759, "diesel": 1.659},
+        {"isOpen": True, "e5": 1.839, "e10": 1.779, "diesel": 1.679},
+        {"isOpen": False, "e5": 1.800, "e10": 1.700, "diesel": 1.600},  # geschlossen → ignoriert
+        {"isOpen": True, "e5": False, "e10": False, "diesel": 1.689},   # Benzin ungueltig → nur diesel
     ]
 
     result = average_fuel_prices(stations)
 
+    assert result["e5"] == 1.829
     assert result["e10"] == 1.769
     assert result["diesel"] == 1.676
     assert result["station_count"] == 3
 
 
 def test_average_fuel_prices_empty_when_all_closed():
-    stations = [{"isOpen": False, "e10": 1.7, "diesel": 1.6}]
+    stations = [{"isOpen": False, "e5": 1.8, "e10": 1.7, "diesel": 1.6}]
     result = average_fuel_prices(stations)
+    assert result["e5"] is None
     assert result["e10"] is None
     assert result["diesel"] is None
     assert result["station_count"] == 0
@@ -293,19 +295,25 @@ def test_tankerkoenig_maps_to_indicator_live_values(monkeypatch):
     _mock_tankerkoenig(monkeypatch, {
         "ok": True,
         "stations": [
-            {"isOpen": True, "e10": 1.759, "diesel": 1.659},
-            {"isOpen": True, "e10": 1.779, "diesel": 1.679},
-            {"isOpen": True, "e10": False, "diesel": 1.689},
+            {"isOpen": True, "e5": 1.819, "e10": 1.759, "diesel": 1.659},
+            {"isOpen": True, "e5": 1.839, "e10": 1.779, "diesel": 1.679},
+            {"isOpen": True, "e5": False, "e10": False, "diesel": 1.689},
         ],
     })
 
     items = TankerkoenigAdapter().fetch_latest()
     by_id = {item.indicator_id: item for item in items}
 
-    assert set(by_id) == {"wi-kraftstoffpreis-super-e10", "wi-kraftstoffpreis-diesel"}
+    assert set(by_id) == {
+        "wi-kraftstoffpreis-super-e5",
+        "wi-kraftstoffpreis-super-e10",
+        "wi-kraftstoffpreis-diesel",
+    }
 
+    e5 = by_id["wi-kraftstoffpreis-super-e5"]
     e10 = by_id["wi-kraftstoffpreis-super-e10"]
     diesel = by_id["wi-kraftstoffpreis-diesel"]
+    assert e5.current_value == 1.829
     assert e10.current_value == 1.769
     assert diesel.current_value == 1.676
     assert e10.current_value_date == date.today().isoformat()

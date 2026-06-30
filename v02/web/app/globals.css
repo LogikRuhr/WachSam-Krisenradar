@@ -412,6 +412,26 @@ strong { color: var(--on-surface); font-weight: 700; }
   .app-state-band { grid-template-columns: 1fr; }
 }
 
+.price-radar { margin: 0 0 28px; }
+.price-radar-head { margin-bottom: 12px; }
+.price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.price-card { display: flex; flex-direction: column; gap: 7px; min-width: 0; min-height: 198px; border: 1px solid var(--outline); border-left: 3px solid var(--outline); border-radius: 0 4px 4px 0; background: rgba(27,30,37,.78); padding: 16px; color: var(--on-surface); transition: border-color .2s, background .2s; }
+.price-card:hover { border-left-color: var(--primary); background: rgba(33,36,44,.86); }
+.price-card-uncritical { border-left-color: var(--success); }
+.price-card-elevated { border-left-color: var(--warning); }
+.price-card-critical { border-left-color: var(--critical); }
+.price-card-source-critical { border-color: rgba(239,68,68,.34); }
+.price-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.price-label { color: var(--on-surface); font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.price-value { display: block; margin: 2px 0 0; color: var(--on-surface); font-family: var(--font-display); font-size: 30px; line-height: 1; letter-spacing: .02em; overflow-wrap: anywhere; }
+.price-value-pending { font-family: var(--font-mono); font-size: 13px; line-height: 1.45; color: var(--on-surface-variant); }
+.price-description, .price-note { margin: 0; color: var(--on-surface-variant); font-size: 13px; line-height: 1.45; }
+.price-source { margin-top: auto; padding-top: 4px; font-size: 10px; line-height: 1.4; }
+.source-pill { flex: 0 1 auto; min-width: 0; border: 1px solid var(--outline); border-radius: 999px; padding: 2px 7px; color: var(--on-surface-variant); font-family: var(--font-mono); font-size: 10px; line-height: 1.3; text-transform: uppercase; overflow-wrap: anywhere; }
+.source-pill-uncritical { color: var(--success); border-color: rgba(34,197,94,.45); }
+.source-pill-elevated { color: var(--warning); border-color: rgba(234,179,8,.45); }
+.source-pill-critical { color: var(--critical); border-color: rgba(239,68,68,.5); }
+
 .signals-grid { display: flex; flex-direction: column; gap: 24px; }
 .signal-chain { background: var(--surface-container); border-left: 3px solid var(--primary); border-top: 1px solid var(--outline); border-right: 1px solid var(--outline); border-bottom: 1px solid var(--outline); border-radius: 0 4px 4px 0; padding: 28px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
 .signal-title { margin: 12px 0 6px; font-family: var(--font-display, var(--font-mono)); font-size: 26px; line-height: 1.2; color: var(--on-surface); }

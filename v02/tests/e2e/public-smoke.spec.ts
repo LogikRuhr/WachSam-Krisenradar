@@ -54,11 +54,18 @@ test.describe("public WachSam smoke", () => {
     const dataStatus = page.getByLabel("Datenstatus des Haushalts-Checks");
     const onboarding = page.getByLabel("In drei Schritten zum ersten WachSam-Wert");
     const results = page.locator(".household-check-results");
+    const priceRadar = page.locator(".price-radar");
 
     await expect(heading).toBeVisible();
     await expect(householdType).toBeVisible();
     await expect(dataStatus).toBeVisible();
     await expect(onboarding).toBeVisible();
+    await expect(priceRadar).toBeVisible();
+    await expect(priceRadar).toContainText("Super E5");
+    await expect(priceRadar).toContainText("Super E10");
+    await expect(priceRadar).toContainText("Diesel");
+    await expect(priceRadar).toContainText("Strom Haushalte");
+    await expect(priceRadar).toContainText("Gas Haushalte");
     await expect(onboarding).toContainText("Haushalt einordnen");
     await expect(onboarding).toContainText("Wirkung verstehen");
     await expect(onboarding).toContainText("Prüfschritt mitnehmen");

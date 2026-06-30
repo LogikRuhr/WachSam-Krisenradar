@@ -7,10 +7,16 @@ export type NewIndicator = InferInsertModel<typeof indicators>;
 // The JSON has new optional fields that TypeScript's inferred type doesn't cover yet.
 // We cast each item to access them safely.
 type RawIndicator = (typeof indicatorData.indicators)[number] & {
+  threshold_warn?: number | null;
+  threshold_critical?: number | null;
   scale_direction?: string;
   zone_text_uncritical?: string;
   zone_text_elevated?: string;
   zone_text_critical?: string;
+  current_value?: number;
+  current_value_date?: string;
+  previous_value?: number;
+  previous_value_date?: string;
   target_value?: number;
   target_deadline?: string;
   target_label?: string;
@@ -35,14 +41,18 @@ export const INDICATORS: NewIndicator[] = indicatorData.indicators.map((_item) =
   return {
     id: item.id,
     label: item.label,
-    thresholdWarn: String(item.threshold_warn),
-    thresholdCritical: String(item.threshold_critical),
+    thresholdWarn: item.threshold_warn != null ? String(item.threshold_warn) : null,
+    thresholdCritical: item.threshold_critical != null ? String(item.threshold_critical) : null,
     unit: item.unit,
     system: item.system,
     severityTrigger: item.severity_trigger,
     quelle: item.quelle,
     germanyRelevance: { description: item.germany_relevance },
     linkedCascade: item.linked_cascade ?? null,
+    currentValue: item.current_value != null ? String(item.current_value) : null,
+    currentValueDate: item.current_value_date ? new Date(item.current_value_date) : null,
+    previousValue: item.previous_value != null ? String(item.previous_value) : null,
+    previousValueDate: item.previous_value_date ? new Date(item.previous_value_date) : null,
     scaleDirection: item.scale_direction ?? "higher_is_worse",
     zoneTextUncritical: item.zone_text_uncritical ?? null,
     zoneTextElevated: item.zone_text_elevated ?? null,

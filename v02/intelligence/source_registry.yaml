@@ -113,7 +113,7 @@ sources:
     operator: Tankerkönig / Markttransparenzstelle Kraftstoffe
     source_url: https://creativecommons.tankerkoenig.de/
     adapter: src.adapters.tankerkoenig.TankerkoenigAdapter
-    indicator_ids: [wi-kraftstoffpreis-super-e10, wi-kraftstoffpreis-diesel]
+    indicator_ids: [wi-kraftstoffpreis-super-e5, wi-kraftstoffpreis-super-e10, wi-kraftstoffpreis-diesel]
     status: active
     format: json
     auth_required: api-key
@@ -357,7 +357,7 @@ sources:
     operator: BDEW
     source_url: https://www.bdew.de/service/daten-und-grafiken/bdew-strompreisanalyse/
     adapter: null
-    indicator_ids: []
+    indicator_ids: [wi-strompreis-haushalt]
     status: editorial-only
     format: web-report
     auth_required: none
@@ -365,4 +365,19 @@ sources:
     household_relevance: hoch
     current_quality: source-url-verified-http-200
     risk_notes: Association source; use as context, not official authority.
+    next_step: Keep editorial-only unless stable downloads and terms are found.
+  - id: bdew-gaspreisanalyse
+    name: BDEW Gaspreisanalyse
+    layer: energy
+    operator: BDEW
+    source_url: https://www.bdew.de/service/daten-und-grafiken/bdew-gaspreisanalyse/
+    adapter: null
+    indicator_ids: [wi-gaspreis-haushalt-efh]
+    status: editorial-only
+    format: web-report
+    auth_required: none
+    freshness_expectation: periodic
+    household_relevance: hoch
+    current_quality: source-url-verified-http-200
+    risk_notes: Association source; household tariff context only, not an individual contract forecast.
     next_step: Keep editorial-only unless stable downloads and terms are found.

@@ -28,6 +28,7 @@ PLAUSIBILITY_RULES: dict[str, dict[str, float]] = {
     # Erdgas Europa in USD/MMBtu.
     "wi-gaspreis-europa": {"plausibility_min": 0.0, "plausibility_max": 400.0, "max_delta_percent": 40.0},
     # Kraftstoffe in €/Liter.
+    "wi-kraftstoffpreis-super-e5": {"plausibility_min": 0.5, "plausibility_max": 5.0, "max_delta_percent": 20.0},
     "wi-kraftstoffpreis-super-e10": {"plausibility_min": 0.5, "plausibility_max": 5.0, "max_delta_percent": 20.0},
     "wi-kraftstoffpreis-diesel": {"plausibility_min": 0.5, "plausibility_max": 5.0, "max_delta_percent": 20.0},
     # BIP-Wachstum QoQ in %. Historische Extreme: Finanzkrise/Covid -10% QoQ;
