@@ -116,7 +116,7 @@ jobs:
             rsync -a --delete "$runtime_v02/" "$backup_dir/"
           fi
 
-          rsync -a --delete "$source_v02/" "$runtime_v02/"
+          rsync -a --delete --exclude 'intelligence/.env' "$source_v02/" "$runtime_v02/"
           docker compose -f "$compose_file" up -d --build web
           docker compose -f "$compose_file" ps web
 
