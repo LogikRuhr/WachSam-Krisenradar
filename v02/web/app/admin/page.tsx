@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { AdminOverviewTable } from "@/components/admin/AdminOverviewTable";
-import { getEditorialOverview } from "@/lib/admin/editorial-read";
+import { getEditorialOverview, getEditorialReviewQueue } from "@/lib/admin/editorial-read";
 
 export const metadata = { title: "Admin — WachSam Editorial" };
 
 export default async function AdminPage() {
-  const rows = await getEditorialOverview();
+  const [rows, queue] = await Promise.all([getEditorialOverview(), getEditorialReviewQueue()]);
 
   return (
     <section>
@@ -18,7 +18,7 @@ export default async function AdminPage() {
       <div className="admin-toolbar">
         <Link className="admin-link" href="/admin/audit">Audit-Log ansehen</Link>
       </div>
-      <AdminOverviewTable rows={rows} />
+      <AdminOverviewTable rows={rows} queue={queue} />
     </section>
   );
 }

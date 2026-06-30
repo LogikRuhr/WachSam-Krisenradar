@@ -47,6 +47,13 @@ export type EditorialListItem = {
   status: EditorialStatus;
   editorialReviewedAt: Date | null;
   publishedAt: Date | null;
+  createdAt: Date | null;
+};
+
+export type EditorialReviewQueueItem = EditorialListItem & {
+  type: EditorialItemType;
+  label: string;
+  queuedAt: Date | null;
 };
 
 export type EditorialItem = Record<string, unknown> & {
@@ -54,6 +61,7 @@ export type EditorialItem = Record<string, unknown> & {
   editorialStatus: EditorialStatus;
   editorialReviewedAt: Date | null;
   publishedAt: Date | null;
+  createdAt: Date | null;
 };
 
 export type EditorialAuditEventRow = {
@@ -69,6 +77,13 @@ export type EditorialAuditEventRow = {
 };
 
 const statuses: EditorialStatus[] = ["draft", "approved", "rejected", "published"];
+const reviewStatuses = new Set<EditorialStatus>(["draft", "approved"]);
+const statusPriority: Record<EditorialStatus, number> = {
+  draft: 0,
+  approved: 1,
+  rejected: 2,
+  published: 3,
+};
 const confidenceOptions = ["niedrig", "mittel", "hoch"];
 const severityOptions = ["stabil", "beobachten", "erhoeht", "kritisch", "eskalierend"];
 const zeithorizontOptions = ["kurzfristig", "wochen", "monate", "langfristig"];
@@ -286,6 +301,29 @@ function normalizeCounts(rows: Array<{ status: EditorialStatus; count: number }>
   return result;
 }
 
+function latestReviewTime(row: { editorialReviewedAt: Date | null; publishedAt: Date | null; createdAt?: Date | null }) {
+  return (row.editorialReviewedAt ?? row.publishedAt ?? row.createdAt)?.getTime() ?? 0;
+}
+
+function sortForReview<
+  T extends {
+    status: EditorialStatus;
+    editorialReviewedAt: Date | null;
+    publishedAt: Date | null;
+    createdAt?: Date | null;
+    id: string;
+  },
+>(
+  rows: T[],
+): T[] {
+  return [...rows].sort(
+    (a, b) =>
+      statusPriority[a.status] - statusPriority[b.status] ||
+      latestReviewTime(b) - latestReviewTime(a) ||
+      a.id.localeCompare(b.id),
+  );
+}
+
 export async function getEditorialOverview(): Promise<EditorialOverviewRow[]> {
   await requireEditorRole();
   const activeDb = ensureDb();
@@ -308,13 +346,42 @@ export async function listEditorialItems(itemType: EditorialItemType): Promise<E
   const t = table(itemType);
   const meta = getTypeMeta(itemType);
   const rows = (await activeDb.select().from(t as never).orderBy(t.editorialStatus as never, t.id as never)) as EditorialItem[];
-  return rows.map((row) => ({
+  return sortForReview(rows.map((row) => ({
     id: row.id,
     title: String(row[meta.titleField] ?? row.id),
     status: row.editorialStatus,
     editorialReviewedAt: row.editorialReviewedAt,
     publishedAt: row.publishedAt,
-  }));
+    createdAt: row.createdAt,
+  })));
+}
+
+export async function getEditorialReviewQueue(limit = 12): Promise<EditorialReviewQueueItem[]> {
+  await requireEditorRole();
+  const activeDb = ensureDb();
+  const queue: EditorialReviewQueueItem[] = [];
+
+  for (const itemType of editorialItemTypes) {
+    const t = table(itemType);
+    const meta = getTypeMeta(itemType);
+    const rows = (await activeDb.select().from(t as never).orderBy(desc(t.editorialReviewedAt as never))) as EditorialItem[];
+    for (const row of rows) {
+      if (!reviewStatuses.has(row.editorialStatus)) continue;
+      queue.push({
+        id: row.id,
+        title: String(row[meta.titleField] ?? row.id),
+        status: row.editorialStatus,
+        editorialReviewedAt: row.editorialReviewedAt,
+        publishedAt: row.publishedAt,
+        createdAt: row.createdAt,
+        type: itemType,
+        label: meta.label,
+        queuedAt: row.editorialReviewedAt ?? row.createdAt,
+      });
+    }
+  }
+
+  return sortForReview(queue).slice(0, limit);
 }
 
 export async function getEditorialItem(itemType: EditorialItemType, id: string): Promise<EditorialItem | null> {

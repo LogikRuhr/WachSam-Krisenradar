@@ -20,6 +20,13 @@ function formatDate(value: Date | null) {
   return new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" }).format(value);
 }
 
+function nextStepLabel(status: EditorialStatus) {
+  if (status === "draft") return "Prüfen: freigeben oder ablehnen";
+  if (status === "approved") return "Publizieren oder ablehnen";
+  if (status === "rejected") return "Bearbeiten und neu prüfen";
+  return "Öffentlich sichtbar";
+}
+
 function TransitionForm({
   id,
   label,
@@ -82,6 +89,7 @@ export function AdminItemsTable({ meta, items }: { meta: EditorialTypeMeta; item
           <tr>
             <th>Titel / Label / ID</th>
             <th>Status</th>
+            <th>Nächster Schritt</th>
             <th>Zuletzt geprüft</th>
             <th>Publiziert</th>
             <th>Aktionen</th>
@@ -92,6 +100,7 @@ export function AdminItemsTable({ meta, items }: { meta: EditorialTypeMeta; item
             <tr key={item.id}>
               <td data-label="Titel / Label / ID"><strong>{item.title}</strong><br /><code>{item.id}</code></td>
               <td data-label="Status"><span className={`admin-status admin-status-${item.status}`}>{statusLabels[item.status]}</span></td>
+              <td data-label="Nächster Schritt">{nextStepLabel(item.status)}</td>
               <td data-label="Zuletzt geprüft">{formatDate(item.editorialReviewedAt)}</td>
               <td data-label="Publiziert">{formatDate(item.publishedAt)}</td>
               <td data-label="Aktionen"><RowActions meta={meta} item={item} /></td>
@@ -99,7 +108,7 @@ export function AdminItemsTable({ meta, items }: { meta: EditorialTypeMeta; item
           ))}
           {items.length === 0 ? (
             <tr>
-              <td colSpan={5}>Keine Einträge vorhanden.</td>
+              <td colSpan={6}>Keine Einträge vorhanden.</td>
             </tr>
           ) : null}
         </tbody>

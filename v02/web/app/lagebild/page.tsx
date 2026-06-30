@@ -2,6 +2,7 @@ import { DbNotice } from "@/components/DbNotice";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SignalChain } from "@/components/SignalChain";
 import { Verdict } from "@/components/Verdict";
+import Link from "next/link";
 import { computeVerdict, personalNote } from "@/lib/personalization";
 import { getSignalChains } from "@/lib/public-data";
 import { getCurrentUserProfile } from "@/lib/use-user-modus";
@@ -31,6 +32,18 @@ export default async function LagebildPage() {
       <SectionHeader label="Lagebild" title="Deutschland in zehn Bereichen">
         <p>Jeder Bereich: was sich bewegt, was es für deinen Haushalt bedeutet, was du tun kannst.</p>
       </SectionHeader>
+
+      <section className="review-gate-band" aria-label="Aktualisierungspfad des Lagebilds">
+        <div>
+          <p className="mono-label">Aktualisierungspfad</p>
+          <strong>Automatische Signale -&gt; Redaktion -&gt; Veröffentlichung</strong>
+          <p>
+            Neue Meldungen und Datenpunkte werden zuerst als interne Entwürfe geprüft. Öffentlich sichtbar werden nur
+            Einordnungen mit Quelle, Stand, Deutschland-Relevanz und redaktioneller Freigabe.
+          </p>
+        </div>
+        <Link className="text-link" href="/status">Datenstatus prüfen</Link>
+      </section>
 
       {!state.connected ? <DbNotice error={state.error} /> : null}
 

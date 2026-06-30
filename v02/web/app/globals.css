@@ -308,6 +308,16 @@ strong { color: var(--on-surface); font-weight: 700; }
 .admin-input-error { border-color: var(--critical); }
 .admin-error, .admin-notice { border: 1px solid rgba(239,68,68,.5); border-radius: 4px; background: rgba(239,68,68,.08); padding: 12px 14px; font-size: 14px; line-height: 1.6; }
 .admin-notice { border-color: rgba(234,179,8,.45); background: rgba(234,179,8,.08); color: var(--on-surface); }
+.admin-review-queue, .review-gate-band { display: grid; gap: 16px; margin: 0 0 24px; border: 1px solid var(--outline); border-left: 3px solid var(--primary); border-radius: 0 4px 4px 0; background: rgba(27,30,37,.72); padding: 20px; }
+.admin-review-queue p, .review-gate-band p { margin: 0; max-width: 760px; }
+.admin-review-queue .detail-title-small { margin-bottom: 6px; }
+.admin-review-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.admin-review-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; border: 1px solid var(--outline); border-radius: 4px; background: rgba(13,13,13,.5); padding: 12px; }
+.admin-review-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.admin-review-list strong, .review-gate-band strong { display: block; margin: 7px 0 5px; overflow-wrap: anywhere; }
+.admin-review-list small { display: block; color: var(--on-surface-variant); font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.admin-review-empty { color: var(--on-surface-variant); }
+.review-gate-band { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
 
 @media (max-width: 820px) {
   .top-nav { grid-template-columns: 1fr; gap: 12px; }
@@ -344,6 +354,7 @@ strong { color: var(--on-surface); font-weight: 700; }
   .admin-table tr:last-child { border-bottom: 0; }
   .admin-table td { display: grid; grid-template-columns: minmax(110px, .42fr) minmax(0, 1fr); gap: 10px; border-bottom: 0; padding: 8px 12px; overflow-wrap: anywhere; }
   .admin-table td::before { content: attr(data-label); color: var(--primary); font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .admin-review-list li, .review-gate-band { grid-template-columns: 1fr; align-items: start; }
 }
 
 @media (prefers-reduced-motion: reduce) {

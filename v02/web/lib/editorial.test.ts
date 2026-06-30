@@ -24,6 +24,10 @@ assert.ok(
   editorialStatusExplain("published").toLowerCase().includes("öffentlich"),
   "published-Erklärung nennt die öffentliche Sichtbarkeit",
 );
+assert.ok(
+  editorialStatusExplain("approved").toLowerCase().includes("nicht öffentlich"),
+  "approved ist noch nicht öffentlich sichtbar",
+);
 assert.notEqual(
   editorialStatusExplain("draft"),
   editorialStatusExplain("published"),
