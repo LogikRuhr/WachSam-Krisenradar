@@ -15,9 +15,15 @@
     "lint": "cd web && eslint . --max-warnings 0",
     "smoke:ui": "playwright test",
     "smoke:ui:install": "playwright install chromium",
+    "editorial:queue": "tsx scripts/editorial-cli.ts queue",
+    "editorial:report": "tsx scripts/editorial-cli.ts report",
+    "editorial:approve": "tsx scripts/editorial-cli.ts approve",
+    "editorial:publish": "tsx scripts/editorial-cli.ts publish",
+    "editorial:reject": "tsx scripts/editorial-cli.ts reject",
+    "test:editorial-cli": "tsx scripts/editorial-cli.test.ts",
     "test:audit": "tsx scripts/audit-invariants.test.ts",
     "test:unit": "tsx web/lib/personalization.test.ts && tsx web/lib/household-check.test.ts && tsx web/lib/onboarding.test.ts && tsx web/lib/price-radar.test.ts && tsx web/lib/editorial.test.ts && tsx web/lib/feedback.test.ts && tsx web/lib/rate-limit.test.ts && tsx web/lib/same-origin.test.ts && tsx web/lib/sparkline.test.ts",
-    "verify": "cd web && tsc --noEmit && eslint . --max-warnings 0 && next build && cd ../db && drizzle-kit generate && tsx scripts/seed.ts --dry-run && cd .. && tsx scripts/audit-invariants.test.ts && tsx web/lib/personalization.test.ts && tsx web/lib/household-check.test.ts && tsx web/lib/onboarding.test.ts && tsx web/lib/price-radar.test.ts && tsx web/lib/editorial.test.ts && tsx web/lib/feedback.test.ts && tsx web/lib/rate-limit.test.ts && tsx web/lib/same-origin.test.ts && tsx web/lib/sparkline.test.ts",
+    "verify": "cd web && tsc --noEmit && eslint . --max-warnings 0 && next build && cd ../db && drizzle-kit generate && tsx scripts/seed.ts --dry-run && cd .. && tsx scripts/audit-invariants.test.ts && tsx scripts/editorial-cli.test.ts && tsx web/lib/personalization.test.ts && tsx web/lib/household-check.test.ts && tsx web/lib/onboarding.test.ts && tsx web/lib/price-radar.test.ts && tsx web/lib/editorial.test.ts && tsx web/lib/feedback.test.ts && tsx web/lib/rate-limit.test.ts && tsx web/lib/same-origin.test.ts && tsx web/lib/sparkline.test.ts",
     "typecheck": "cd web && tsc --noEmit",
     "db:push": "cd db && drizzle-kit push",
     "db:generate": "cd db && drizzle-kit generate",
@@ -40,5 +46,8 @@
       "postcss": "8.5.15",
       "cookie": "1.1.1"
     }
+  },
+  "dependencies": {
+    "postgres": "3.4.9"
   }
 }

@@ -71,6 +71,25 @@ Erwartung:
 - Verify meldet `verify: PASS`.
 - Produktive Container laufen unveraendert weiter.
 
+## Editorial CLI auf Produktion
+
+Der Review-Pfad braucht keinen Admin-Login. Im Runtime-Container:
+
+```bash
+docker exec wachsam-web sh -lc 'cd /app && ./node_modules/.bin/tsx scripts/editorial-cli.ts queue --limit 20'
+docker exec wachsam-web sh -lc 'cd /app && ./node_modules/.bin/tsx scripts/editorial-cli.ts report --out outputs/editorial-review.md'
+docker exec wachsam-web sh -lc 'cd /app && ./node_modules/.bin/tsx scripts/editorial-cli.ts approve lagebildItems <id>'
+docker exec wachsam-web sh -lc 'cd /app && ./node_modules/.bin/tsx scripts/editorial-cli.ts publish lagebildItems <id>'
+```
+
+Fuer Ablehnung:
+
+```bash
+docker exec wachsam-web sh -lc 'cd /app && ./node_modules/.bin/tsx scripts/editorial-cli.ts reject lagebildItems <id> --reason "Quelle unklar"'
+```
+
+Die CLI liest `DATABASE_URL` aus der bestehenden Container-Umgebung und schreibt keine Secrets oder User-E-Mails in den Output.
+
 ## Rollback
 
 Source-Rollback auf dem VPS:
