@@ -352,19 +352,19 @@ def test_rss_items_use_article_evidence_before_llm(monkeypatch):
     async def fake_extract(content, source_url, source_class):
         assert content == "Artikel-Body mit belegtem Fakt und zusätzlichem Kontext."
         return IngestionItem(
-            title="Extrahierter Evidence-Draft",
-            description="Aus Artikel-Evidence extrahiert.",
+            title="Gaspreise belasten Haushalte",
+            description="Hoehere Gaspreise koennen Heizkosten deutscher Haushalte erhoehen.",
             source_url=source_url,
             source_class=source_class,
             last_ingested_at=datetime.utcnow(),
             germany_relevance=GermanyRelevance(
                 direct=True,
-                systems_affected=["gesellschaft"],
+                systems_affected=["energie"],
                 time_to_impact="wochen",
-                description="Evidence-basierte Einordnung.",
+                description="Direkte Wirkung auf deutsche Haushaltskosten.",
             ),
             methodology_tag="steep",
-            affected_systems=["gesellschaft"],
+            affected_systems=["energie"],
             raw_content=content,
             status="extracted",
         )
@@ -383,6 +383,67 @@ def test_rss_items_use_article_evidence_before_llm(monkeypatch):
     assert len(inserted) == 1
     assert inserted[0][0].raw_content == "Artikel-Body mit belegtem Fakt und zusätzlichem Kontext."
     assert inserted[0][1] == "lagebild_items"
+
+
+def test_rss_llm_items_without_wachsam_relevance_are_not_inserted(monkeypatch, capsys):
+    raw = _lagebild_item()
+
+    class FakeCrawler:
+        def fetch_all(self):
+            return [raw]
+
+    class FakeArticleFetcher:
+        def fetch_article_evidence(self, **kwargs):
+            return SimpleNamespace(
+                evidence_status="evidence_ready",
+                excerpt="Kircheninterner Konflikt.",
+                raw_text="Konflikt zwischen Piusbruedern und Papst wegen Bischofsweihe.",
+                content_hash="abc123",
+            )
+
+    async def fake_extract(content, source_url, source_class):
+        return IngestionItem(
+            title="Konflikt zwischen Piusbruedern und dem Papst wegen Bischofsweihe",
+            description="Kircheninterner Konflikt ohne erkennbare Wirkung auf Versorgung oder Haushaltskosten.",
+            source_url=source_url,
+            source_class=source_class,
+            last_ingested_at=datetime.utcnow(),
+            germany_relevance=GermanyRelevance(
+                direct=False,
+                systems_affected=["gesellschaft"],
+                time_to_impact="wochen",
+                description="Kein belastbarer Deutschland-Impact.",
+            ),
+            methodology_tag="steep",
+            affected_systems=["gesellschaft"],
+            raw_content=content,
+            status="extracted",
+        )
+
+    for attr in _ALL_ADAPTER_ATTRS:
+        monkeypatch.setattr(main, attr, EmptyAdapter)
+    monkeypatch.setattr(main, "RSSCrawler", FakeCrawler)
+    monkeypatch.setattr(main, "ArticleFetcher", FakeArticleFetcher)
+    monkeypatch.setattr(main, "extract_with_llm", fake_extract)
+
+    inserted = []
+    monkeypatch.setattr(main, "insert_draft", lambda item, item_type: inserted.append((item, item_type)) or "draft")
+
+    asyncio.run(main.run_ingestion())
+
+    assert inserted == []
+    gate_lines = []
+    for line in capsys.readouterr().out.splitlines():
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        obj = json.loads(line)
+        if obj.get("event") == "wachsam_relevance_gate":
+            gate_lines.append(obj)
+
+    assert len(gate_lines) == 1
+    assert gate_lines[0]["action"] == "skip_draft"
+    assert gate_lines[0]["reason"] == "low_relevance_topic"
 
 
 def test_run_ingestion_persists_source_health_when_path_is_explicit(monkeypatch, tmp_path):

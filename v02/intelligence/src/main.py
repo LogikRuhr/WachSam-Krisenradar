@@ -31,6 +31,7 @@ from .fetchers.article_fetcher import ArticleFetcher
 from .extractors.llm_extractor import extract_with_llm, reset_llm_runtime_state
 from .db import insert_draft, set_dry_run, fetch_indicator_thresholds, upsert_source_health
 from .validation import validate_draft
+from .relevance_gate import evaluate_wachsam_relevance
 from .gate import evaluate_plausibility, source_error_verdict, build_shadow_log
 from .plausibility_rules import get_rules
 from .source_health import build_source_health, persist_source_health
@@ -210,6 +211,19 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
             print(f"  [VALIDIERUNG] '{item.title}': {len(result.errors)} Fehler — {result.errors}")
         if result.warnings:
             print(f"  [VALIDIERUNG] '{item.title}': {len(result.warnings)} Hinweise — {result.warnings}")
+
+        if item_type == "lagebild_items" and item.status == "extracted":
+            relevance = evaluate_wachsam_relevance(item)
+            if not relevance.allowed:
+                print(json.dumps({
+                    "event": "wachsam_relevance_gate",
+                    "action": "skip_draft",
+                    "reason": relevance.reason,
+                    "signals": list(relevance.signals),
+                    "title": item.title,
+                    "source_url": item.source_url,
+                }, ensure_ascii=False))
+                continue
 
         # --- Plausibilitäts-Gate / Stale-on-error -----------------------------
         # C1/C4 halten den letzten guten Wert: kein Indicator-UPDATE und kein

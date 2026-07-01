@@ -7,7 +7,7 @@ from ..models import (
 )
 
 
-WACHSAM_EXTRACT_PROMPT_VERSION = "rss-evidence-v1"
+WACHSAM_EXTRACT_PROMPT_VERSION = "rss-evidence-v2"
 
 
 def _json_values(values: tuple[str, ...]) -> str:
@@ -25,6 +25,9 @@ Regeln:
 - Wenn eine Information nicht im Text steht, verwende keine freie Behauptung.
 - Confidence immer angeben.
 - Fokus auf Haushaltsrelevanz.
+- Deutschlandbezug allein reicht NICHT. Es braucht eine belegte Wirkung auf Kosten, Versorgung, Energie, Mobilitaet, Arbeit, Infrastruktur, Gesundheit, Finanzen, Lebensmittel, Industrie, Logistik oder gesellschaftliche Stabilitaet deutscher Haushalte.
+- Kultur-, Kirchen-, Sport-, Promi-, lokale Einzelereignisse und allgemeine Auslandsmeldungen ohne solche Wirkungskette sind NICHT WachSam-relevant.
+- Wenn der Quelltext keine konkrete WachSam-Wirkungskette belegt, setze systems_affected auf [] und beschreibe die fehlende Wirkung knapp.
 - Antworte AUSSCHLIESSLICH als valides JSON.
 - Verwende für Enum-Felder ausschließlich die unten erlaubten Werte.
 
@@ -40,7 +43,7 @@ JSON-Schema:
   "description": "2-3 Sätze Einordnung",
   "germany_relevance": {{
     "direct": true oder false,
-    "systems_affected": [ein oder mehrere erlaubte systems_affected-Werte],
+    "systems_affected": [nur belegte erlaubte systems_affected-Werte, sonst []],
     "time_to_impact": ein erlaubter time_to_impact-Wert,
     "description": "DE-spezifische Einordnung"
   }},

@@ -46,6 +46,8 @@ Jede Aktion schreibt einen Eintrag ins `editorial_audit_log` (`logAuditEvent`): 
 
 Die Python-Pipeline (`v02/intelligence/`) schreibt neue Items als **Draft** (`insert_draft`). Es gibt keinen Pfad, der Crawler- oder Adapter-Output automatisch veröffentlicht. Live-Werte für Indikatoren werden über `editorial_action = ingest_value` getrackt, ändern aber nicht den Veröffentlichungsstatus.
 
+LLM-extrahierte RSS-Lagebild-Items durchlaufen vor `insert_draft` zusätzlich das harte WachSam-Relevance-Gate (`v02/intelligence/src/relevance_gate.py`). Ein Item kommt nur in die Queue, wenn Deutschland-Bezug, Systembereich und konkrete Haushalts-, Kosten-, Versorgungs- oder Stabilitätswirkung nachvollziehbar sind. Allgemeine News, Kultur-/Kirchen-/Sport-/Promi-Themen, lokale Einzelereignisse und Auslandsmeldungen ohne solche Wirkungskette werden strukturiert geloggt und nicht als Draft gespeichert.
+
 ## Operator-CLI
 
 Das Admin-UI ist optional. Der kontrollierte Review-Pfad fuer Betreiber laeuft auch ohne Login:

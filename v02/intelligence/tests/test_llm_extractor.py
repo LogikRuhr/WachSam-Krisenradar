@@ -368,8 +368,9 @@ async def test_extract_never_accepts_published_status_from_llm(mock_build_client
 def test_prompt_declares_version_and_exact_kanon_values():
     from src.extractors.prompts import SYSTEM_PROMPT, WACHSAM_EXTRACT_PROMPT_VERSION
 
-    assert WACHSAM_EXTRACT_PROMPT_VERSION == "rss-evidence-v1"
-    assert "rss-evidence-v1" in SYSTEM_PROMPT
+    assert WACHSAM_EXTRACT_PROMPT_VERSION == "rss-evidence-v2"
+    assert "rss-evidence-v2" in SYSTEM_PROMPT
+    assert "Deutschlandbezug allein reicht NICHT" in SYSTEM_PROMPT
     assert '"beobachten"' in SYSTEM_PROMPT
     assert '"gesellschaft"' in SYSTEM_PROMPT
 
