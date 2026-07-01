@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
+import Resend from "next-auth/providers/resend";
 import authConfig from "../auth.config";
 import { db } from "./db";
 import { accounts, sessions, users, verificationTokens } from "@wachsam/db/schema";
@@ -16,6 +17,12 @@ const adapter = db
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   adapter,
+  providers: [
+    Resend({
+      from: process.env.AUTH_EMAIL_FROM ?? "wachsam@ruhrlogik.de",
+      apiKey: process.env.RESEND_API_KEY,
+    }),
+  ],
   callbacks: {
     ...authConfig.callbacks,
     session({ session, user }) {

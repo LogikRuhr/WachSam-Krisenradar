@@ -1,4 +1,4 @@
-import { count, desc, eq, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { db, schema } from "../db";
 import { requireEditorRole } from "./permissions";
@@ -56,6 +56,33 @@ export type EditorialReviewQueueItem = EditorialListItem & {
   queuedAt: Date | null;
 };
 
+export type EditorialReviewSource = {
+  sourceName: string;
+  sourceUrl: string;
+  sourceStand: string;
+};
+
+export type EditorialReviewAudit = {
+  action: string;
+  reason: string | null;
+  createdAt: Date;
+};
+
+export type EditorialReviewField = {
+  name: string;
+  label: string;
+  value: string;
+};
+
+export type MobileEditorialReviewItem = EditorialReviewQueueItem & {
+  description: string;
+  confidence: string | null;
+  source: EditorialReviewSource | null;
+  latestAudit: EditorialReviewAudit | null;
+  publicPath?: string;
+  fields: EditorialReviewField[];
+};
+
 export type EditorialItem = Record<string, unknown> & {
   id: string;
   editorialStatus: EditorialStatus;
@@ -89,6 +116,30 @@ const severityOptions = ["stabil", "beobachten", "erhoeht", "kritisch", "eskalie
 const zeithorizontOptions = ["kurzfristig", "wochen", "monate", "langfristig"];
 const methodologyOptions = ["steep", "rca", "bia", "fmea", "scenario"];
 const aufwandOptions = ["niedrig", "mittel", "hoch"];
+
+const sourceTypeByItemType = {
+  facts: "lagebild",
+  cascades: "cascade",
+  governance: "governance",
+  indicators: "indicator",
+  costImpacts: "cost",
+  lagebildItems: "lagebild",
+  supplyRisks: "supply",
+  citizenActions: "action",
+  nationalState: null,
+} as const satisfies Record<EditorialItemType, "lagebild" | "cost" | "supply" | "cascade" | "governance" | "indicator" | "action" | null>;
+
+const auditTypeAliases = {
+  facts: ["fact", "facts"],
+  cascades: ["cascade", "cascades"],
+  governance: ["governance"],
+  indicators: ["indicator", "indicators"],
+  costImpacts: ["cost_impact", "cost_impacts"],
+  lagebildItems: ["lagebild_item", "lagebild_items"],
+  supplyRisks: ["supply_risk", "supply_risks"],
+  citizenActions: ["citizen_action", "citizen_actions"],
+  nationalState: ["national_state"],
+} as const satisfies Record<EditorialItemType, readonly string[]>;
 
 export const editorialTypeMeta = {
   facts: {
@@ -324,6 +375,137 @@ function sortForReview<
   );
 }
 
+function textValue(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "object") return JSON.stringify(value, null, 2);
+  const text = String(value).trim();
+  return text || null;
+}
+
+function firstText(row: EditorialItem, fields: string[]): string | null {
+  for (const field of fields) {
+    const value = textValue(row[field]);
+    if (value) return value;
+  }
+  return null;
+}
+
+function descriptionFor(itemType: EditorialItemType, row: EditorialItem): string {
+  const fallback = "Keine Beschreibung im Datensatz hinterlegt.";
+  if (itemType === "facts") {
+    return firstText(row, ["sourceName", "period", "category"]) ?? fallback;
+  }
+  if (itemType === "cascades") return firstText(row, ["trigger", "haushaltswirkung"]) ?? fallback;
+  if (itemType === "governance") return firstText(row, ["realitaet", "haushaltswirkung"]) ?? fallback;
+  if (itemType === "indicators") {
+    const germanyRelevance = row.germanyRelevance;
+    if (germanyRelevance && typeof germanyRelevance === "object" && "description" in germanyRelevance) {
+      const description = textValue((germanyRelevance as Record<string, unknown>).description);
+      if (description) return description;
+    }
+    return firstText(row, ["quelle", "system"]) ?? fallback;
+  }
+  if (itemType === "nationalState") return firstText(row, ["executiveSummary"]) ?? fallback;
+  return firstText(row, ["beschreibung", "titel", "title"]) ?? fallback;
+}
+
+function confidenceFor(row: EditorialItem): string | null {
+  return textValue(row.confidence) ?? textValue(row.confidenceSuggestion);
+}
+
+function fieldsFor(itemType: EditorialItemType, row: EditorialItem): EditorialReviewField[] {
+  const meta = getTypeMeta(itemType);
+  return meta.fields.map((field) => ({
+    name: field.name,
+    label: field.label,
+    value: textValue(row[field.name]) ?? "—",
+  }));
+}
+
+function sourceFromItem(itemType: EditorialItemType, row: EditorialItem): EditorialReviewSource | null {
+  if (itemType !== "facts") return null;
+  const sourceName = textValue(row.sourceName);
+  const sourceUrl = textValue(row.sourceUrl);
+  const sourceStand = textValue(row.sourceStand);
+  if (!sourceName || !sourceUrl || !sourceStand) return null;
+  return { sourceName, sourceUrl, sourceStand };
+}
+
+async function getItemSource(
+  activeDb: NonNullable<typeof db>,
+  itemType: EditorialItemType,
+  row: EditorialItem,
+): Promise<EditorialReviewSource | null> {
+  const directSource = sourceFromItem(itemType, row);
+  if (directSource) return directSource;
+
+  const sourceType = sourceTypeByItemType[itemType];
+  if (!sourceType) return null;
+
+  const rows = await activeDb
+    .select({
+      sourceName: schema.itemSources.sourceName,
+      sourceUrl: schema.itemSources.sourceUrl,
+      sourceStand: schema.itemSources.sourceStand,
+    })
+    .from(schema.itemSources)
+    .where(and(eq(schema.itemSources.itemType, sourceType), eq(schema.itemSources.itemId, row.id)))
+    .orderBy(asc(schema.itemSources.orderIdx))
+    .limit(1);
+
+  return rows[0] ?? null;
+}
+
+async function getLatestAudit(
+  activeDb: NonNullable<typeof db>,
+  itemType: EditorialItemType,
+  id: string,
+): Promise<EditorialReviewAudit | null> {
+  const rows = await activeDb
+    .select({
+      action: schema.editorialAuditLog.action,
+      reason: schema.editorialAuditLog.reason,
+      createdAt: schema.editorialAuditLog.createdAt,
+    })
+    .from(schema.editorialAuditLog)
+    .where(and(inArray(schema.editorialAuditLog.itemType, [...auditTypeAliases[itemType]]), eq(schema.editorialAuditLog.itemId, id)))
+    .orderBy(desc(schema.editorialAuditLog.createdAt), sql`${schema.editorialAuditLog.id} desc`)
+    .limit(1);
+
+  return rows[0] ?? null;
+}
+
+async function buildMobileReviewItem(
+  activeDb: NonNullable<typeof db>,
+  itemType: EditorialItemType,
+  row: EditorialItem,
+): Promise<MobileEditorialReviewItem> {
+  const meta = getTypeMeta(itemType);
+  const [source, latestAudit] = await Promise.all([
+    getItemSource(activeDb, itemType, row),
+    getLatestAudit(activeDb, itemType, row.id),
+  ]);
+
+  return {
+    id: row.id,
+    title: String(row[meta.titleField] ?? row.id),
+    status: row.editorialStatus,
+    editorialReviewedAt: row.editorialReviewedAt,
+    publishedAt: row.publishedAt,
+    createdAt: row.createdAt,
+    type: itemType,
+    label: meta.label,
+    queuedAt: row.editorialReviewedAt ?? row.createdAt,
+    description: descriptionFor(itemType, row),
+    confidence: confidenceFor(row),
+    source,
+    latestAudit,
+    publicPath: meta.publicPath,
+    fields: fieldsFor(itemType, row),
+  };
+}
+
 export async function getEditorialOverview(): Promise<EditorialOverviewRow[]> {
   await requireEditorRole();
   const activeDb = ensureDb();
@@ -384,12 +566,51 @@ export async function getEditorialReviewQueue(limit = 12): Promise<EditorialRevi
   return sortForReview(queue).slice(0, limit);
 }
 
+export async function getMobileEditorialReviewQueue(limit = 20): Promise<MobileEditorialReviewItem[]> {
+  await requireEditorRole();
+  const activeDb = ensureDb();
+  const rows: Array<{ itemType: EditorialItemType; row: EditorialItem }> = [];
+
+  for (const itemType of editorialItemTypes) {
+    const t = table(itemType);
+    const items = (await activeDb.select().from(t as never).orderBy(desc(t.editorialReviewedAt as never))) as EditorialItem[];
+    for (const row of items) {
+      if (!reviewStatuses.has(row.editorialStatus)) continue;
+      rows.push({ itemType, row });
+    }
+  }
+
+  const sorted = sortForReview(rows.map(({ itemType, row }) => ({
+    ...row,
+    type: itemType,
+    label: getTypeMeta(itemType).label,
+    title: String(row[getTypeMeta(itemType).titleField] ?? row.id),
+    status: row.editorialStatus,
+    queuedAt: row.editorialReviewedAt ?? row.createdAt,
+  }))).slice(0, limit);
+
+  return Promise.all(sorted.map((item) => buildMobileReviewItem(activeDb, item.type, item)));
+}
+
 export async function getEditorialItem(itemType: EditorialItemType, id: string): Promise<EditorialItem | null> {
   await requireEditorRole();
   const activeDb = ensureDb();
   const t = table(itemType);
   const rows = (await activeDb.select().from(t as never).where(eq(t.id as never, id as never)).limit(1)) as EditorialItem[];
   return rows[0] ?? null;
+}
+
+export async function getMobileEditorialReviewItem(
+  itemType: EditorialItemType,
+  id: string,
+): Promise<MobileEditorialReviewItem | null> {
+  await requireEditorRole();
+  const activeDb = ensureDb();
+  const t = table(itemType);
+  const rows = (await activeDb.select().from(t as never).where(eq(t.id as never, id as never)).limit(1)) as EditorialItem[];
+  const row = rows[0];
+  if (!row) return null;
+  return buildMobileReviewItem(activeDb, itemType, row);
 }
 
 export async function listAuditEvents(limit = 100): Promise<EditorialAuditEventRow[]> {
