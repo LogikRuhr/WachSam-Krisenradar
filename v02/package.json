@@ -39,7 +39,7 @@
     "@playwright/test": "1.60.0",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
-    "next": "15.5.18",
+    "next": "16.2.9",
     "tsx": "4.22.3",
     "typescript": "5.9.3"
   },
