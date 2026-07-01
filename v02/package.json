@@ -36,11 +36,11 @@
     "db:seed:dry": "cd db && tsx scripts/seed.ts --dry-run"
   },
   "devDependencies": {
-    "@playwright/test": "1.60.0",
+    "@playwright/test": "1.61.1",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
     "next": "15.5.18",
-    "tsx": "4.22.3",
+    "tsx": "4.22.4",
     "typescript": "5.9.3"
   },
   "pnpm": {
