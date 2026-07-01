@@ -118,7 +118,9 @@ jobs:
 
           rsync -a --delete --exclude 'intelligence/.env' "$source_v02/" "$runtime_v02/"
           docker compose -f "$compose_file" up -d --build web
+          docker compose -f "$runtime_v02/infra/docker-compose.intelligence.prod.yml" up -d --build intelligence
           docker compose -f "$compose_file" ps web
+          docker compose -f "$runtime_v02/infra/docker-compose.intelligence.prod.yml" ps intelligence
 
           echo "promote-runtime: PASS $EXPECTED_SHA -> $runtime_v02 (backup: $backup_dir)"
           REMOTE
