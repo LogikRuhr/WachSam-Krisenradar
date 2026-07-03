@@ -536,6 +536,59 @@ def test_run_ingestion_upserts_source_health_in_normal_mode(monkeypatch):
     assert len(captured) == 13  # 8 bestehende + 5 neue Adapter
 
 
+def test_run_ingestion_marks_bnetza_source_health_degraded_when_adapter_reports_source_error(monkeypatch):
+    item = _bnetza_item(
+        title="Gasspeicher Deutschland — Datenquelle prüfen",
+        current_value=None,
+        current_value_date=None,
+        previous_value=None,
+        previous_value_date=None,
+        source_stand_date=None,
+    )
+
+    class FakeBNetzAAdapter:
+        name = "BNetzA"
+
+        def __init__(self):
+            self.source_errors = [{
+                "indicator_id": "wi-gasspeicher-fuellstand",
+                "reason": "unexpected_payload_shape",
+                "source_url": "https://agsi.gie.eu/",
+                "keep_previous": True,
+            }]
+
+        def describe(self):
+            return {
+                "name": "BNetzA",
+                "source": "GIE AGSI+",
+                "requires_api_key": False,
+                "writes_db": True,
+                "output_target": "indicators",
+            }
+
+        def fetch_latest(self):
+            return [item]
+
+    for attr in _ALL_ADAPTER_ATTRS:
+        if attr != "BNetzAAdapter":
+            monkeypatch.setattr(main, attr, EmptyAdapter)
+    monkeypatch.setattr(main, "BNetzAAdapter", FakeBNetzAAdapter)
+    monkeypatch.setattr(main, "RSSCrawler", EmptyCrawler)
+    monkeypatch.setattr(main, "insert_draft", lambda item, item_type: "draft")
+    monkeypatch.setattr(main, "fetch_indicator_thresholds", lambda _id: None)
+
+    captured = []
+    monkeypatch.setattr(main, "upsert_source_health", lambda records: captured.extend(records) or len(records))
+
+    asyncio.run(main.run_ingestion(dry_run=False, allow_fetch=True))
+
+    bnetza_record = next(r for r in captured if r.source_id == "bnetza")
+    assert bnetza_record.status == "degraded"
+    assert bnetza_record.error_count == 1
+    assert bnetza_record.error_messages == ["unexpected_payload_shape"]
+    assert bnetza_record.freshness_status == "source-error"
+
+
 # --- W6a.1: C4-Quellfehler-Sichtbarkeit im Ingestion-Fluss -------------------
 
 def _collect_shadow_lines(capsys):

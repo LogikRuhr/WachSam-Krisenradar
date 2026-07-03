@@ -192,3 +192,23 @@ def test_tankerkoenig_records_both_fuels_without_api_key(monkeypatch):
         "wi-kraftstoffpreis-super-e10",
         "wi-kraftstoffpreis-diesel",
     }
+
+
+def test_bnetza_records_source_error_on_unexpected_payload(monkeypatch):
+    from src.adapters import bnetza
+
+    monkeypatch.setattr(
+        bnetza.requests,
+        "get",
+        lambda *a, **k: _FakeResp(status_code=200, json_data={"status": "ok", "data": {}}),
+    )
+    adapter = bnetza.BNetzAAdapter()
+
+    items = adapter.fetch_latest()
+
+    assert len(items) == 1
+    assert items[0].indicator_id == "wi-gasspeicher-fuellstand"
+    assert len(adapter.source_errors) == 1
+    err = adapter.source_errors[0]
+    assert err["indicator_id"] == "wi-gasspeicher-fuellstand"
+    assert err["reason"] == "unexpected_payload_shape"

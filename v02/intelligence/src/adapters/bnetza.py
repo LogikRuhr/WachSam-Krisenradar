@@ -79,11 +79,24 @@ class BNetzAAdapter(BaseAdapter):
                         source_period_type="date",
                     )]
 
+            reason = f"HTTP {response.status_code}"
+            if response.status_code == 200:
+                reason = "unexpected_payload_shape"
             self.log_error(f"GIE API: Status {response.status_code}")
+            self.record_source_error(
+                "wi-gasspeicher-fuellstand",
+                reason,
+                source_url="https://agsi.gie.eu/",
+            )
             return self._fallback()
 
         except Exception as e:
             self.log_error(f"Gas storage fetch failed: {e}")
+            self.record_source_error(
+                "wi-gasspeicher-fuellstand",
+                f"fetch_error: {type(e).__name__}",
+                source_url="https://agsi.gie.eu/",
+            )
             return self._fallback()
 
     def _fallback(self) -> List[IngestionItem]:
