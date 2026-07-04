@@ -29,6 +29,7 @@ export default function DatenschutzPage() {
               <li><strong>Session-Cookie</strong> — technisch notwendig für die Sitzungsverwaltung, kein Tracking</li>
               <li><strong>Haushalts-Profil</strong> — anonymisierter Modus (Single/Familie/Selbstständig/Rentebeziehende) und PLZ, keine personenbezogenen Scores</li>
               <li><strong>Feedback</strong> — frei eingegebener Text sowie optionale Kategorie, Bewertung und freiwillige Kontakt-E-Mail. Bei angemeldeten Nutzern wird das Feedback mit dem Konto verknüpft, sonst anonym gespeichert. Es werden keine IP-Adressen gespeichert.</li>
+              <li><strong>Regionsfilter-Cookie (ws-region)</strong> — rein funktionale Einstellung auf /radar, speichert ausschließlich ein Bundesland-Kürzel (z.B. &bdquo;NS&ldquo;), um die amtliche Warnlage regional statt bundesweit anzuzeigen. Kein Konto- oder Personenbezug, kein Tracking.</li>
             </ul>
           </div>
 
@@ -56,6 +57,7 @@ export default function DatenschutzPage() {
               <li>E-Mail-Adresse: bis zur Kontolöschung</li>
               <li>Haushalts-Profil: bis zur Kontolöschung</li>
               <li>Feedback-Einträge: bis zur Bearbeitung des Anliegens, längstens 24 Monate</li>
+              <li>Regionsfilter-Cookie (ws-region): 1 Jahr oder bis zur manuellen Löschung im Browser</li>
             </ul>
           </div>
 

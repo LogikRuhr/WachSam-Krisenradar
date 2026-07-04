@@ -1,7 +1,10 @@
+import { cookies } from "next/headers";
 import { DbNotice } from "@/components/DbNotice";
+import { RegionSwitcher } from "@/components/RegionSwitcher";
 import { SectionHeader } from "@/components/SectionHeader";
 import { ThemeCard } from "@/components/ThemeCard";
 import { getRadarThemes } from "@/lib/radar-data";
+import { REGION_COOKIE } from "@/lib/regions";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +17,8 @@ function formatStand(value: string | null): string | null {
 }
 
 export default async function RadarPage() {
-  const { themes, warnlage, connected } = await getRadarThemes();
+  const region = (await cookies()).get(REGION_COOKIE)?.value ?? null;
+  const { themes, warnlage, connected } = await getRadarThemes(region);
   const warnlageStand = formatStand(warnlage.sinceDate);
   const allCalm = themes.every((theme) => theme.state === "normal");
 
@@ -28,6 +32,8 @@ export default async function RadarPage() {
       </SectionHeader>
 
       {!connected ? <DbNotice /> : null}
+
+      <RegionSwitcher currentRegion={region} />
 
       <div className="theme-warnlage-slot">
         <ThemeCard theme={warnlage} />
