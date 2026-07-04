@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth, isAuthRuntimeConfigured, signOut } from "@/lib/auth";
 
 const tabs = [
+  ["/radar", "Radar"],
   ["/lagebild", "Lage"],
   ["/kosten", "Haushalt"],
   ["/kaskaden", "Wirkungsketten"],

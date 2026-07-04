@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 const publicRoutes = [
   { path: "/", title: /Was betrifft meinen Haushalt jetzt/i },
+  { path: "/radar", title: /WachSam Radar/i },
   { path: "/lagebild", title: /Deutschland in zehn Bereichen/i },
   { path: "/kosten", title: /Was teurer werden kann/i },
   { path: "/massnahmen", title: /Was ich tun kann/i },
