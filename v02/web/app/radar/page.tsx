@@ -1,3 +1,4 @@
+import { DbNotice } from "@/components/DbNotice";
 import { SectionHeader } from "@/components/SectionHeader";
 import { ThemeCard } from "@/components/ThemeCard";
 import { getRadarThemes } from "@/lib/radar-data";
@@ -26,29 +27,25 @@ export default async function RadarPage() {
         </p>
       </SectionHeader>
 
-      {connected ? (
-        <>
-          <div className="theme-warnlage-slot">
-            <ThemeCard theme={warnlage} />
-          </div>
+      {!connected ? <DbNotice /> : null}
 
-          {allCalm ? (
-            <section className="hero-card">
-              <p className="lead">Aktuell keine erhöhten Themen.</p>
-            </section>
-          ) : (
-            <section className="themes-grid" aria-label="Themenkanäle">
-              {themes.map((theme) => (
-                <ThemeCard key={theme.key} theme={theme} />
-              ))}
-            </section>
-          )}
-        </>
-      ) : (
-        <section className="hero-card">
-          <p className="lead">Aktuell keine Datenverbindung — es gilt der zuletzt veröffentlichte Stand.</p>
-        </section>
-      )}
+      <div className="theme-warnlage-slot">
+        <ThemeCard theme={warnlage} />
+      </div>
+
+      {connected ? (
+        allCalm ? (
+          <section className="hero-card">
+            <p className="lead">Aktuell keine erhöhten Themen.</p>
+          </section>
+        ) : (
+          <section className="themes-grid" aria-label="Themenkanäle">
+            {themes.map((theme) => (
+              <ThemeCard key={theme.key} theme={theme} />
+            ))}
+          </section>
+        )
+      ) : null}
     </main>
   );
 }

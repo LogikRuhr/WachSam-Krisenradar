@@ -39,6 +39,15 @@ test.describe("public WachSam smoke", () => {
     expect(failedResponses, "HTTP 5xx responses").toEqual([]);
   });
 
+  test("shows the official Warnlage card on /radar even without a database", async ({ page }) => {
+    await page.goto("/radar");
+    const warnlageCard = page.getByRole("article", { name: /Themenkanal Akute Warnlage \(amtlich\)/i });
+    await expect(warnlageCard).toBeVisible();
+    await expect(warnlageCard).toContainText("Quelle: DWD (amtlich)");
+    await expect(warnlageCard).toContainText(/Stand |Datenstand ausstehend/);
+    await expectNoHorizontalOverflow(page);
+  });
+
   test("keeps home call-to-action navigation usable", async ({ page }) => {
     await page.goto("/");
     await page.locator(".pfad-hub").getByRole("link", { name: /Aktuelle Lage ansehen/ }).click();
