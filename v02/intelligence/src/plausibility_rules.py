@@ -47,6 +47,13 @@ PLAUSIBILITY_RULES: dict[str, dict[str, float]] = {
     # Staatsschuldenquote in % des BIP. EU-Referenzwert 60%; Deutschland historisch 40–85%.
     # Jahreswerte → max_delta_percent 10 (10%-Punkt/Jahr ist außergewöhnlich hoch).
     "wi-staatsschuldenquote-de": {"plausibility_min": 0.0, "plausibility_max": 200.0, "max_delta_percent": 10.0},
+    # DWD-Warnstufe (höchste aktive Stufe, 0–5). Kein sinnvoller Delta-Prozentwert
+    # bei kleinen ganzzahligen Stufen (z.B. 0→1 wäre "unendlich" %) → None.
+    "wi-dwd-warnings-de": {"plausibility_min": 0.0, "plausibility_max": 5.0, "max_delta_percent": None},
+    # NINA/MoWaS aktive Zivilschutzmeldungen bundesweit (Anzahl). Historisch selten
+    # >100 gleichzeitig; 2000 als konservative Obergrenze. Zähler kann bei Aktivierung
+    # eines Großlage-Szenarios sprunghaft steigen → kein festes Delta-Limit.
+    "wi-nina-zivilschutz-de": {"plausibility_min": 0.0, "plausibility_max": 2000.0, "max_delta_percent": None},
 }
 
 

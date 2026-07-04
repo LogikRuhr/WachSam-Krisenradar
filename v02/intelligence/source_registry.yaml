@@ -167,6 +167,21 @@ sources:
     current_quality: live-adapter-added-warnwetter-summary
     risk_notes: Warning summary is regional and event-level; do not treat as local user-specific weather forecast.
     next_step: Add regional filters and baselines before strong household-specific guidance.
+  - id: nina-mowas
+    name: NINA/BBK MoWaS Zivilschutzmeldungen
+    layer: society_infrastructure
+    operator: Bundesamt für Bevölkerungsschutz und Katastrophenhilfe
+    source_url: https://warnung.bund.de/api31/mowas/mapData.json
+    adapter: src.adapters.nina.NINAAdapter
+    indicator_ids: [wi-nina-zivilschutz-de]
+    status: active
+    format: json
+    auth_required: none
+    freshness_expectation: daily
+    household_relevance: hoch
+    current_quality: live-verified-2026-07-04-top-level-array
+    risk_notes: Zählt alle MoWaS-Einträge (inkl. Update/Cancel) im aktuellen Kartendatensatz; kein Rückschluss auf regionale Betroffenheit ohne weitere Aufschlüsselung.
+    next_step: Regionale Aufschlüsselung und Typ-Filter (Alert vs. Cancel) prüfen, sobald belastbarer Bedarf besteht.
   - id: pegelonline
     name: Pegelonline WSV
     layer: weather_water

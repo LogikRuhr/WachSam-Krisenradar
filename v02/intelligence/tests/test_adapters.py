@@ -15,6 +15,7 @@ from src.adapters.fred import FREDAdapter
 from src.adapters.fao import FAOAdapter
 from src.adapters.pegelonline import PegelonlineAdapter
 from src.adapters.dwd import DWDAdapter, decode_warnwetter_response, summarize_warnings, summarize_by_state
+from src.adapters.nina import NINAAdapter
 from src.adapters.eurostat import EurostatAdapter
 from src.adapters.warning_indicators import WarningIndicatorsAdapter
 from src.adapters.tankerkoenig import (
@@ -604,6 +605,73 @@ def test_dwd_adapter_keeps_regional_records_stale_on_error(monkeypatch):
     items = adapter.fetch_latest()
     assert items == []
     assert adapter.regional_records == expected
+
+
+def test_nina_adapter_counts_active_warnings(monkeypatch):
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = [
+        {"severity": "Severe", "type": "Alert"},
+        {"severity": "Minor", "type": "Alert"},
+    ]
+    response.raise_for_status = lambda: None
+    monkeypatch.setattr("src.adapters.nina.requests.get", lambda *a, **k: response)
+
+    adapter = NINAAdapter()
+    items = adapter.fetch_latest()
+    assert len(items) == 1
+    assert items[0].indicator_id == "wi-nina-zivilschutz-de"
+    assert items[0].current_value == 2.0
+    assert items[0].severity_suggestion == "erhöht"
+    _validate_items(items)
+
+
+def test_nina_adapter_maps_extreme_severity_to_kritisch(monkeypatch):
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = [
+        {"severity": "Extreme", "type": "Alert"},
+        {"severity": "Minor", "type": "Update"},
+    ]
+    response.raise_for_status = lambda: None
+    monkeypatch.setattr("src.adapters.nina.requests.get", lambda *a, **k: response)
+
+    items = NINAAdapter().fetch_latest()
+    assert items[0].severity_suggestion == "kritisch"
+
+
+def test_nina_adapter_no_warnings_defaults_to_beobachten(monkeypatch):
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = []
+    response.raise_for_status = lambda: None
+    monkeypatch.setattr("src.adapters.nina.requests.get", lambda *a, **k: response)
+
+    items = NINAAdapter().fetch_latest()
+    assert items[0].current_value == 0.0
+    assert items[0].severity_suggestion == "beobachten"
+    _validate_items(items)
+
+
+def test_nina_adapter_records_source_error_on_http_failure(monkeypatch):
+    response = MagicMock()
+    response.status_code = 503
+    response.raise_for_status.side_effect = RuntimeError("HTTP 503")
+    monkeypatch.setattr("src.adapters.nina.requests.get", lambda *a, **k: response)
+
+    adapter = NINAAdapter()
+    assert adapter.fetch_latest() == []
+    assert adapter.source_errors == [
+        {
+            "indicator_id": "wi-nina-zivilschutz-de",
+            "reason": "HTTP 503",
+            "source_url": "https://warnung.bund.de/api31/mowas/mapData.json",
+            "source_stand": None,
+            "observed_at": None,
+            "raw_value": None,
+            "keep_previous": True,
+        }
+    ]
 
 
 # ---------------------------------------------------------------------------

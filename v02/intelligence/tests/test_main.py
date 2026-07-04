@@ -32,6 +32,7 @@ class EmptyCrawler:
 _ALL_ADAPTER_ATTRS = (
     "DestatisAdapter", "BNetzAAdapter", "EIAAdapter", "FREDAdapter",
     "FAOAdapter", "TankerkoenigAdapter", "PegelonlineAdapter", "DWDAdapter",
+    "NINAAdapter",
     "EurostatAdapter", "WarningIndicatorsAdapter",
     "BIPAdapter", "ArbeitslosigkeitAdapter", "EZBLeitzinsAdapter",
     "StaatsschuldenAdapter", "InsolvenzenAdapter",
@@ -528,12 +529,12 @@ def test_run_ingestion_upserts_source_health_in_normal_mode(monkeypatch):
     asyncio.run(main.run_ingestion(dry_run=False, allow_fetch=True))
 
     # Reihenfolge: alle Adapter in Adapter-Listenreihenfolge; BNetzA an Position 2 (Index 1).
-    # 15 Adapter gesamt (8 alt + 5 neu = 13 in run_ingestion-Liste, ohne deaktivierte).
+    # 14 Adapter gesamt in run_ingestion-Liste (13 bestehende + NINA), ohne deaktivierte.
     bnetza_record = next(r for r in captured if r.source_id == "bnetza")
     assert bnetza_record.status == "ok"
     assert bnetza_record.freshness_expectation == "daily"
     assert bnetza_record.freshness_status == "stale"
-    assert len(captured) == 13  # 8 bestehende + 5 neue Adapter
+    assert len(captured) == 14  # 13 bestehende + NINA
 
 
 # --- Task 5: DWD regionale Bundesland-Records persistieren -------------------

@@ -17,6 +17,7 @@ from .adapters.fao import FAOAdapter
 from .adapters.tankerkoenig import TankerkoenigAdapter
 from .adapters.pegelonline import PegelonlineAdapter
 from .adapters.dwd import DWDAdapter
+from .adapters.nina import NINAAdapter
 from .adapters.bip import BIPAdapter
 from .adapters.arbeitslosigkeit import ArbeitslosigkeitAdapter
 from .adapters.ezbleitzins import EZBLeitzinsAdapter
@@ -97,6 +98,7 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
         TankerkoenigAdapter(),
         PegelonlineAdapter(),
         DWDAdapter(),
+        NINAAdapter(),
         BIPAdapter(),
         ArbeitslosigkeitAdapter(),
         EZBLeitzinsAdapter(),
