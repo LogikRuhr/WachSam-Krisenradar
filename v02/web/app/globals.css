@@ -790,3 +790,22 @@ strong { color: var(--on-surface); font-weight: 700; }
 .status-critical { color: var(--critical); border-color: rgba(239,68,68,.5); }
 .status-none { color: var(--on-surface-variant); }
 .status-health-link { margin-top: 16px; }
+
+/* --- /woche: Wochenübersicht (Stufe heute vs. vor 7 Tagen) --- */
+.weekly-channels, .weekly-movers { margin: 0 0 28px; }
+.weekly-channel-list, .weekly-mover-list { display: grid; gap: 10px; margin: 16px 0 0; padding: 0; list-style: none; }
+.weekly-channel-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; border: 1px solid var(--outline); border-radius: 4px; background: rgba(13,13,13,.5); padding: 14px 16px; }
+.weekly-channel-title { color: var(--on-surface); font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.weekly-state-transition { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.weekly-arrow { color: var(--on-surface-variant); font-family: var(--font-mono); font-size: 14px; }
+.weekly-no-history, .weekly-unchanged { font-style: italic; }
+.weekly-mover { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; border: 1px solid var(--outline); border-radius: 4px; background: rgba(13,13,13,.5); padding: 12px 14px; }
+.weekly-mover-label { color: var(--on-surface); font-size: 14px; overflow-wrap: anywhere; }
+.weekly-mover-delta { color: var(--on-surface); font-family: var(--font-mono); font-size: 14px; font-weight: 700; }
+.weekly-mover-channel { white-space: nowrap; }
+.weekly-honesty { border: 1px solid var(--outline); border-left: 3px solid var(--primary); border-radius: 0 4px 4px 0; background: rgba(27,30,37,.72); padding: 22px; }
+.weekly-methodology { margin-top: 8px; font-size: 13px; }
+
+@media (max-width: 820px) {
+  .weekly-channel-row, .weekly-mover { grid-template-columns: 1fr; }
+}
