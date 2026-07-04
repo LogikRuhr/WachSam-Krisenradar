@@ -510,6 +510,7 @@ In `main.py` `run_ingestion()`, direkt nach dem Einsammeln der Items eines Adapt
 - Produces: Indikator `wi-nina-zivilschutz-de` — Anzahl aktiver MoWaS-Zivilschutzmeldungen bundesweit. Quelle: `https://warnung.bund.de/api31/mowas/mapData.json` (JSON-Array; Felder pro Eintrag u. a. `severity` ∈ {"Minor","Moderate","Severe","Extreme"}, `type`).
 
 - [ ] **Step 0: API-Verifikation (Fakten-Treue, VOR dem Code):** `curl -s https://warnung.bund.de/api31/mowas/mapData.json | head -c 2000` — Struktur und Feldnamen bestätigen. Weicht die Struktur ab → Adapter an die echte Struktur anpassen, nicht an diesen Plan.
+- **Amendment (Task-9-Review):** Live enthält das Array auch `"type": "Cancel"`-Einträge (Entwarnungen). Diese dürfen NICHT als aktive Meldungen zählen — Zählregel: `count = len([w for w in data if w.get("type") != "Cancel"])`. Beschreibungstext weist die Filterung aus.
 - [ ] **Step 1: Failing Test** (Muster DWD-Test):
 
 ```python
