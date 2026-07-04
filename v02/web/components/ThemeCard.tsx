@@ -10,6 +10,12 @@ function formatStand(value: string | null): string | null {
   return Number.isNaN(date.getTime()) ? null : DATE_FMT.format(date);
 }
 
+/** "≈ +8 €/Monat" bzw. "≈ −3 €/Monat" — Minuszeichen (U+2212) statt Bindestrich. */
+function formatMonthlyDelta(value: number): string {
+  const sign = value >= 0 ? "+" : "−";
+  return `≈ ${sign}${Math.abs(value)} €/Monat`;
+}
+
 /**
  * Karte für einen Radar-Themenkanal (oder den amtlichen Warnlage-Sonderkanal).
  * Die Warnlage (`theme.key === WARNLAGE_CHANNEL.key`) wird bewusst NICHT über
@@ -57,6 +63,15 @@ export function ThemeCard({ theme }: { theme: RadarTheme }) {
             </li>
           ))}
         </ul>
+      ) : null}
+
+      {theme.costEstimate ? (
+        <div className="theme-cost">
+          <span className="theme-cost-value">{formatMonthlyDelta(theme.costEstimate.monthlyDeltaEur)}</span>
+          <span className="theme-cost-note">
+            Modellrechnung, keine Vorhersage — Annahmen: {theme.costEstimate.assumptions}
+          </span>
+        </div>
       ) : null}
 
       {stand || isWarnlage ? (

@@ -3,8 +3,16 @@
 // Persistenz für Stufen, keine Mockdaten. DB nicht erreichbar → `connected: false`;
 // fehlender Live-Wert → ehrlicher Leerzustand ("pending" / "Datenstand ausstehend").
 
+import { estimateHeatingDelta, estimateMobilityDelta, type CostEstimate } from "./cost-model";
 import { indicatorVitals } from "./indicator-zones";
-import { getIndicators, getRegionalWarnings, type IndicatorRow, type RegionalWarningRow, type WithSources } from "./public-data";
+import {
+  getIndicatorObservations,
+  getIndicators,
+  getRegionalWarnings,
+  type IndicatorRow,
+  type RegionalWarningRow,
+  type WithSources,
+} from "./public-data";
 import { regionName } from "./regions";
 import {
   computeThemeState,
@@ -26,6 +34,7 @@ export type RadarTheme = {
   reason: string;
   drivers: { id: string; label: string; zone: ThemeZone; currentValue: string | null; unit: string | null }[];
   sinceDate: string | null;
+  costEstimate?: CostEstimate | null;
 };
 
 type RadarIndicatorRow = WithSources<IndicatorRow>;
@@ -51,6 +60,33 @@ const WARNLAGE_LEAD: Record<ThemeState, string> = {
 
 type IndicatorEntry = { input: ThemeIndicatorInput; currentValue: string | null; unit: string | null };
 
+// Leitindikatoren der €-Modellrechnung (Task 7) — nur für diese beiden Kanäle
+// wird `costEstimate` berechnet; andere Kanäle erhalten das Feld nicht.
+const COST_MODEL_LEAD_INDICATOR: Record<string, string> = {
+  mobilitaet: "wi-kraftstoffpreis-diesel",
+  "heizen-energie": "wi-gaspreis-haushalt-efh",
+};
+const COST_MODEL_OBSERVATION_LIMIT = 60;
+
+/**
+ * Lädt die Zeitreihe des Leitindikators eines Kostenkanals und berechnet die
+ * €-Modellrechnung (cost-model.ts). Kein Leitindikator für den Kanal konfiguriert,
+ * DB nicht erreichbar oder keine verwertbaren Punkte → `null` (ehrlicher
+ * Leerzustand, kein Crash, keine €-Zeile in ThemeCard).
+ */
+async function buildCostEstimate(channelKey: string, byId: IndicatorMap): Promise<CostEstimate | null> {
+  const indicatorId = COST_MODEL_LEAD_INDICATOR[channelKey];
+  if (!indicatorId) return null;
+
+  const observations = await getIndicatorObservations(indicatorId, COST_MODEL_OBSERVATION_LIMIT);
+  if (!observations.connected || observations.rows.length === 0) return null;
+  const obs = observations.rows.map((row) => ({ observedAt: row.observedAt, value: String(row.value) }));
+
+  if (channelKey === "mobilitaet") return estimateMobilityDelta(obs);
+  const unit = byId.get(indicatorId)?.unit ?? null;
+  return estimateHeatingDelta(obs, unit);
+}
+
 /**
  * Leitet aus einer Indikator-Row (falls vorhanden) den ThemeIndicatorInput für
  * computeThemeState sowie die Anzeigefelder (currentValue/unit als Rohwerte aus
@@ -72,10 +108,11 @@ function buildIndicatorEntry(id: string, byId: IndicatorMap): IndicatorEntry {
   };
 }
 
-function buildTheme(channel: ThemeChannel, byId: IndicatorMap): RadarTheme {
+async function buildTheme(channel: ThemeChannel, byId: IndicatorMap): Promise<RadarTheme> {
   const entries = channel.indicatorIds.map((id) => buildIndicatorEntry(id, byId));
   const entryById = new Map(entries.map((entry) => [entry.input.id, entry]));
   const { state, drivers, reason } = computeThemeState(entries.map((entry) => entry.input));
+  const costEstimate = channel.key in COST_MODEL_LEAD_INDICATOR ? await buildCostEstimate(channel.key, byId) : undefined;
 
   return {
     key: channel.key,
@@ -95,6 +132,7 @@ function buildTheme(channel: ThemeChannel, byId: IndicatorMap): RadarTheme {
       };
     }),
     sinceDate: null,
+    costEstimate,
   };
 }
 
@@ -233,7 +271,10 @@ export async function getRadarThemes(
   const indicators = await getIndicators();
   const byId: IndicatorMap = new Map(indicators.rows.map((row) => [row.id, row]));
 
-  const themes = THEME_CHANNELS.map((channel, index) => ({ theme: buildTheme(channel, byId), index }))
+  const built = await Promise.all(
+    THEME_CHANNELS.map(async (channel, index) => ({ theme: await buildTheme(channel, byId), index })),
+  );
+  const themes = built
     .sort((a, b) => STATE_RANK[b.theme.state] - STATE_RANK[a.theme.state] || a.index - b.index)
     .map((entry) => entry.theme);
 
