@@ -14,7 +14,7 @@ from src.adapters.eia import EIAAdapter
 from src.adapters.fred import FREDAdapter
 from src.adapters.fao import FAOAdapter
 from src.adapters.pegelonline import PegelonlineAdapter
-from src.adapters.dwd import DWDAdapter, decode_warnwetter_response, summarize_warnings
+from src.adapters.dwd import DWDAdapter, decode_warnwetter_response, summarize_warnings, summarize_by_state
 from src.adapters.eurostat import EurostatAdapter
 from src.adapters.warning_indicators import WarningIndicatorsAdapter
 from src.adapters.tankerkoenig import (
@@ -541,6 +541,69 @@ def test_dwd_adapter_records_source_error_on_http_failure(monkeypatch):
             "keep_previous": True,
         }
     ]
+
+
+def test_dwd_summarize_by_state_counts_and_max_level():
+    payload = {
+        "time": 1751600000000,
+        "warnings": {
+            "r1": [
+                {"level": 2, "event": "WINDBÖEN", "stateShort": "NRW"},
+                {"level": 3, "event": "GEWITTER", "stateShort": "NRW"},
+            ],
+            "r2": [{"level": 1, "event": "NEBEL", "stateShort": "BY"}],
+        },
+    }
+
+    records = {r["region_code"]: r for r in summarize_by_state(payload)}
+    assert records["NRW"]["warning_count"] == 2
+    assert records["NRW"]["max_level"] == 3
+    assert records["BY"]["warning_count"] == 1
+
+
+def test_dwd_adapter_fills_regional_records(monkeypatch):
+    response = MagicMock()
+    response.status_code = 200
+    response.text = (
+        'warnWetter.loadWarnings({"time": 1751600000000, "warnings": '
+        '{"r1": [{"level": 2, "event": "STURM", "stateShort": "NRW"}]}});'
+    )
+    response.raise_for_status = lambda: None
+    monkeypatch.setattr("src.adapters.dwd.requests.get", lambda *a, **k: response)
+
+    adapter = DWDAdapter()
+    items = adapter.fetch_latest()
+    assert len(items) == 1
+    assert adapter.regional_records == [
+        {"region_code": "NRW", "warning_count": 1, "max_level": 2, "source": "dwd"}
+    ]
+
+
+def test_dwd_adapter_keeps_regional_records_stale_on_error(monkeypatch):
+    """Bei einem Quellenfehler bleiben die zuletzt bekannten regionalen Records
+    unverändert stehen (Stale-on-error) — es wird schlicht nichts upserted."""
+    ok_response = MagicMock()
+    ok_response.status_code = 200
+    ok_response.text = (
+        'warnWetter.loadWarnings({"time": 1751600000000, "warnings": '
+        '{"r1": [{"level": 2, "event": "STURM", "stateShort": "NRW"}]}});'
+    )
+    ok_response.raise_for_status = lambda: None
+    monkeypatch.setattr("src.adapters.dwd.requests.get", lambda *a, **k: ok_response)
+
+    adapter = DWDAdapter()
+    adapter.fetch_latest()
+    expected = [{"region_code": "NRW", "warning_count": 1, "max_level": 2, "source": "dwd"}]
+    assert adapter.regional_records == expected
+
+    fail_response = MagicMock()
+    fail_response.status_code = 503
+    fail_response.raise_for_status.side_effect = RuntimeError("HTTP 503")
+    monkeypatch.setattr("src.adapters.dwd.requests.get", lambda *a, **k: fail_response)
+
+    items = adapter.fetch_latest()
+    assert items == []
+    assert adapter.regional_records == expected
 
 
 # ---------------------------------------------------------------------------

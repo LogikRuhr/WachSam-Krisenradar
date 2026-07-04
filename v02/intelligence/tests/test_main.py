@@ -536,6 +536,70 @@ def test_run_ingestion_upserts_source_health_in_normal_mode(monkeypatch):
     assert len(captured) == 13  # 8 bestehende + 5 neue Adapter
 
 
+# --- Task 5: DWD regionale Bundesland-Records persistieren -------------------
+
+class FakeDWDAdapterWithRegionalRecords:
+    name = "DWD"
+
+    def __init__(self):
+        self.source_errors = []
+        self.regional_records = [
+            {"region_code": "NRW", "warning_count": 2, "max_level": 3, "source": "dwd"}
+        ]
+
+    def describe(self):
+        return {
+            "name": "DWD",
+            "source": "DWD WarnWetter warnings JSON",
+            "requires_api_key": False,
+            "writes_db": True,
+            "output_target": "indicators",
+        }
+
+    def fetch_latest(self):
+        return []
+
+
+def _stub_all_adapters_except(monkeypatch, keep_attr, fake_cls):
+    for attr in _ALL_ADAPTER_ATTRS:
+        if attr != keep_attr:
+            monkeypatch.setattr(main, attr, EmptyAdapter)
+    monkeypatch.setattr(main, keep_attr, fake_cls)
+    monkeypatch.setattr(main, "RSSCrawler", EmptyCrawler)
+    monkeypatch.setattr(main, "insert_draft", lambda item, item_type: "draft")
+    monkeypatch.setattr(main, "fetch_indicator_thresholds", lambda _id: None)
+    monkeypatch.setattr(main, "upsert_source_health", lambda records: len(records))
+
+
+def test_run_ingestion_persists_dwd_regional_records(monkeypatch):
+    _stub_all_adapters_except(monkeypatch, "DWDAdapter", FakeDWDAdapterWithRegionalRecords)
+
+    captured = []
+    monkeypatch.setattr(
+        main, "upsert_regional_warnings",
+        lambda records: captured.extend(records) or len(records),
+    )
+
+    asyncio.run(main.run_ingestion(dry_run=False, allow_fetch=True))
+
+    assert captured == [{"region_code": "NRW", "warning_count": 2, "max_level": 3, "source": "dwd"}]
+
+
+def test_run_ingestion_regional_warnings_db_error_does_not_stop_run(monkeypatch, capsys):
+    _stub_all_adapters_except(monkeypatch, "DWDAdapter", FakeDWDAdapterWithRegionalRecords)
+
+    def boom(records):
+        raise RuntimeError("db down")
+
+    monkeypatch.setattr(main, "upsert_regional_warnings", boom)
+
+    # Darf NICHT crashen — der Lauf muss trotz DB-Fehler durchlaufen.
+    asyncio.run(main.run_ingestion(dry_run=False, allow_fetch=True))
+
+    out = capsys.readouterr().out
+    assert "abgeschlossen" in out
+
+
 # --- W6a.1: C4-Quellfehler-Sichtbarkeit im Ingestion-Fluss -------------------
 
 def _collect_shadow_lines(capsys):
