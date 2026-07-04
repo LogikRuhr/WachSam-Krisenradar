@@ -71,12 +71,19 @@ const COST_MODEL_OBSERVATION_LIMIT = 60;
 /**
  * Lädt die Zeitreihe des Leitindikators eines Kostenkanals und berechnet die
  * €-Modellrechnung (cost-model.ts). Kein Leitindikator für den Kanal konfiguriert,
- * DB nicht erreichbar oder keine verwertbaren Punkte → `null` (ehrlicher
- * Leerzustand, kein Crash, keine €-Zeile in ThemeCard).
+ * Indikator nicht (mehr) publiziert, DB nicht erreichbar oder keine verwertbaren
+ * Punkte → `null` (ehrlicher Leerzustand, kein Crash, keine €-Zeile in ThemeCard).
+ *
+ * `byId` enthält nur publizierte Indikatoren (getIndicators() filtert
+ * editorial_status = 'published', s. public-data.ts). Der Guard hier stellt
+ * sicher, dass die €-Zeile mitzieht, wenn ein Indikator redaktionell auf Draft
+ * zurückgesetzt wird — sonst würde `getIndicatorObservations` (kein eigener
+ * Publish-Filter, s. public-data.ts:346-349) weiter aus der Rohzeitreihe eines
+ * nicht-publizierten Indikators rechnen.
  */
 async function buildCostEstimate(channelKey: string, byId: IndicatorMap): Promise<CostEstimate | null> {
   const indicatorId = COST_MODEL_LEAD_INDICATOR[channelKey];
-  if (!indicatorId) return null;
+  if (!indicatorId || !byId.has(indicatorId)) return null;
 
   const observations = await getIndicatorObservations(indicatorId, COST_MODEL_OBSERVATION_LIMIT);
   if (!observations.connected || observations.rows.length === 0) return null;
