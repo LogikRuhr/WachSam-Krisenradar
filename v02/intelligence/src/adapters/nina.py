@@ -47,8 +47,13 @@ class NINAAdapter(BaseAdapter):
         self.source_class = "behoerde"
 
     def _item_from_warnings(self, warnings: list[dict]) -> IngestionItem:
-        count = len(warnings)
-        severities = [w.get("severity") for w in warnings]
+        # Plan-Amendment (Task-9-Review): "Cancel"-Einträge sind Entwarnungen,
+        # keine aktiven Zivilschutzmeldungen. Eine Häufung von Entwarnungen darf
+        # den Indikator nicht fälschlich Richtung "erhöht/kritisch" heben — daher
+        # zählen nur Alert/Update-Einträge, Cancel wird ausgeschlossen.
+        active_warnings = [w for w in warnings if w.get("type") != "Cancel"]
+        count = len(active_warnings)
+        severities = [w.get("severity") for w in active_warnings]
         severity = _max_severity_suggestion(severities)
         distribution = Counter(str(s).strip() for s in severities if s)
         severity_text = ", ".join(
@@ -60,16 +65,17 @@ class NINAAdapter(BaseAdapter):
             title = f"NINA/MoWaS: {count} aktive Zivilschutzmeldungen bundesweit"
             description = (
                 f"Der Bund (BBK) meldet über MoWaS/NINA {count} aktive Zivilschutzmeldungen "
-                f"bundesweit. Severity-Verteilung: {severity_text}. Relevanz: amtliche "
-                "Zivilschutzmeldungen (u. a. Gefahrenlagen, Evakuierungen, Trinkwasser- oder "
-                "Infrastrukturwarnungen) können kurzfristig Gesellschaft und Infrastruktur betreffen."
+                f"bundesweit (ohne Entwarnungen/Cancel). Severity-Verteilung: {severity_text}. "
+                "Relevanz: amtliche Zivilschutzmeldungen (u. a. Gefahrenlagen, Evakuierungen, "
+                "Trinkwasser- oder Infrastrukturwarnungen) können kurzfristig Gesellschaft und "
+                "Infrastruktur betreffen."
             )
         else:
             title = "NINA/MoWaS: keine aktiven Zivilschutzmeldungen im aktuellen Datensatz"
             description = (
                 "Der MoWaS-Kartendatensatz (BBK/NINA) enthält aktuell keine aktiven "
-                "Zivilschutzmeldungen. Die Lage bleibt beobachtungsrelevant, da sich das "
-                "kurzfristig ändern kann."
+                "Zivilschutzmeldungen (ohne Entwarnungen/Cancel). Die Lage bleibt "
+                "beobachtungsrelevant, da sich das kurzfristig ändern kann."
             )
 
         return self.create_item(

@@ -626,6 +626,29 @@ def test_nina_adapter_counts_active_warnings(monkeypatch):
     _validate_items(items)
 
 
+def test_nina_adapter_excludes_cancel_entries_from_count_and_severity(monkeypatch):
+    """Plan-Amendment (Review Task 9): 'Cancel' = Entwarnung, keine aktive
+    Meldung. Darf weder mitgezählt noch in die Severity-Ableitung einfließen —
+    sonst könnte eine Häufung von Entwarnungen den Indikator fälschlich Richtung
+    erhöht/kritisch heben."""
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = [
+        {"severity": "Minor", "type": "Alert"},
+        {"severity": "Extreme", "type": "Cancel"},
+        {"severity": "Severe", "type": "Cancel"},
+    ]
+    response.raise_for_status = lambda: None
+    monkeypatch.setattr("src.adapters.nina.requests.get", lambda *a, **k: response)
+
+    items = NINAAdapter().fetch_latest()
+    assert len(items) == 1
+    assert items[0].current_value == 1.0
+    assert items[0].severity_suggestion == "beobachten"
+    assert "Entwarnungen" in items[0].description
+    _validate_items(items)
+
+
 def test_nina_adapter_maps_extreme_severity_to_kritisch(monkeypatch):
     response = MagicMock()
     response.status_code = 200

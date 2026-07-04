@@ -180,8 +180,8 @@ sources:
     freshness_expectation: daily
     household_relevance: hoch
     current_quality: live-verified-2026-07-04-top-level-array
-    risk_notes: Zählt alle MoWaS-Einträge (inkl. Update/Cancel) im aktuellen Kartendatensatz; kein Rückschluss auf regionale Betroffenheit ohne weitere Aufschlüsselung.
-    next_step: Regionale Aufschlüsselung und Typ-Filter (Alert vs. Cancel) prüfen, sobald belastbarer Bedarf besteht.
+    risk_notes: Zählt nur Alert/Update-Einträge des aktuellen Kartendatensatzes; "Cancel"-Einträge (Entwarnungen) werden explizit ausgefiltert, damit eine Häufung von Entwarnungen den Indikator nicht fälschlich Richtung erhöht/kritisch hebt. Kein Rückschluss auf regionale Betroffenheit ohne weitere Aufschlüsselung.
+    next_step: Regionale Aufschlüsselung prüfen, sobald belastbarer Bedarf besteht.
   - id: pegelonline
     name: Pegelonline WSV
     layer: weather_water
