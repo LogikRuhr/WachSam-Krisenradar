@@ -508,3 +508,15 @@ export const feedback = pgTable("feedback", {
   contactEmail: text("contact_email"),
   createdAt,
 });
+
+export const regionalWarnings = pgTable(
+  "regional_warnings",
+  {
+    regionCode: text("region_code").notNull(),
+    source: text("source").notNull().default("dwd"),
+    warningCount: integer("warning_count").notNull(),
+    maxLevel: integer("max_level").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.regionCode, table.source] })],
+);
