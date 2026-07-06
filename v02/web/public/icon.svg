@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="WachSam Radar Icon">
+  <rect width="512" height="512" rx="96" fill="#0D0D0D" />
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#D4540A" stroke-width="10" opacity="0.35" />
+  <circle cx="256" cy="256" r="130" fill="none" stroke="#D4540A" stroke-width="10" opacity="0.55" />
+  <circle cx="256" cy="256" r="80" fill="none" stroke="#D4540A" stroke-width="10" opacity="0.8" />
+  <path d="M256 256 L256 76 A180 180 0 0 1 411 166 Z" fill="#D4540A" opacity="0.25" />
+  <circle cx="256" cy="256" r="18" fill="#D4540A" />
+</svg>

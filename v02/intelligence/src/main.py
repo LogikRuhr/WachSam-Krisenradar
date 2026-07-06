@@ -17,6 +17,7 @@ from .adapters.fao import FAOAdapter
 from .adapters.tankerkoenig import TankerkoenigAdapter
 from .adapters.pegelonline import PegelonlineAdapter
 from .adapters.dwd import DWDAdapter
+from .adapters.nina import NINAAdapter
 from .adapters.bip import BIPAdapter
 from .adapters.arbeitslosigkeit import ArbeitslosigkeitAdapter
 from .adapters.ezbleitzins import EZBLeitzinsAdapter
@@ -29,7 +30,7 @@ from .adapters.warning_indicators import WarningIndicatorsAdapter
 from .crawler.rss_crawler import RSSCrawler
 from .fetchers.article_fetcher import ArticleFetcher
 from .extractors.llm_extractor import extract_with_llm, reset_llm_runtime_state
-from .db import insert_draft, set_dry_run, fetch_indicator_thresholds, upsert_source_health
+from .db import insert_draft, set_dry_run, fetch_indicator_thresholds, upsert_source_health, upsert_regional_warnings
 from .validation import validate_draft
 from .relevance_gate import evaluate_wachsam_relevance
 from .gate import evaluate_plausibility, source_error_verdict, build_shadow_log
@@ -97,6 +98,7 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
         TankerkoenigAdapter(),
         PegelonlineAdapter(),
         DWDAdapter(),
+        NINAAdapter(),
         BIPAdapter(),
         ArbeitslosigkeitAdapter(),
         EZBLeitzinsAdapter(),
@@ -133,6 +135,18 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
             except Exception as e:
                 adapter_errors.append({"reason": str(e)})
                 print(f"  [{adapter.name}] FEHLER: {e}")
+
+            # Task 5: regionale Bundesland-Aufschlüsselung (aktuell DWD) additiv
+            # persistieren. Ein DB-Fehler darf den gesamten Lauf nicht stoppen.
+            regional = getattr(adapter, "regional_records", [])
+            if regional:
+                try:
+                    written = upsert_regional_warnings(regional)
+                    if written:
+                        print(f"  [{adapter.name}] {written} regionale Warnrecords upserted")
+                except Exception as e:
+                    print(f"  [{adapter.name}] REGIONAL_WARNINGS FEHLER: {e}")
+
             # W6a.1: gemeldete Quell-/Fetch-/Parsingfehler einsammeln (rein
             # additiv; getattr-defensiv für Adapter/Fakes ohne das Attribut).
             adapter_errors.extend(getattr(adapter, "source_errors", []))

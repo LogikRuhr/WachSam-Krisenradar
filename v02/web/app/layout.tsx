@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Bebas_Neue, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { TopNav } from "@/components/TopNav";
 import { Footer } from "@/components/Footer";
@@ -12,6 +12,10 @@ const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600", "
 export const metadata: Metadata = {
   title: "WachSam — Krisenradar",
   description: "Deutschland-zentriertes Krisen- und Haushalts-Auswirkungsradar",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0D0D0D",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

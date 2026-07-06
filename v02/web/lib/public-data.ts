@@ -423,6 +423,24 @@ export async function getSourceHealthOverview(): Promise<DbState<SourceHealthPub
   );
 }
 
+export type RegionalWarningRow = typeof schema.regionalWarnings.$inferSelect;
+
+/**
+ * Amtliche Warnzähler je Bundesland (aus DWD, Task-5-Ingestion). Operative
+ * Aggregatzahlen ohne redaktionelle Freigabe — wie source_health bewusst OHNE
+ * editorial_status-Filter, da es keine Editorial-Inhalte, sondern reine
+ * Zähler sind. Migration 0013 kann auf Prod noch fehlen: `safe()` fängt eine
+ * fehlende Tabelle wie jeden anderen DB-Fehler ab (connected: false).
+ */
+export async function getRegionalWarnings(regionCode: string): Promise<DbState<RegionalWarningRow>> {
+  return safe(() =>
+    database()!
+      .select()
+      .from(schema.regionalWarnings)
+      .where(eq(schema.regionalWarnings.regionCode, regionCode)),
+  );
+}
+
 /** Kompakter Preisradar für die Startseite: nur publizierte Indikatoren, kein API-Call im Renderpfad. */
 export async function getPriceRadar(): Promise<DbState<PriceRadarCard>> {
   const indicators = await safe(() =>

@@ -123,6 +123,17 @@ export default async function HomePage() {
 
       {signals.connected ? <Verdict verdict={verdict} stand={formatStand(latestStand)} /> : null}
 
+      <section className="hero-card" aria-label="Neu im WachSam-Radar">
+        <p className="mono-label">Neu</p>
+        <p className="lead">
+          Neu: Das WachSam-Radar — alle Themen mit Warnstufe auf einen Blick.
+        </p>
+        <div className="home-actions">
+          <Link className="btn-rost" href="/radar">Zum Radar</Link>
+          <Link className="text-link" href="/woche">Woche im Überblick</Link>
+        </div>
+      </section>
+
       {signals.connected ? (
         <section className="app-state-band" aria-label="Quellen, Datenstand und Qualität dieser Lageeinordnung">
           <div className="app-state-item">

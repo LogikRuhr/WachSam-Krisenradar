@@ -12,6 +12,24 @@ from ..models import GermanyRelevance, IngestionItem
 
 
 DWD_WARNINGS_URL = "https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json"
+DWD_STATE_CODES = (
+    "BB",
+    "BE",
+    "BW",
+    "BY",
+    "HB",
+    "HE",
+    "HH",
+    "MV",
+    "NRW",
+    "NS",
+    "RP",
+    "SH",
+    "SL",
+    "SN",
+    "ST",
+    "TH",
+)
 
 _LEVEL_TO_SEVERITY = {
     0: "stabil",
@@ -59,6 +77,30 @@ def summarize_warnings(payload: dict) -> dict:
     }
 
 
+def summarize_by_state(payload: dict) -> list[dict]:
+    """Bricht die DWD-Warnungen nach Bundesland-Kürzel (`stateShort`) herunter.
+
+    Liefert alle bekannten Bundesländer, auch wenn sie gerade keine aktiven
+    Warnungen haben. So überschreibt ein erfolgreicher Fetch frühere Warnungen
+    sauber mit 0/0 statt alte Rows in `regional_warnings` stehen zu lassen.
+    """
+    warnings_by_region = payload.get("warnings") or {}
+    by_state: dict[str, dict] = {
+        code: {"region_code": code, "warning_count": 0, "max_level": 0, "source": "dwd"}
+        for code in DWD_STATE_CODES
+    }
+    for region in warnings_by_region.values():
+        for warning in region:
+            state = str(warning.get("stateShort") or warning.get("state") or "unknown")
+            level = int(warning.get("level") or 0)
+            entry = by_state.setdefault(
+                state, {"region_code": state, "warning_count": 0, "max_level": 0, "source": "dwd"}
+            )
+            entry["warning_count"] += 1
+            entry["max_level"] = max(entry["max_level"], level)
+    return sorted(by_state.values(), key=lambda e: e["region_code"])
+
+
 class DWDAdapter(BaseAdapter):
     """DWD WarnWetter — current official warning summary for Germany."""
 
@@ -69,6 +111,9 @@ class DWDAdapter(BaseAdapter):
     def __init__(self):
         super().__init__("DWD")
         self.source_class = "behoerde"
+        # Bundesland-Aufschlüsselung (Task 5) — bleibt bei Quellenfehlern stehen
+        # (Stale-on-error): siehe fetch_latest()-except-Zweig.
+        self.regional_records: list[dict] = []
 
     def _item_from_summary(self, summary: dict) -> IngestionItem:
         generated_at = summary["generated_at"]
@@ -139,8 +184,12 @@ class DWDAdapter(BaseAdapter):
             summary = summarize_warnings(payload)
             if summary["generated_at"] is None:
                 raise ValueError("missing DWD generated timestamp")
+            self.regional_records = summarize_by_state(payload)
             return [self._item_from_summary(summary)]
         except Exception as exc:
+            # Stale-on-error: regional_records NICHT zurücksetzen — bei einem
+            # Quellenfehler bleiben die zuletzt bekannten Werte stehen, es wird
+            # in main.run_ingestion() schlicht nichts neu upserted.
             self.record_source_error(
                 "wi-dwd-warnings-de",
                 str(exc),

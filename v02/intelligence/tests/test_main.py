@@ -32,6 +32,7 @@ class EmptyCrawler:
 _ALL_ADAPTER_ATTRS = (
     "DestatisAdapter", "BNetzAAdapter", "EIAAdapter", "FREDAdapter",
     "FAOAdapter", "TankerkoenigAdapter", "PegelonlineAdapter", "DWDAdapter",
+    "NINAAdapter",
     "EurostatAdapter", "WarningIndicatorsAdapter",
     "BIPAdapter", "ArbeitslosigkeitAdapter", "EZBLeitzinsAdapter",
     "StaatsschuldenAdapter", "InsolvenzenAdapter",
@@ -528,12 +529,76 @@ def test_run_ingestion_upserts_source_health_in_normal_mode(monkeypatch):
     asyncio.run(main.run_ingestion(dry_run=False, allow_fetch=True))
 
     # Reihenfolge: alle Adapter in Adapter-Listenreihenfolge; BNetzA an Position 2 (Index 1).
-    # 15 Adapter gesamt (8 alt + 5 neu = 13 in run_ingestion-Liste, ohne deaktivierte).
+    # 14 Adapter gesamt in run_ingestion-Liste (13 bestehende + NINA), ohne deaktivierte.
     bnetza_record = next(r for r in captured if r.source_id == "bnetza")
     assert bnetza_record.status == "ok"
     assert bnetza_record.freshness_expectation == "daily"
     assert bnetza_record.freshness_status == "stale"
-    assert len(captured) == 13  # 8 bestehende + 5 neue Adapter
+    assert len(captured) == 14  # 13 bestehende + NINA
+
+
+# --- Task 5: DWD regionale Bundesland-Records persistieren -------------------
+
+class FakeDWDAdapterWithRegionalRecords:
+    name = "DWD"
+
+    def __init__(self):
+        self.source_errors = []
+        self.regional_records = [
+            {"region_code": "NRW", "warning_count": 2, "max_level": 3, "source": "dwd"}
+        ]
+
+    def describe(self):
+        return {
+            "name": "DWD",
+            "source": "DWD WarnWetter warnings JSON",
+            "requires_api_key": False,
+            "writes_db": True,
+            "output_target": "indicators",
+        }
+
+    def fetch_latest(self):
+        return []
+
+
+def _stub_all_adapters_except(monkeypatch, keep_attr, fake_cls):
+    for attr in _ALL_ADAPTER_ATTRS:
+        if attr != keep_attr:
+            monkeypatch.setattr(main, attr, EmptyAdapter)
+    monkeypatch.setattr(main, keep_attr, fake_cls)
+    monkeypatch.setattr(main, "RSSCrawler", EmptyCrawler)
+    monkeypatch.setattr(main, "insert_draft", lambda item, item_type: "draft")
+    monkeypatch.setattr(main, "fetch_indicator_thresholds", lambda _id: None)
+    monkeypatch.setattr(main, "upsert_source_health", lambda records: len(records))
+
+
+def test_run_ingestion_persists_dwd_regional_records(monkeypatch):
+    _stub_all_adapters_except(monkeypatch, "DWDAdapter", FakeDWDAdapterWithRegionalRecords)
+
+    captured = []
+    monkeypatch.setattr(
+        main, "upsert_regional_warnings",
+        lambda records: captured.extend(records) or len(records),
+    )
+
+    asyncio.run(main.run_ingestion(dry_run=False, allow_fetch=True))
+
+    assert captured == [{"region_code": "NRW", "warning_count": 2, "max_level": 3, "source": "dwd"}]
+
+
+def test_run_ingestion_regional_warnings_db_error_does_not_stop_run(monkeypatch, capsys):
+    _stub_all_adapters_except(monkeypatch, "DWDAdapter", FakeDWDAdapterWithRegionalRecords)
+
+    def boom(records):
+        raise RuntimeError("db down")
+
+    monkeypatch.setattr(main, "upsert_regional_warnings", boom)
+
+    # Darf NICHT crashen — der Lauf muss trotz DB-Fehler durchlaufen.
+    asyncio.run(main.run_ingestion(dry_run=False, allow_fetch=True))
+
+    out = capsys.readouterr().out
+    assert "abgeschlossen" in out
 
 
 def test_run_ingestion_marks_bnetza_source_health_degraded_when_adapter_reports_source_error(monkeypatch):

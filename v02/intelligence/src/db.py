@@ -259,6 +259,37 @@ def upsert_source_health(records: list[SourceHealthRecord]) -> int:
         conn.close()
 
 
+def upsert_regional_warnings(records: list[dict]) -> int:
+    """Persistiert die DWD-Bundesland-Aufschlüsselung additiv in `regional_warnings`.
+
+    Dry-run-safe (analog `upsert_source_health`): im Dry-Run oder bei leerer
+    Record-Liste wird keine DB-Verbindung geöffnet. Ein DB-Fehler propagiert
+    NICHT hoch — der Aufrufer (main.run_ingestion) faengt bereits defensiv ab,
+    diese Funktion selbst rollt bei Fehlern zurück und liefert 0.
+    """
+    if is_dry_run() or not records:
+        return 0
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            for r in records:
+                cur.execute(
+                    """
+                    INSERT INTO regional_warnings (region_code, source, warning_count, max_level, updated_at)
+                    VALUES (%s, %s, %s, %s, NOW())
+                    ON CONFLICT (region_code, source) DO UPDATE SET
+                        warning_count = EXCLUDED.warning_count,
+                        max_level = EXCLUDED.max_level,
+                        updated_at = NOW()
+                    """,
+                    (r["region_code"], r.get("source", "dwd"), r["warning_count"], r["max_level"]),
+                )
+        conn.commit()
+        return len(records)
+    finally:
+        conn.close()
+
+
 def insert_draft(item: IngestionItem, item_type: str = "lagebild_items") -> Optional[str]:
     """Schreibt ein IngestionItem als Draft in die Postgres-DB.
 

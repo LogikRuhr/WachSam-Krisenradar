@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime
 from unittest.mock import patch, MagicMock, call
-from src.db import insert_draft, set_dry_run, upsert_source_health
+from src.db import insert_draft, set_dry_run, upsert_source_health, upsert_regional_warnings
 from src.models import IngestionItem, GermanyRelevance
 from src.source_health import SourceHealthRecord
 
@@ -306,5 +306,48 @@ def test_upsert_source_health_dry_run_does_not_open_db(mock_get_conn):
         assert upsert_source_health([_source_health_record()]) == 0
     finally:
         set_dry_run(False)
+
+
+# ---------------------------------------------------------------------------
+# regional_warnings — Bundesland-Aufschlüsselung (DWD)
+# ---------------------------------------------------------------------------
+
+def _regional_record(**kwargs):
+    base = dict(region_code="NRW", warning_count=2, max_level=3, source="dwd")
+    base.update(kwargs)
+    return base
+
+
+@patch("src.db.get_connection")
+def test_upsert_regional_warnings_writes_records(mock_get_conn):
+    mock_conn, mock_cursor = _setup_mock_conn()
+    mock_get_conn.return_value = mock_conn
+
+    result = upsert_regional_warnings([_regional_record()])
+
+    assert result == 1
+    sqls = [str(c.args[0]) for c in mock_cursor.execute.call_args_list]
+    assert any("INSERT INTO regional_warnings" in sql for sql in sqls)
+    assert any("ON CONFLICT (region_code, source) DO UPDATE" in sql for sql in sqls)
+    args = mock_cursor.execute.call_args_list[0].args[1]
+    assert args == ("NRW", "dwd", 2, 3)
+    assert mock_conn.commit.called
+    mock_conn.close.assert_called_once()
+
+
+@patch("src.db.get_connection")
+def test_upsert_regional_warnings_dry_run_does_not_open_db(mock_get_conn):
+    set_dry_run(True)
+    try:
+        assert upsert_regional_warnings([_regional_record()]) == 0
+    finally:
+        set_dry_run(False)
+    mock_get_conn.assert_not_called()
+
+
+@patch("src.db.get_connection")
+def test_upsert_regional_warnings_empty_list_is_noop(mock_get_conn):
+    assert upsert_regional_warnings([]) == 0
+    mock_get_conn.assert_not_called()
 
     mock_get_conn.assert_not_called()

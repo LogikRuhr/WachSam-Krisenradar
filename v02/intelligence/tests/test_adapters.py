@@ -14,7 +14,8 @@ from src.adapters.eia import EIAAdapter
 from src.adapters.fred import FREDAdapter
 from src.adapters.fao import FAOAdapter
 from src.adapters.pegelonline import PegelonlineAdapter
-from src.adapters.dwd import DWDAdapter, decode_warnwetter_response, summarize_warnings
+from src.adapters.dwd import DWDAdapter, decode_warnwetter_response, summarize_warnings, summarize_by_state
+from src.adapters.nina import NINAAdapter
 from src.adapters.eurostat import EurostatAdapter
 from src.adapters.warning_indicators import WarningIndicatorsAdapter
 from src.adapters.tankerkoenig import (
@@ -535,6 +536,175 @@ def test_dwd_adapter_records_source_error_on_http_failure(monkeypatch):
             "indicator_id": "wi-dwd-warnings-de",
             "reason": "HTTP 503",
             "source_url": "https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json",
+            "source_stand": None,
+            "observed_at": None,
+            "raw_value": None,
+            "keep_previous": True,
+        }
+    ]
+
+
+def test_dwd_summarize_by_state_counts_and_max_level():
+    payload = {
+        "time": 1751600000000,
+        "warnings": {
+            "r1": [
+                {"level": 2, "event": "WINDBÖEN", "stateShort": "NRW"},
+                {"level": 3, "event": "GEWITTER", "stateShort": "NRW"},
+            ],
+            "r2": [{"level": 1, "event": "NEBEL", "stateShort": "BY"}],
+        },
+    }
+
+    records = {r["region_code"]: r for r in summarize_by_state(payload)}
+    assert len(records) == 16
+    assert records["NRW"]["warning_count"] == 2
+    assert records["NRW"]["max_level"] == 3
+    assert records["BY"]["warning_count"] == 1
+    assert records["TH"]["warning_count"] == 0
+    assert records["TH"]["max_level"] == 0
+
+
+def test_dwd_summarize_by_state_resets_all_states_when_no_warnings():
+    payload = {"time": 1751600000000, "warnings": {}}
+
+    records = summarize_by_state(payload)
+
+    assert len(records) == 16
+    assert all(r["warning_count"] == 0 for r in records)
+    assert all(r["max_level"] == 0 for r in records)
+
+
+def test_dwd_adapter_fills_regional_records(monkeypatch):
+    response = MagicMock()
+    response.status_code = 200
+    response.text = (
+        'warnWetter.loadWarnings({"time": 1751600000000, "warnings": '
+        '{"r1": [{"level": 2, "event": "STURM", "stateShort": "NRW"}]}});'
+    )
+    response.raise_for_status = lambda: None
+    monkeypatch.setattr("src.adapters.dwd.requests.get", lambda *a, **k: response)
+
+    adapter = DWDAdapter()
+    items = adapter.fetch_latest()
+    assert len(items) == 1
+    records = {r["region_code"]: r for r in adapter.regional_records}
+    assert len(records) == 16
+    assert records["NRW"] == {"region_code": "NRW", "warning_count": 1, "max_level": 2, "source": "dwd"}
+    assert records["TH"] == {"region_code": "TH", "warning_count": 0, "max_level": 0, "source": "dwd"}
+
+
+def test_dwd_adapter_keeps_regional_records_stale_on_error(monkeypatch):
+    """Bei einem Quellenfehler bleiben die zuletzt bekannten regionalen Records
+    unverändert stehen (Stale-on-error) — es wird schlicht nichts upserted."""
+    ok_response = MagicMock()
+    ok_response.status_code = 200
+    ok_response.text = (
+        'warnWetter.loadWarnings({"time": 1751600000000, "warnings": '
+        '{"r1": [{"level": 2, "event": "STURM", "stateShort": "NRW"}]}});'
+    )
+    ok_response.raise_for_status = lambda: None
+    monkeypatch.setattr("src.adapters.dwd.requests.get", lambda *a, **k: ok_response)
+
+    adapter = DWDAdapter()
+    adapter.fetch_latest()
+    expected = list(adapter.regional_records)
+    records = {r["region_code"]: r for r in expected}
+    assert len(records) == 16
+    assert records["NRW"]["warning_count"] == 1
+
+    fail_response = MagicMock()
+    fail_response.status_code = 503
+    fail_response.raise_for_status.side_effect = RuntimeError("HTTP 503")
+    monkeypatch.setattr("src.adapters.dwd.requests.get", lambda *a, **k: fail_response)
+
+    items = adapter.fetch_latest()
+    assert items == []
+    assert adapter.regional_records == expected
+
+
+def test_nina_adapter_counts_active_warnings(monkeypatch):
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = [
+        {"severity": "Severe", "type": "Alert"},
+        {"severity": "Minor", "type": "Alert"},
+    ]
+    response.raise_for_status = lambda: None
+    monkeypatch.setattr("src.adapters.nina.requests.get", lambda *a, **k: response)
+
+    adapter = NINAAdapter()
+    items = adapter.fetch_latest()
+    assert len(items) == 1
+    assert items[0].indicator_id == "wi-nina-zivilschutz-de"
+    assert items[0].current_value == 2.0
+    assert items[0].severity_suggestion == "erhöht"
+    _validate_items(items)
+
+
+def test_nina_adapter_excludes_cancel_entries_from_count_and_severity(monkeypatch):
+    """Plan-Amendment (Review Task 9): 'Cancel' = Entwarnung, keine aktive
+    Meldung. Darf weder mitgezählt noch in die Severity-Ableitung einfließen —
+    sonst könnte eine Häufung von Entwarnungen den Indikator fälschlich Richtung
+    erhöht/kritisch heben."""
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = [
+        {"severity": "Minor", "type": "Alert"},
+        {"severity": "Extreme", "type": "Cancel"},
+        {"severity": "Severe", "type": "Cancel"},
+    ]
+    response.raise_for_status = lambda: None
+    monkeypatch.setattr("src.adapters.nina.requests.get", lambda *a, **k: response)
+
+    items = NINAAdapter().fetch_latest()
+    assert len(items) == 1
+    assert items[0].current_value == 1.0
+    assert items[0].severity_suggestion == "beobachten"
+    assert "Entwarnungen" in items[0].description
+    _validate_items(items)
+
+
+def test_nina_adapter_maps_extreme_severity_to_kritisch(monkeypatch):
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = [
+        {"severity": "Extreme", "type": "Alert"},
+        {"severity": "Minor", "type": "Update"},
+    ]
+    response.raise_for_status = lambda: None
+    monkeypatch.setattr("src.adapters.nina.requests.get", lambda *a, **k: response)
+
+    items = NINAAdapter().fetch_latest()
+    assert items[0].severity_suggestion == "kritisch"
+
+
+def test_nina_adapter_no_warnings_defaults_to_beobachten(monkeypatch):
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = []
+    response.raise_for_status = lambda: None
+    monkeypatch.setattr("src.adapters.nina.requests.get", lambda *a, **k: response)
+
+    items = NINAAdapter().fetch_latest()
+    assert items[0].current_value == 0.0
+    assert items[0].severity_suggestion == "beobachten"
+    _validate_items(items)
+
+
+def test_nina_adapter_records_source_error_on_http_failure(monkeypatch):
+    response = MagicMock()
+    response.status_code = 503
+    response.raise_for_status.side_effect = RuntimeError("HTTP 503")
+    monkeypatch.setattr("src.adapters.nina.requests.get", lambda *a, **k: response)
+
+    adapter = NINAAdapter()
+    assert adapter.fetch_latest() == []
+    assert adapter.source_errors == [
+        {
+            "indicator_id": "wi-nina-zivilschutz-de",
+            "reason": "HTTP 503",
+            "source_url": "https://warnung.bund.de/api31/mowas/mapData.json",
             "source_stand": None,
             "observed_at": None,
             "raw_value": None,

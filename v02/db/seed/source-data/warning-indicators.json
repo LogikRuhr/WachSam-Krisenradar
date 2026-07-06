@@ -1,9 +1,9 @@
 {
   "meta": {
-    "version": "v0.3",
-    "stand": "2026-06-16",
-    "count": 18,
-    "note": "18 Frühwarnindikatoren inkl. Preisradar-Erweiterung für Tankstellen- und Haushaltsenergiepreise. Basis: docs/warning-indicators.md"
+    "version": "v0.4",
+    "stand": "2026-07-04",
+    "count": 20,
+    "note": "20 Frühwarnindikatoren inkl. NINA/BBK-Zivilschutzmeldungen und DWD-Warnlage. Basis: docs/warning-indicators.md"
   },
   "indicators": [
     {
@@ -476,6 +476,48 @@
       "linked_cascade": null,
       "scale_direction": "higher_is_worse",
       "threshold_method": "warn = 70 % BIP (EU-Maastricht-Referenzwert 60 % + Puffer; aktuell ~63 %); critical = 90 % BIP (internationaler Schwellwert stark erhöhter Schuldenlast)"
+    },
+    {
+      "id": "wi-nina-zivilschutz-de",
+      "label": "NINA Zivilschutzmeldungen (aktiv)",
+      "threshold_warn": 25,
+      "threshold_critical": 100,
+      "unit": "Meldungen",
+      "system": "gesellschaft",
+      "severity_trigger": "erhoeht",
+      "quelle": "BBK MoWaS/NINA — warnung.bund.de (near-real-time)",
+      "sources": [
+        {
+          "name": "BBK — Warnung der Bevölkerung (NINA/MoWaS Kartendaten)",
+          "url": "https://warnung.bund.de/api31/mowas/mapData.json",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "Bundesweiter amtlicher Zivilschutz-Warnkanal des BBK; direkte Relevanz für Gesellschaft und Infrastruktur",
+      "linked_cascade": null,
+      "scale_direction": "higher_is_worse",
+      "threshold_method": "ANNAHME, konservativ — warn = 25 aktive Meldungen bundesweit, critical = 100 (deutlich über dem Normalniveau vereinzelter lokaler Meldungen); im Review nachschärfen, sobald belastbare MoWaS-Referenzwerte vorliegen."
+    },
+    {
+      "id": "wi-dwd-warnings-de",
+      "label": "DWD Warnlage (höchste aktive Stufe)",
+      "threshold_warn": 3,
+      "threshold_critical": 4,
+      "unit": "Warnstufe (0–5)",
+      "system": "infrastruktur",
+      "severity_trigger": "erhoeht",
+      "quelle": "DWD WarnWetter warnings JSON (near-real-time)",
+      "sources": [
+        {
+          "name": "DWD — WarnWetter Warnungen (JSON)",
+          "url": "https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "Amtliche Wetterwarnungen des DWD betreffen Mobilität, Infrastruktur und Gesundheit kurzfristig bundesweit",
+      "linked_cascade": null,
+      "scale_direction": "higher_is_worse",
+      "threshold_method": "ANNAHME, konservativ — warn = Stufe 3 (Unwetterwarnung), critical = Stufe 4 (extreme Unwetterwarnung); im Review nachschärfen."
     }
   ]
 }

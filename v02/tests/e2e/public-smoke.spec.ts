@@ -2,6 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 
 const publicRoutes = [
   { path: "/", title: /Was betrifft meinen Haushalt jetzt/i },
+  { path: "/radar", title: /WachSam Radar/i },
+  { path: "/woche", title: /Die Woche im Überblick/i },
   { path: "/lagebild", title: /Deutschland in zehn Bereichen/i },
   { path: "/kosten", title: /Was teurer werden kann/i },
   { path: "/massnahmen", title: /Was ich tun kann/i },
@@ -36,6 +38,15 @@ test.describe("public WachSam smoke", () => {
 
     expect(browserErrors, "browser console/page errors").toEqual([]);
     expect(failedResponses, "HTTP 5xx responses").toEqual([]);
+  });
+
+  test("shows the official Warnlage card on /radar even without a database", async ({ page }) => {
+    await page.goto("/radar");
+    const warnlageCard = page.getByRole("article", { name: /Themenkanal Akute Warnlage \(amtlich\)/i });
+    await expect(warnlageCard).toBeVisible();
+    await expect(warnlageCard).toContainText("Quelle: DWD (amtlich)");
+    await expect(warnlageCard).toContainText(/Stand |Datenstand ausstehend/);
+    await expectNoHorizontalOverflow(page);
   });
 
   test("keeps home call-to-action navigation usable", async ({ page }) => {
