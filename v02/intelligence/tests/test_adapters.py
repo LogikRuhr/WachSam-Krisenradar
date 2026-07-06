@@ -557,9 +557,22 @@ def test_dwd_summarize_by_state_counts_and_max_level():
     }
 
     records = {r["region_code"]: r for r in summarize_by_state(payload)}
+    assert len(records) == 16
     assert records["NRW"]["warning_count"] == 2
     assert records["NRW"]["max_level"] == 3
     assert records["BY"]["warning_count"] == 1
+    assert records["TH"]["warning_count"] == 0
+    assert records["TH"]["max_level"] == 0
+
+
+def test_dwd_summarize_by_state_resets_all_states_when_no_warnings():
+    payload = {"time": 1751600000000, "warnings": {}}
+
+    records = summarize_by_state(payload)
+
+    assert len(records) == 16
+    assert all(r["warning_count"] == 0 for r in records)
+    assert all(r["max_level"] == 0 for r in records)
 
 
 def test_dwd_adapter_fills_regional_records(monkeypatch):
@@ -575,9 +588,10 @@ def test_dwd_adapter_fills_regional_records(monkeypatch):
     adapter = DWDAdapter()
     items = adapter.fetch_latest()
     assert len(items) == 1
-    assert adapter.regional_records == [
-        {"region_code": "NRW", "warning_count": 1, "max_level": 2, "source": "dwd"}
-    ]
+    records = {r["region_code"]: r for r in adapter.regional_records}
+    assert len(records) == 16
+    assert records["NRW"] == {"region_code": "NRW", "warning_count": 1, "max_level": 2, "source": "dwd"}
+    assert records["TH"] == {"region_code": "TH", "warning_count": 0, "max_level": 0, "source": "dwd"}
 
 
 def test_dwd_adapter_keeps_regional_records_stale_on_error(monkeypatch):
@@ -594,8 +608,10 @@ def test_dwd_adapter_keeps_regional_records_stale_on_error(monkeypatch):
 
     adapter = DWDAdapter()
     adapter.fetch_latest()
-    expected = [{"region_code": "NRW", "warning_count": 1, "max_level": 2, "source": "dwd"}]
-    assert adapter.regional_records == expected
+    expected = list(adapter.regional_records)
+    records = {r["region_code"]: r for r in expected}
+    assert len(records) == 16
+    assert records["NRW"]["warning_count"] == 1
 
     fail_response = MagicMock()
     fail_response.status_code = 503

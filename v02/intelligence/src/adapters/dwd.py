@@ -12,6 +12,24 @@ from ..models import GermanyRelevance, IngestionItem
 
 
 DWD_WARNINGS_URL = "https://www.dwd.de/DWD/warnungen/warnapp/json/warnings.json"
+DWD_STATE_CODES = (
+    "BB",
+    "BE",
+    "BW",
+    "BY",
+    "HB",
+    "HE",
+    "HH",
+    "MV",
+    "NRW",
+    "NS",
+    "RP",
+    "SH",
+    "SL",
+    "SN",
+    "ST",
+    "TH",
+)
 
 _LEVEL_TO_SEVERITY = {
     0: "stabil",
@@ -62,11 +80,15 @@ def summarize_warnings(payload: dict) -> dict:
 def summarize_by_state(payload: dict) -> list[dict]:
     """Bricht die DWD-Warnungen nach Bundesland-Kürzel (`stateShort`) herunter.
 
-    Liefert je Bundesland Warnanzahl und höchste Warnstufe, sortiert nach
-    region_code. Grundlage für die Persistenz in `regional_warnings`.
+    Liefert alle bekannten Bundesländer, auch wenn sie gerade keine aktiven
+    Warnungen haben. So überschreibt ein erfolgreicher Fetch frühere Warnungen
+    sauber mit 0/0 statt alte Rows in `regional_warnings` stehen zu lassen.
     """
     warnings_by_region = payload.get("warnings") or {}
-    by_state: dict[str, dict] = {}
+    by_state: dict[str, dict] = {
+        code: {"region_code": code, "warning_count": 0, "max_level": 0, "source": "dwd"}
+        for code in DWD_STATE_CODES
+    }
     for region in warnings_by_region.values():
         for warning in region:
             state = str(warning.get("stateShort") or warning.get("state") or "unknown")
