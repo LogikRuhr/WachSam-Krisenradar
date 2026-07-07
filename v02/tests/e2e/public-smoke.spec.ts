@@ -127,6 +127,10 @@ test.describe("public WachSam smoke", () => {
     await expect(results).toContainText(/Aktueller Status|Deine erste Einordnung/);
     await expect(results).toContainText(/Nächster Prüfschritt/);
     await expect(results).toContainText(/Orientierung, keine Beratung/);
+    if ((await results.getByLabel("Monatliche Kostenspanne").count()) > 0) {
+      await expect(results.getByLabel("Monatliche Kostenspanne")).toContainText(/Monatliche Spanne/);
+      await expect(results.getByLabel("Monatliche Kostenspanne")).toContainText(/€\/Monat|belastbare €/);
+    }
     if ((await results.getByText("Deine erste Einordnung").count()) > 0) {
       await householdType.selectOption("single");
       await expect(onboarding).toContainText("2/3 bereit");

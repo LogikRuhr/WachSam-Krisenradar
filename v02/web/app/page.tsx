@@ -8,8 +8,9 @@ import { PriceRadar } from "@/components/PriceRadar";
 import { SignalChain } from "@/components/SignalChain";
 import { Verdict } from "@/components/Verdict";
 import { VitalsBoard } from "@/components/VitalsBoard";
+import { HOUSEHOLD_COST_INDICATOR_IDS, type HouseholdCostInput } from "@/lib/household-costs";
 import { computeVerdict, personalNote, type Verdict as VerdictData, type VerdictTone } from "@/lib/personalization";
-import { getFrontDoorSignals, getHeadlineVitals, getNationalState, getPriceRadar } from "@/lib/public-data";
+import { getFrontDoorSignals, getHeadlineVitals, getIndicatorObservations, getIndicators, getNationalState, getPriceRadar } from "@/lib/public-data";
 import { getCurrentUserProfile } from "@/lib/use-user-modus";
 import type { HouseholdCheckChain } from "@/lib/household-check";
 
@@ -33,13 +34,44 @@ function formatStand(value: Date | string | null | undefined): string | null {
   return Number.isNaN(date.getTime()) ? null : DATE_FMT.format(date);
 }
 
+async function getHouseholdCostInputs(): Promise<HouseholdCostInput[]> {
+  const indicators = await getIndicators();
+  if (!indicators.connected) return [];
+
+  const byId = new Map(indicators.rows.map((row) => [row.id, row]));
+  const rows: Array<HouseholdCostInput | null> = await Promise.all(
+    HOUSEHOLD_COST_INDICATOR_IDS.map(async (id) => {
+      const indicator = byId.get(id);
+      if (!indicator) return null;
+
+      const observations = await getIndicatorObservations(id);
+      if (!observations.connected || observations.rows.length === 0) return null;
+
+      return {
+        id,
+        label: indicator.label,
+        unit: indicator.unit,
+        sourceName: indicator.quelle ?? null,
+        currentValueDate: indicator.currentValueDate ? indicator.currentValueDate.toISOString() : null,
+        observations: observations.rows.map((observation) => ({
+          observedAt: observation.observedAt.toISOString(),
+          value: String(observation.value),
+        })),
+      } satisfies HouseholdCostInput;
+    }),
+  );
+
+  return rows.filter((row): row is HouseholdCostInput => row !== null);
+}
+
 export default async function HomePage() {
   const profile = await getCurrentUserProfile();
-  const [signals, national, vitals, priceRadar] = await Promise.all([
+  const [signals, national, vitals, priceRadar, costInputs] = await Promise.all([
     getFrontDoorSignals(8),
     getNationalState(),
     getHeadlineVitals(),
     getPriceRadar(),
+    getHouseholdCostInputs(),
   ]);
   const verdict = computeVerdict(signals.rows.map((chain) => chain.signal));
   const chainsWithImpact = signals.rows.filter((chain) => chain.impact).slice(0, 3);
@@ -99,6 +131,7 @@ export default async function HomePage() {
         headingLevel="h1"
         sourceCount={sourceCount}
         latestStand={formatStand(latestStand)}
+        costInputs={costInputs}
       />
 
       <section className="home-context-strip" aria-label="WachSam Kontext">

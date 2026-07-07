@@ -662,6 +662,14 @@ strong { color: var(--on-surface); font-weight: 700; }
 .household-activation-chip { flex: 0 1 auto; min-width: 0; border: 1px solid rgba(34,197,94,.5); border-radius: 999px; padding: 4px 8px; font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--success); overflow-wrap: anywhere; }
 .household-result-summary strong { display: block; margin-top: 4px; font-size: 18px; line-height: 1.28; overflow-wrap: anywhere; }
 .household-result-summary p { margin: 7px 0 0; max-width: none; color: var(--on-surface); font-size: 14px; line-height: 1.55; }
+.household-cost-panel { display: grid; gap: 9px; margin-top: 12px; border-top: 1px solid rgba(241,242,244,.14); padding-top: 10px; }
+.household-cost-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start; min-width: 0; border: 1px solid rgba(241,242,244,.12); border-radius: 4px; background: rgba(13,13,13,.34); padding: 10px; }
+.household-cost-row strong { margin: 0; font-size: 14px; line-height: 1.3; }
+.household-cost-row small { display: block; margin-top: 3px; color: var(--on-surface-variant); font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+.household-cost-row p { margin-top: 5px; color: var(--on-surface-variant); font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.household-cost-value { justify-self: end; max-width: 170px; color: var(--primary); text-align: right; overflow-wrap: anywhere; }
+.household-cost-empty .household-cost-value { color: var(--on-surface-variant); }
+.household-cost-note { margin: 0; color: var(--on-surface-variant); font-size: 12px; line-height: 1.45; }
 .household-result-next, .household-result-action { margin-top: 12px; border-top: 1px solid rgba(241,242,244,.14); padding-top: 10px; }
 .household-result-next span, .household-result-action > span { display: block; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--on-surface-variant); overflow-wrap: anywhere; }
 .household-result-action strong { font-size: 15px; line-height: 1.35; }
@@ -714,6 +722,8 @@ strong { color: var(--on-surface); font-weight: 700; }
   .household-result-summary { padding: 12px; }
   .household-result-summary strong { font-size: 16px; }
   .household-result-kicker { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .household-cost-row { grid-template-columns: 1fr; gap: 6px; }
+  .household-cost-value { justify-self: start; max-width: none; text-align: left; }
 }
 
 /* --- Gesamtstand: Vitals Board --- */
