@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { DbNotice } from "@/components/DbNotice";
 import { HouseholdCheck } from "@/components/HouseholdCheck";
-import { HomeStorySteps } from "@/components/HomeStorySteps";
 import { MethodikHinweis } from "@/components/MethodikHinweis";
 import { NutzenBoard } from "@/components/NutzenBoard";
 import { PfadHub } from "@/components/PfadHub";
@@ -117,11 +116,11 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <PfadHub />
+
       {priceRadar.rows.length > 0 ? <PriceRadar cards={priceRadar.rows} /> : null}
 
       {!signals.connected ? <DbNotice error={signals.error} /> : null}
-
-      {signals.connected ? <Verdict verdict={verdict} stand={formatStand(latestStand)} /> : null}
 
       <section className="hero-card" aria-label="Werkzeug: WachSam-Radar">
         <p className="mono-label">Werkzeug</p>
@@ -200,8 +199,6 @@ export default async function HomePage() {
 
       <NutzenBoard activeModus={profile.modus} />
 
-      <HomeStorySteps />
-
       <section className="home-impact-band" aria-labelledby="haushalt-title">
         <div>
           <p className="mono-label">Haushaltsauswirkungen</p>
@@ -215,17 +212,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="home-transparency" aria-labelledby="transparenz-title">
-        <p className="mono-label">Quellen und Transparenz</p>
-        <h2 id="transparenz-title" className="detail-title-small">Einordnung mit Unsicherheit</h2>
-        <p>Jede Einschätzung bleibt abhängig von Quellenlage, Datenqualität, Zeitfenster und redaktioneller Prüfung. WachSam ersetzt keine Behördeninformationen und keine rechtliche, medizinische oder finanzielle Beratung.</p>
-        {formatStand(latestStand) ? <p className="mono-label">Datenstand: {formatStand(latestStand)}</p> : null}
-        <Link className="text-link" href="/quellen">Quellen ansehen</Link>
-      </section>
-
       <MethodikHinweis variant="lage" />
-
-      <PfadHub />
     </main>
   );
 }

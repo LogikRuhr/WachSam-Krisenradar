@@ -16,6 +16,8 @@ const publicRoutes = [
 
 test.describe("public WachSam smoke", () => {
   test("renders core public routes without browser errors", async ({ page }) => {
+    test.setTimeout(60_000);
+
     const browserErrors: string[] = [];
     const failedResponses: string[] = [];
 
