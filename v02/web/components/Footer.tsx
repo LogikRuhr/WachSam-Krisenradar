@@ -6,7 +6,7 @@ export function Footer() {
       <div className="site-footer-inner">
         <div>
           <p className="mono-label">
-            © {new Date().getFullYear()} RuhrLogik · WachSam Krisenradar
+            © {new Date().getFullYear()} RuhrLogik · WachSam Haushalts-Krisencheck
           </p>
           <p className="footer-transparency">
             WachSam liefert Orientierung auf Basis öffentlicher Quellen und redaktioneller Einordnung. Die Plattform ersetzt keine Behördeninformationen und keine rechtliche, medizinische oder finanzielle Beratung.

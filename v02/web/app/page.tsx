@@ -104,7 +104,7 @@ export default async function HomePage() {
 
       <section className="home-context-strip" aria-label="WachSam Kontext">
         <div>
-          <p className="mono-label">WachSam · Lage- und Auswirkungenradar</p>
+          <p className="mono-label">WachSam · Haushalts-Krisencheck</p>
           <p>
             Energie, Preise, Lieferketten, Infrastruktur und Arbeitsmarkt wirken oft zusammen.
             WachSam ordnet Entwicklungen nach Deutschland-Relevanz, Haushaltsauswirkung,
@@ -192,7 +192,7 @@ export default async function HomePage() {
           </div>
         </section>
       ) : signals.connected ? (
-        <section className="hero-card">
+        <section className="hero-card" id="aktuelle-lage">
           <p className="lead">Aktuell liegen keine veröffentlichten Lagekarten mit konkreter Haushaltsauswirkung vor. Die übrigen Hinweise bleiben in redaktioneller Prüfung.</p>
           <Link className="text-link" href="/lagebild">Zum Lagebild</Link>
         </section>
