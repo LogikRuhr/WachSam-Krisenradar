@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { deriveHouseholdCostView, type HouseholdCostInput, type HouseholdCostView } from "@/lib/household-costs";
 import { deriveHouseholdCheck, type HouseholdCheckChain } from "@/lib/household-check";
 import { buildPublicOnboardingSteps } from "@/lib/onboarding";
 import { aufwandLabel, bereichLabel } from "@/lib/personalization";
@@ -27,15 +28,70 @@ const HEIZART_OPTIONS: Array<{ value: HouseholdHeizart; label: string }> = [
 type HouseholdCheckProps = {
   chains: HouseholdCheckChain[];
   connected: boolean;
+  costInputs?: HouseholdCostInput[];
   titleId?: string;
   headingLevel?: "h1" | "h2";
   sourceCount?: number;
   latestStand?: string | null;
 };
 
+const COST_DATE_FMT = new Intl.DateTimeFormat("de-DE", { day: "numeric", month: "long", year: "numeric" });
+
+function formatCostDate(value: string | null): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : COST_DATE_FMT.format(date);
+}
+
+function formatSignedEuro(value: number): string {
+  if (value === 0) return "0 €";
+  return `${value > 0 ? "+" : "-"}${Math.abs(value)} €`;
+}
+
+function formatCostRange(min: number, max: number): string {
+  if (min === max) return `ca. ${formatSignedEuro(min)}/Monat`;
+  return `ca. ${formatSignedEuro(min)} bis ${formatSignedEuro(max)}/Monat`;
+}
+
+function HouseholdCostPanel({ view }: { view: HouseholdCostView }) {
+  return (
+    <div className="household-cost-panel" aria-label="Monatliche Kostenspanne">
+      <span className="chain-label">Monatliche Spanne</span>
+      {view.ranges.map((range) => {
+        const stand = formatCostDate(range.stand);
+        return (
+          <div key={range.key} className="household-cost-row">
+            <div>
+              <strong>{range.title}</strong>
+              <small>{range.basis} · {range.window}</small>
+              <p>
+                {range.assumptions}
+                {range.sourceName ? ` · Quelle: ${range.sourceName}` : ""}
+                {stand ? ` · Stand: ${stand}` : ""}
+              </p>
+            </div>
+            <strong className="household-cost-value">{formatCostRange(range.amountMinEur, range.amountMaxEur)}</strong>
+          </div>
+        );
+      })}
+      {view.unavailable.map((item) => (
+        <div key={item.key} className="household-cost-row household-cost-empty">
+          <div>
+            <strong>{item.title}</strong>
+            <p>{item.reason}</p>
+          </div>
+          <strong className="household-cost-value">keine belastbare €/Monat-Spanne</strong>
+        </div>
+      ))}
+      <p className="household-cost-note">{view.boundary}</p>
+    </div>
+  );
+}
+
 export function HouseholdCheck({
   chains,
   connected,
+  costInputs = [],
   titleId = "household-check-title",
   headingLevel = "h2",
   sourceCount = 0,
@@ -50,6 +106,10 @@ export function HouseholdCheck({
     () => deriveHouseholdCheck({ profile: { modus, heizart, plz: plz.trim() || null }, chains }),
     [chains, heizart, modus, plz],
   );
+  const costView = useMemo(
+    () => deriveHouseholdCostView({ profile: { modus, heizart }, inputs: costInputs }),
+    [costInputs, heizart, modus],
+  );
   const Heading = headingLevel;
   const ready = connected && chains.length > 0;
   const statusText = connected ? (chains.length > 0 ? "Daten verbunden" : "Keine Lagekarten freigegeben") : "Datenpfad blockiert";
@@ -61,6 +121,7 @@ export function HouseholdCheck({
   const hasProfileInput = hasAdjustedProfile || heizart !== "unbekannt" || plz.length === 5;
   const hasFirstValue =
     connected && hasProfileInput && (result.primaryConcern !== null || result.primaryImpact !== null || result.primaryAction !== null);
+  const showCostPanel = connected && (costView.ranges.length > 0 || costView.unavailable.length > 0);
   const primaryAction = result.primaryAction?.action ?? null;
   const onboardingSteps = buildPublicOnboardingSteps({
     hasProfileInput,
@@ -172,6 +233,7 @@ export function HouseholdCheck({
                   <span>Nächster Prüfschritt</span>
                   <p>{nextStepText}</p>
                 </div>
+                {showCostPanel ? <HouseholdCostPanel view={costView} /> : null}
               </div>
               <p className="household-check-boundary">{result.boundary}</p>
             </>
@@ -201,6 +263,7 @@ export function HouseholdCheck({
                     ? `${result.primaryImpact.impact.titel}: ${result.primaryImpact.impact.beschreibung}`
                     : "Fuer diese Auswahl ist noch keine konkrete Kosten- oder Versorgungswirkung freigegeben."}
                 </p>
+                {showCostPanel ? <HouseholdCostPanel view={costView} /> : null}
                 <div className="household-result-next">
                   <span>Nächster Prüfschritt</span>
                   <p>{nextStepText}</p>

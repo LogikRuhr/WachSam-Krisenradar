@@ -28,7 +28,7 @@ export type HouseholdCheckResult = {
 };
 
 const BOUNDARY =
-  "Orientierung, keine Beratung: WachSam zeigt mögliche Haushaltswirkungen, keine sichere Vorhersage und keine individuellen Euro-Beträge.";
+  "Orientierung, keine Beratung: WachSam zeigt mögliche Haushaltswirkungen und €/Monat-Bandbreiten mit Annahmen, keine sichere Vorhersage.";
 
 const PRIVACY =
   "Anonyme Check-Angaben werden nicht gespeichert. PLZ wird in dieser Welle nicht für regionale Fakten genutzt.";
