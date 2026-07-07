@@ -59,6 +59,13 @@ const WARNLAGE_LEAD: Record<ThemeState, string> = {
 };
 
 type IndicatorEntry = { input: ThemeIndicatorInput; currentValue: string | null; unit: string | null };
+type WarnlageIndicatorDriver = {
+  id: string;
+  label: string;
+  zone: ThemeZone;
+  currentValue: string | null;
+  unit: string | null;
+};
 
 // Leitindikatoren der €-Modellrechnung (Task 7) — nur für diese beiden Kanäle
 // wird `costEstimate` berechnet; andere Kanäle erhalten das Feld nicht.
@@ -198,12 +205,34 @@ function buildRegionalWarnlageTheme(regionCode: string, rows: RegionalWarningRow
   };
 }
 
+function themeStateFromZone(zone: ThemeZone): ThemeState {
+  if (zone === "critical") return "hoch";
+  if (zone === "elevated") return "erhoeht";
+  return "normal";
+}
+
+function strongestState(states: ThemeState[]): ThemeState {
+  return states.reduce((strongest, state) => (STATE_RANK[state] > STATE_RANK[strongest] ? state : strongest), "normal");
+}
+
+function warnlageDriver(row: RadarIndicatorRow): {
+  driver: WarnlageIndicatorDriver;
+  state: ThemeState;
+  date: Date | null;
+} {
+  const vitals = indicatorVitals(row);
+  const zone: ThemeZone = vitals.zone?.zone ?? "pending";
+  return {
+    driver: { id: row.id, label: row.label, zone, currentValue: row.currentValue, unit: row.unit },
+    state: themeStateFromZone(zone),
+    date: vitals.currentValueDate,
+  };
+}
+
 /**
- * Warnlage-Sonderkanal (DWD, `wi-dwd-warnings-de`): umgeht die Korroborations-
- * Logik (computeWarnlageState statt computeThemeState), siehe themes.ts. Der
- * Indikator hat aktuell keine Seed-Zeile (folgt in einem späteren Task) — fehlt
- * die Row oder der Live-Wert, liefert diese Funktion einen ehrlichen
- * "Datenstand ausstehend"-Zustand statt der fälschlich beruhigenden
+ * Warnlage-Sonderkanal (DWD + NINA): umgeht die Korroborations-Logik, siehe
+ * themes.ts. Fehlen alle amtlichen Live-Werte, liefert diese Funktion einen
+ * ehrlichen "Datenstand ausstehend"-Zustand statt der fälschlich beruhigenden
  * `computeWarnlageState(0)`.
  *
  * Ist ein Bundesland-Filter gesetzt (`regionCode`), wird stattdessen der
@@ -230,9 +259,11 @@ async function buildWarnlageTheme(byId: IndicatorMap, regionCode?: string | null
     };
   }
 
-  const row = byId.get(WARNLAGE_CHANNEL.indicatorId);
+  const [dwdIndicatorId, ninaIndicatorId] = WARNLAGE_CHANNEL.indicatorIds;
+  const dwdRow = byId.get(dwdIndicatorId);
+  const ninaRow = byId.get(ninaIndicatorId);
 
-  if (!row || row.currentValue == null) {
+  if ((!dwdRow || dwdRow.currentValue == null) && (!ninaRow || ninaRow.currentValue == null)) {
     return {
       key: WARNLAGE_CHANNEL.key,
       title: WARNLAGE_CHANNEL.title,
@@ -245,11 +276,32 @@ async function buildWarnlageTheme(byId: IndicatorMap, regionCode?: string | null
     };
   }
 
-  const vitals = indicatorVitals(row);
-  const rawLevel = Number(row.currentValue);
-  const maxLevel = Number.isFinite(rawLevel) ? rawLevel : 0;
-  const state = computeWarnlageState(maxLevel);
-  const zone: ThemeZone = vitals.zone?.zone ?? "pending";
+  const drivers: WarnlageIndicatorDriver[] = [];
+  const states: ThemeState[] = [];
+  const reasonParts: string[] = [];
+  const dates: Date[] = [];
+
+  if (dwdRow && dwdRow.currentValue != null) {
+    const rawLevel = Number(dwdRow.currentValue);
+    const maxLevel = Number.isFinite(rawLevel) ? rawLevel : 0;
+    const dwd = warnlageDriver(dwdRow);
+    drivers.push(dwd.driver);
+    states.push(computeWarnlageState(maxLevel));
+    reasonParts.push(`DWD höchste aktive Warnstufe: ${maxLevel} von 5`);
+    if (dwd.date) dates.push(dwd.date);
+  }
+
+  if (ninaRow && ninaRow.currentValue != null) {
+    const count = Number(ninaRow.currentValue);
+    const nina = warnlageDriver(ninaRow);
+    drivers.push(nina.driver);
+    states.push(nina.state);
+    reasonParts.push(`NINA/MoWaS aktive Zivilschutzmeldungen: ${Number.isFinite(count) ? count : ninaRow.currentValue}`);
+    if (nina.date) dates.push(nina.date);
+  }
+
+  const state = strongestState(states);
+  const latest = dates.sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
 
   return {
     key: WARNLAGE_CHANNEL.key,
@@ -257,9 +309,9 @@ async function buildWarnlageTheme(byId: IndicatorMap, regionCode?: string | null
     question: WARNLAGE_CHANNEL.question,
     state,
     lead: WARNLAGE_LEAD[state],
-    reason: `Höchste aktive Warnstufe: ${maxLevel} von 5.`,
-    drivers: [{ id: row.id, label: row.label, zone, currentValue: row.currentValue, unit: row.unit }],
-    sinceDate: vitals.currentValueDate ? vitals.currentValueDate.toISOString() : null,
+    reason: `${reasonParts.join("; ")}.`,
+    drivers,
+    sinceDate: latest ? latest.toISOString() : null,
   };
 }
 

@@ -2,8 +2,8 @@
   "meta": {
     "version": "v0.4",
     "stand": "2026-07-04",
-    "count": 20,
-    "note": "20 Frühwarnindikatoren inkl. NINA/BBK-Zivilschutzmeldungen und DWD-Warnlage. Basis: docs/warning-indicators.md"
+    "count": 25,
+    "note": "25 Frühwarnindikatoren inkl. NINA/BBK-Zivilschutzmeldungen, DWD-Warnlage, Pegelonline und Destatis-Lebensmittel-Teilindex. Basis: docs/warning-indicators.md"
   },
   "indicators": [
     {
@@ -103,6 +103,27 @@
       "germany_relevance": "Direkte Haushaltsbelastung; IW-Prognose ~3 % für 2026",
       "linked_cascade": "cascade-j",
       "scale_direction": "higher_is_worse"
+    },
+    {
+      "id": "wi-destatis-lebensmittel-yoy-de",
+      "label": "Verbraucherpreise Nahrungsmittel Deutschland",
+      "threshold_warn": null,
+      "threshold_critical": null,
+      "unit": "Prozent YoY",
+      "system": "lebensmittel",
+      "severity_trigger": "beobachten",
+      "quelle": "Destatis — Verbraucherpreisindex nach 12 Abteilungen (monatlich)",
+      "sources": [
+        {
+          "name": "Destatis — Gesamtindex und 12 Abteilungen",
+          "url": "https://www.destatis.de/DE/Themen/Wirtschaft/Preise/Verbraucherpreisindex/Tabellen/Verbraucherpreise-12Kategorien.html",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "Direkte Haushaltsbelastung beim Einkauf; spezifischer als der Gesamt-VPI für den Lebensmittelkanal",
+      "linked_cascade": "cascade-a",
+      "scale_direction": "higher_is_worse",
+      "threshold_method": "Keine WachSam-Schwellenzone: Destatis liefert die amtliche YoY-Rate für Nahrungsmittel und alkoholfreie Getränke; Warn-/Kritisch-Schwellen werden erst nach separater Kalibrierung gesetzt."
     },
     {
       "id": "wi-oel-brent",
@@ -497,6 +518,90 @@
       "linked_cascade": null,
       "scale_direction": "higher_is_worse",
       "threshold_method": "ANNAHME, konservativ — warn = 25 aktive Meldungen bundesweit, critical = 100 (deutlich über dem Normalniveau vereinzelter lokaler Meldungen); im Review nachschärfen, sobald belastbare MoWaS-Referenzwerte vorliegen."
+    },
+    {
+      "id": "wi-pegelonline-koeln",
+      "label": "Pegel Köln (Rhein)",
+      "threshold_warn": null,
+      "threshold_critical": null,
+      "unit": "cm",
+      "system": "infrastruktur",
+      "severity_trigger": "beobachten",
+      "quelle": "Pegelonline WSV (near-real-time)",
+      "sources": [
+        {
+          "name": "Pegelonline WSV — Station Köln",
+          "url": "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/K%C3%96LN/W/currentmeasurement.json",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "Rheinpegel beeinflussen Wasserstraßenlogistik, lokale Hoch-/Niedrigwasserlage und Versorgungsketten",
+      "linked_cascade": null,
+      "scale_direction": "higher_is_worse",
+      "threshold_method": "Keine WachSam-Schwellenzone: Wasserstände sind stationsspezifisch; Pegelonline-Status wird vorerst als Live-Messwert angezeigt, nicht als bundesweite Warnstufe."
+    },
+    {
+      "id": "wi-pegelonline-kaub",
+      "label": "Pegel Kaub (Rhein)",
+      "threshold_warn": null,
+      "threshold_critical": null,
+      "unit": "cm",
+      "system": "infrastruktur",
+      "severity_trigger": "beobachten",
+      "quelle": "Pegelonline WSV (near-real-time)",
+      "sources": [
+        {
+          "name": "Pegelonline WSV — Station Kaub",
+          "url": "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/KAUB/W/currentmeasurement.json",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "Kaub ist ein zentraler Rhein-Engpass; Niedrigwasser kann Transportkosten und Versorgungsketten beeinflussen",
+      "linked_cascade": null,
+      "scale_direction": "higher_is_worse",
+      "threshold_method": "Keine WachSam-Schwellenzone: Wasserstände sind stationsspezifisch; Pegelonline-Status wird vorerst als Live-Messwert angezeigt, nicht als bundesweite Warnstufe."
+    },
+    {
+      "id": "wi-pegelonline-duisburg-ruhrort",
+      "label": "Pegel Duisburg-Ruhrort (Rhein)",
+      "threshold_warn": null,
+      "threshold_critical": null,
+      "unit": "cm",
+      "system": "infrastruktur",
+      "severity_trigger": "beobachten",
+      "quelle": "Pegelonline WSV (near-real-time)",
+      "sources": [
+        {
+          "name": "Pegelonline WSV — Station Duisburg-Ruhrort",
+          "url": "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/DUISBURG-RUHRORT/W/currentmeasurement.json",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "Duisburg-Ruhrort liegt am größten Binnenhafen Europas; Pegelstände können Industrie- und Logistikflüsse betreffen",
+      "linked_cascade": null,
+      "scale_direction": "higher_is_worse",
+      "threshold_method": "Keine WachSam-Schwellenzone: Wasserstände sind stationsspezifisch; Pegelonline-Status wird vorerst als Live-Messwert angezeigt, nicht als bundesweite Warnstufe."
+    },
+    {
+      "id": "wi-pegelonline-magdeburg-strombruecke",
+      "label": "Pegel Magdeburg-Strombrücke (Elbe)",
+      "threshold_warn": null,
+      "threshold_critical": null,
+      "unit": "cm",
+      "system": "infrastruktur",
+      "severity_trigger": "beobachten",
+      "quelle": "Pegelonline WSV (near-real-time)",
+      "sources": [
+        {
+          "name": "Pegelonline WSV — Station Magdeburg-Strombrücke",
+          "url": "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/MAGDEBURG-STROMBR%C3%9CCKE/W/currentmeasurement.json",
+          "stand": "2026"
+        }
+      ],
+      "germany_relevance": "Elbe-Pegel beeinflussen regionale Wasserstraßenlogistik, Hochwasserlage und Infrastrukturbelastung",
+      "linked_cascade": null,
+      "scale_direction": "higher_is_worse",
+      "threshold_method": "Keine WachSam-Schwellenzone: Wasserstände sind stationsspezifisch; Pegelonline-Status wird vorerst als Live-Messwert angezeigt, nicht als bundesweite Warnstufe."
     },
     {
       "id": "wi-dwd-warnings-de",

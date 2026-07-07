@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { computeThemeState, computeWarnlageState, THEME_CHANNELS } from "./themes";
+import { computeThemeState, computeWarnlageState, THEME_CHANNELS, WARNLAGE_CHANNEL } from "./themes";
 
 const mk = (id: string, zone: "uncritical" | "elevated" | "critical" | "pending") =>
   ({ id, zone, label: id });
@@ -33,6 +33,11 @@ assert.equal(computeWarnlageState(0), "normal", "max_level 0 → normal");
 assert.equal(computeWarnlageState(2), "beobachten", "max_level 2 → beobachten");
 assert.equal(computeWarnlageState(3), "erhoeht", "max_level 3 → erhoeht");
 assert.equal(computeWarnlageState(5), "hoch", "max_level 5 → hoch");
+assert.deepEqual(
+  WARNLAGE_CHANNEL.indicatorIds,
+  ["wi-dwd-warnings-de", "wi-nina-zivilschutz-de"],
+  "Warnlage-Kanal verbindet DWD und NINA",
+);
 
 // --- Kanal-Konfiguration: jeder Kanal referenziert ≥1 Indikator + alle 4 leadTexts
 
