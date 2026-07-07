@@ -4,6 +4,12 @@ export type SourceLike = {
   sourceStand: string;
 };
 
+function sourcePillKey(source: SourceLike) {
+  const name = source.sourceName.trim();
+  const stand = source.sourceStand.trim();
+  return stand ? `${name}-${stand}` : `${name}-${source.sourceUrl}`;
+}
+
 export function SourcePill({ source }: { source: SourceLike }) {
   return (
     <a
@@ -24,7 +30,7 @@ export function SourcePills({ sources, compact = false }: { sources?: SourceLike
   return (
     <div className={compact ? "source-pills-compact" : "source-row"}>
       {sources.map((source) => (
-        <SourcePill key={`${source.sourceUrl}-${source.sourceStand}`} source={source} />
+        <SourcePill key={sourcePillKey(source)} source={source} />
       ))}
     </div>
   );
