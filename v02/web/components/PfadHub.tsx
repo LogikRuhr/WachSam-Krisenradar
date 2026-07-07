@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const pfade = [
-  { href: "/lagebild", label: "Aktuelle Lage ansehen", text: "Entwicklungen mit Relevanz für Deutschland." },
+  { href: "/lage", label: "Gesamtstand ansehen", text: "Nationale Einordnung und wichtigste Vitalwerte." },
   { href: "/kosten", label: "Haushaltsauswirkungen prüfen", text: "Mögliche Mehrkosten, Versorgung und Alltagseinordnung." },
   { href: "/kaskaden", label: "Zusammenhänge verstehen", text: "Wirkungsketten von Entwicklung bis Haushaltsauswirkung." },
   { href: "/massnahmen", label: "Maßnahmen prüfen", text: "Ruhige, praktische Prüfschritte mit Quellenstand." },

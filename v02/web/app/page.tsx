@@ -200,7 +200,7 @@ export default async function HomePage() {
           <Verdict verdict={overallVerdict} stand={overallStand} />
           {hasVitals ? <VitalsBoard indicators={vitals.rows} limit={4} heading="Wichtigste Vitalwerte" /> : null}
           <div className="home-actions">
-            <Link className="btn-rost" href="/lage">Zum vollständigen Lagebild</Link>
+            <Link className="btn-rost" href="/lage">Zum Gesamtstand</Link>
           </div>
         </section>
       ) : null}
@@ -226,7 +226,7 @@ export default async function HomePage() {
       ) : signals.connected ? (
         <section className="hero-card" id="aktuelle-lage">
           <p className="lead">Aktuell liegen keine veröffentlichten Lagekarten mit konkreter Haushaltsauswirkung vor. Die übrigen Hinweise bleiben in redaktioneller Prüfung.</p>
-          <Link className="text-link" href="/lagebild">Zum Lagebild</Link>
+          <Link className="text-link" href="/lagebild">Zu den Bereichsdetails</Link>
         </section>
       ) : null}
 

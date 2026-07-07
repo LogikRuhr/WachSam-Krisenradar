@@ -26,8 +26,11 @@ export default async function RadarPage() {
 
   return (
     <main className="page-shell" aria-labelledby="page-title">
-      <SectionHeader label="Radar" title="WachSam Radar">
-        <p>Themenkanäle und die amtliche Warnlage — deterministisch aus den zuletzt veröffentlichten Indikatoren abgeleitet.</p>
+      <SectionHeader label="Treiber" title="Treiber und Themenkanäle">
+        <p>
+          Warum die Lage-Stufen entstehen: Themenkanäle, Indikator-Zonen und amtliche Warnlage —
+          deterministisch aus den zuletzt veröffentlichten Daten abgeleitet.
+        </p>
         <p className="mono-label">
           {warnlageStand ? `Stand amtliche Warnlage: ${warnlageStand}` : "Stand amtliche Warnlage: ausstehend"}
         </p>

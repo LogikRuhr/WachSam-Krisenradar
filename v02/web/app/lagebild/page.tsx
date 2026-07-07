@@ -30,8 +30,8 @@ export default async function LagebildPage() {
 
   return (
     <main className="page-shell" aria-labelledby="page-title">
-      <SectionHeader label="Lagebild" title="Deutschland in zehn Bereichen">
-        <p>Jeder Bereich: was sich bewegt, was es für deinen Haushalt bedeutet, was du tun kannst.</p>
+      <SectionHeader label="Detailansicht" title="Zehn Bereiche im Detail">
+        <p>Bereichsdetails: was sich bewegt, was es für deinen Haushalt bedeutet, was du tun kannst.</p>
       </SectionHeader>
 
       <LageViewsNav current="lagebild" />

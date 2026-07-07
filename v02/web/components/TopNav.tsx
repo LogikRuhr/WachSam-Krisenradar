@@ -6,7 +6,7 @@ import { getCurrentUserModus } from "@/lib/use-user-modus";
 
 const tabs = [
   ["/kosten", "Haushalt"],
-  ["/lagebild", "Lage"],
+  ["/lage", "Lage"],
   ["/radar", "Radar"],
   ["/woche", "Woche"],
   ["/kaskaden", "Wirkungsketten"],
