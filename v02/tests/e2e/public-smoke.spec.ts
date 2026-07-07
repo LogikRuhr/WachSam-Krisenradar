@@ -4,6 +4,7 @@ const publicRoutes = [
   { path: "/", title: /Was betrifft meinen Haushalt jetzt/i },
   { path: "/radar", title: /WachSam Radar/i },
   { path: "/woche", title: /Die Woche im Überblick/i },
+  { path: "/lage", title: /Deutschland im Überblick/i },
   { path: "/lagebild", title: /Deutschland in zehn Bereichen/i },
   { path: "/kosten", title: /Was teurer werden kann/i },
   { path: "/versorgung", title: /Was knapp werden kann/i },
@@ -59,6 +60,20 @@ test.describe("public WachSam smoke", () => {
     await expect(page).toHaveURL(/\/lagebild$/);
     await expect(page.getByRole("main")).toContainText(/Deutschland in zehn Bereichen/i);
     await expectNoHorizontalOverflow(page);
+  });
+
+  test("connects the public Lage views", async ({ page }) => {
+    for (const path of ["/lage", "/lagebild", "/radar", "/woche"]) {
+      await page.goto(path);
+      const nav = page.getByRole("navigation", { name: "Lage-Sichten" });
+      await expect(nav).toBeVisible();
+      await expect(nav.getByRole("link", { name: /Gesamtstand/i })).toHaveAttribute("href", "/lage");
+      await expect(nav.getByRole("link", { name: /Lagebild/i })).toHaveAttribute("href", "/lagebild");
+      await expect(nav.getByRole("link", { name: /Radar/i })).toHaveAttribute("href", "/radar");
+      await expect(nav.getByRole("link", { name: /Woche/i })).toHaveAttribute("href", "/woche");
+      await expect(nav.locator('a[aria-current="page"]')).toHaveCount(1);
+      await expectNoHorizontalOverflow(page);
+    }
   });
 
   test("opens the tools drawer and links secondary routes", async ({ page }) => {

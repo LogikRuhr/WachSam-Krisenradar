@@ -1,4 +1,5 @@
 import { DbNotice } from "@/components/DbNotice";
+import { LageViewsNav } from "@/components/LageViewsNav";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SignalChain } from "@/components/SignalChain";
 import { Verdict } from "@/components/Verdict";
@@ -32,6 +33,8 @@ export default async function LagebildPage() {
       <SectionHeader label="Lagebild" title="Deutschland in zehn Bereichen">
         <p>Jeder Bereich: was sich bewegt, was es für deinen Haushalt bedeutet, was du tun kannst.</p>
       </SectionHeader>
+
+      <LageViewsNav current="lagebild" />
 
       <section className="review-gate-band" aria-label="Aktualisierungspfad des Lagebilds">
         <div>
