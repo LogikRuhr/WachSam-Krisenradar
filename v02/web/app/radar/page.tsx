@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { DbNotice } from "@/components/DbNotice";
 import { RegionSwitcher } from "@/components/RegionSwitcher";
+import { ScaleLegend } from "@/components/ScaleLegend";
 import { SectionHeader } from "@/components/SectionHeader";
 import { ThemeCard } from "@/components/ThemeCard";
 import { getRadarThemes } from "@/lib/radar-data";
@@ -34,6 +35,7 @@ export default async function RadarPage() {
       {!connected ? <DbNotice /> : null}
 
       <RegionSwitcher currentRegion={region} />
+      <ScaleLegend variant="radar" />
 
       <div className="theme-warnlage-slot">
         <ThemeCard theme={warnlage} />

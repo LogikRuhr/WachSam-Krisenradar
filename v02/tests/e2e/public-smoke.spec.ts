@@ -45,6 +45,7 @@ test.describe("public WachSam smoke", () => {
 
   test("shows the official Warnlage card on /radar even without a database", async ({ page }) => {
     await page.goto("/radar");
+    await expect(page.getByRole("main")).toContainText("Radar-Stufe und Treiber-Zone");
     const warnlageCard = page.getByRole("article", { name: /Themenkanal Akute Warnlage \(amtlich\)/i });
     await expect(warnlageCard).toBeVisible();
     await expect(warnlageCard).toContainText("Quelle: DWD (amtlich)");
@@ -78,6 +79,7 @@ test.describe("public WachSam smoke", () => {
     await page.getByRole("dialog", { name: "Werkzeuge" }).getByRole("link", { name: "Indikatoren" }).click();
     await expect(page).toHaveURL(/\/indikatoren$/);
     await expect(page.getByRole("main")).toContainText(/Worauf WachSam achtet/i);
+    await expect(page.getByRole("main")).toContainText("Lage-Stufe und Messwert-Zone");
     await expectNoHorizontalOverflow(page);
   });
 
