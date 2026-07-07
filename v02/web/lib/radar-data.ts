@@ -11,6 +11,7 @@ import {
   getRegionalWarnings,
   type IndicatorRow,
   type RegionalWarningRow,
+  type SourceRow,
   type WithSources,
 } from "./public-data";
 import { regionName } from "./regions";
@@ -32,8 +33,18 @@ export type RadarTheme = {
   state: ThemeState;
   lead: string;
   reason: string;
-  drivers: { id: string; label: string; zone: ThemeZone; currentValue: string | null; unit: string | null }[];
+  drivers: {
+    id: string;
+    label: string;
+    zone: ThemeZone;
+    currentValue: string | null;
+    unit: string | null;
+    currentValueDate: Date | null;
+    sourceName: string | null;
+    sources: SourceRow[];
+  }[];
   sinceDate: string | null;
+  sources: SourceRow[];
   costEstimate?: CostEstimate | null;
 };
 
@@ -58,13 +69,23 @@ const WARNLAGE_LEAD: Record<ThemeState, string> = {
   hoch: "Amtliche Warnungen mit hoher oder extremer Stufe aktiv.",
 };
 
-type IndicatorEntry = { input: ThemeIndicatorInput; currentValue: string | null; unit: string | null };
+type IndicatorEntry = {
+  input: ThemeIndicatorInput;
+  currentValue: string | null;
+  unit: string | null;
+  currentValueDate: Date | null;
+  sourceName: string | null;
+  sources: SourceRow[];
+};
 type WarnlageIndicatorDriver = {
   id: string;
   label: string;
   zone: ThemeZone;
   currentValue: string | null;
   unit: string | null;
+  currentValueDate: Date | null;
+  sourceName: string | null;
+  sources: SourceRow[];
 };
 
 // Leitindikatoren der €-Modellrechnung (Task 7) — nur für diese beiden Kanäle
@@ -111,7 +132,14 @@ async function buildCostEstimate(channelKey: string, byId: IndicatorMap): Promis
 function buildIndicatorEntry(id: string, byId: IndicatorMap): IndicatorEntry {
   const row = byId.get(id);
   if (!row) {
-    return { input: { id, zone: "pending", label: id }, currentValue: null, unit: null };
+    return {
+      input: { id, zone: "pending", label: id },
+      currentValue: null,
+      unit: null,
+      currentValueDate: null,
+      sourceName: null,
+      sources: [],
+    };
   }
   const vitals = indicatorVitals(row);
   const zone: ThemeZone = vitals.zone?.zone ?? "pending";
@@ -119,7 +147,38 @@ function buildIndicatorEntry(id: string, byId: IndicatorMap): IndicatorEntry {
     input: { id, zone, label: row.label },
     currentValue: row.currentValue,
     unit: row.unit,
+    currentValueDate: vitals.currentValueDate,
+    sourceName: row.quelle,
+    sources: row.sources,
   };
+}
+
+function latestDate(entries: IndicatorEntry[]): string | null {
+  const dates = entries
+    .map((entry) => entry.currentValueDate)
+    .filter((date): date is Date => date instanceof Date)
+    .sort((a, b) => b.getTime() - a.getTime());
+  return dates[0]?.toISOString() ?? null;
+}
+
+function sourceKey(source: SourceRow): string {
+  const stand = source.sourceStand.trim();
+  return stand ? `${source.sourceName}:${stand}` : `${source.sourceName}:${source.sourceUrl}`;
+}
+
+function collectThemeSources(entries: IndicatorEntry[]): SourceRow[] {
+  const seen = new Set<string>();
+  const sources: SourceRow[] = [];
+  for (const entry of entries) {
+    for (const source of entry.sources) {
+      const key = sourceKey(source);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      sources.push(source);
+      if (sources.length >= 4) return sources;
+    }
+  }
+  return sources;
 }
 
 async function buildTheme(channel: ThemeChannel, byId: IndicatorMap): Promise<RadarTheme> {
@@ -143,9 +202,13 @@ async function buildTheme(channel: ThemeChannel, byId: IndicatorMap): Promise<Ra
         zone: driver.zone,
         currentValue: entry?.currentValue ?? null,
         unit: entry?.unit ?? null,
+        currentValueDate: entry?.currentValueDate ?? null,
+        sourceName: entry?.sourceName ?? null,
+        sources: entry?.sources ?? [],
       };
     }),
-    sinceDate: null,
+    sinceDate: latestDate(entries),
+    sources: collectThemeSources(entries),
     costEstimate,
   };
 }
@@ -187,6 +250,7 @@ function buildRegionalWarnlageTheme(regionCode: string, rows: RegionalWarningRow
       reason: `Keine aktiven Warnungen für ${name} im Datensatz.`,
       drivers: [],
       sinceDate: null,
+      sources: [],
     };
   }
 
@@ -202,6 +266,7 @@ function buildRegionalWarnlageTheme(regionCode: string, rows: RegionalWarningRow
     reason: `${count} aktive Warnung(en) in ${name}, höchste Stufe ${maxLevel} von 5.`,
     drivers: [],
     sinceDate: latest ? latest.toISOString() : null,
+    sources: [],
   };
 }
 
@@ -223,7 +288,16 @@ function warnlageDriver(row: RadarIndicatorRow): {
   const vitals = indicatorVitals(row);
   const zone: ThemeZone = vitals.zone?.zone ?? "pending";
   return {
-    driver: { id: row.id, label: row.label, zone, currentValue: row.currentValue, unit: row.unit },
+    driver: {
+      id: row.id,
+      label: row.label,
+      zone,
+      currentValue: row.currentValue,
+      unit: row.unit,
+      currentValueDate: vitals.currentValueDate,
+      sourceName: row.quelle,
+      sources: row.sources,
+    },
     state: themeStateFromZone(zone),
     date: vitals.currentValueDate,
   };
@@ -256,6 +330,7 @@ async function buildWarnlageTheme(byId: IndicatorMap, regionCode?: string | null
       reason: WARNLAGE_MISSING_REASON,
       drivers: [],
       sinceDate: null,
+      sources: [],
     };
   }
 
@@ -273,6 +348,7 @@ async function buildWarnlageTheme(byId: IndicatorMap, regionCode?: string | null
       reason: WARNLAGE_MISSING_REASON,
       drivers: [],
       sinceDate: null,
+      sources: [],
     };
   }
 
@@ -312,6 +388,16 @@ async function buildWarnlageTheme(byId: IndicatorMap, regionCode?: string | null
     reason: `${reasonParts.join("; ")}.`,
     drivers,
     sinceDate: latest ? latest.toISOString() : null,
+    sources: collectThemeSources(
+      drivers.map((driver) => ({
+        input: { id: driver.id, zone: driver.zone, label: driver.label },
+        currentValue: driver.currentValue,
+        unit: driver.unit,
+        currentValueDate: driver.currentValueDate,
+        sourceName: driver.sourceName,
+        sources: driver.sources,
+      })),
+    ),
   };
 }
 
