@@ -7,7 +7,7 @@ const base = new Date("2026-01-01T00:00:00Z");
 
 // --- estimateMobilityDelta: Diesel, Annahme 15.000 km/Jahr, 6,5 l/100 km --------
 
-// 35-Tage-Fenster, 1.70 → 1.80 €/l: 0.10 * 81.25 ≈ 8.13 → gerundet 8
+// 35-Tage-Fenster, 1.70 → 1.80 €/l: 0.10 * 81.25 * 30/35 ≈ 6.96 → gerundet 7
 {
   const obs = [
     { observedAt: base, value: "1.70" },
@@ -15,7 +15,7 @@ const base = new Date("2026-01-01T00:00:00Z");
   ];
   const estimate = estimateMobilityDelta(obs);
   assert.ok(estimate, "35-Tage-Fenster liefert eine Schätzung");
-  assert.equal(estimate!.monthlyDeltaEur, 8, "0.10 * 81.25 ≈ 8.13 → 8");
+  assert.equal(estimate!.monthlyDeltaEur, 7, "0.10 * 81.25 * 30/35 ≈ 6.96 → 7");
   assert.equal(estimate!.window, "35 Tage", "Fenster wird als Tage-Text ausgewiesen");
   assert.match(estimate!.assumptions, /15\.000 km\/Jahr/, "Annahmen ausgeschrieben");
 }
@@ -38,6 +38,15 @@ const base = new Date("2026-01-01T00:00:00Z");
     { observedAt: addDays(base, 10), value: "1.80" },
   ];
   assert.equal(estimateMobilityDelta(obs), null, "zu kurzes Fenster → null");
+}
+
+// Zu langes Fenster (60 Tage > 45 Tage Maximum) → null statt überzeichneter Monatswert
+{
+  const obs = [
+    { observedAt: base, value: "1.70" },
+    { observedAt: addDays(base, 60), value: "1.80" },
+  ];
+  assert.equal(estimateMobilityDelta(obs), null, "zu langes Fenster → null");
 }
 
 // Weniger als 2 verwertbare Punkte → null

@@ -34,6 +34,22 @@ export function formatIndex(index: number) {
   return String(index + 1).padStart(2, "0");
 }
 
+function sourceDedupeKey(source: SourceRow) {
+  return `${source.itemType}:${source.itemId}:${source.sourceName}:${source.sourceUrl}`;
+}
+
+function dedupeSources(rows: SourceRow[]) {
+  const seen = new Set<string>();
+  const deduped: SourceRow[] = [];
+  for (const row of rows) {
+    const key = sourceDedupeKey(row);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(row);
+  }
+  return deduped;
+}
+
 async function safe<T>(query: () => Promise<T[]>): Promise<DbState<T>> {
   const activeDb = database();
   if (!activeDb) return { rows: [], connected: false };
@@ -58,7 +74,7 @@ async function attachSources<T extends { id: string }>(itemType: SourceRow["item
     .orderBy(asc(schema.itemSources.orderIdx));
   return rows.map((row) => ({
     ...row,
-    sources: sources.filter((source) => source.itemType === itemType && source.itemId === row.id),
+    sources: dedupeSources(sources.filter((source) => source.itemType === itemType && source.itemId === row.id)),
   }));
 }
 
@@ -292,7 +308,7 @@ export async function getItemSources(itemType: ItemSourceType, itemId: string): 
   );
   if (!state.connected) return { data: null, connected: false, error: state.error };
   const typed = state.rows.filter((source) => source.itemType === itemType);
-  return { data: await keepPublishedSources(typed), connected: true };
+  return { data: await keepPublishedSources(dedupeSources(typed)), connected: true };
 }
 
 export async function getCitizenActions() {
@@ -377,7 +393,7 @@ export async function getNationalState() {
 
 export async function getSourceTrustLayer() {
   const state = await safe(() => database()!.select().from(schema.itemSources).orderBy(asc(schema.itemSources.sourceName)));
-  const visible = await keepPublishedSources(state.rows);
+  const visible = await keepPublishedSources(dedupeSources(state.rows));
   const byUrl = new Map<string, SourceRow & { citedItems: string[] }>();
   for (const source of visible) {
     const key = source.sourceUrl;

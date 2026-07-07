@@ -11,6 +11,8 @@ type NumericObservation = { observedAt: Date; value: number };
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Unter diesem Fenster ist ein Vergleich zu verrauscht, um als Modellrechnung ausgewiesen zu werden. */
 const MIN_WINDOW_DAYS = 21;
+/** Über diesem Fenster wäre eine lineare Monatsnormierung zu unsicher. */
+const MAX_WINDOW_DAYS = 45;
 /** Ziel-Rückblick für den Vergleichspunkt — grob "vor einem Monat". */
 const TARGET_LOOKBACK_DAYS = 28;
 
@@ -52,10 +54,12 @@ function buildEstimate(
 
   const windowDays = Math.round((latest.observedAt.getTime() - comparison.observedAt.getTime()) / DAY_MS);
   if (windowDays < MIN_WINDOW_DAYS) return null;
+  if (windowDays > MAX_WINDOW_DAYS) return null;
 
   const delta = latest.value - comparison.value;
+  const normalizedMonthlyDelta = toMonthlyDelta(delta) * (30 / windowDays);
   return {
-    monthlyDeltaEur: Math.round(toMonthlyDelta(delta)),
+    monthlyDeltaEur: Math.round(normalizedMonthlyDelta),
     window: `${windowDays} Tage`,
     assumptions,
     basis: basis(comparison, latest),
