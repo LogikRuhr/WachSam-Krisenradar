@@ -5,6 +5,7 @@ export type ThemeState = "normal" | "beobachten" | "erhoeht" | "hoch";
 export type ThemeZone = "uncritical" | "elevated" | "critical" | "pending";
 export type ThemeIndicatorInput = { id: string; zone: ThemeZone; label: string };
 export type ThemeStateResult = { state: ThemeState; drivers: ThemeIndicatorInput[]; reason: string };
+export type ThemeStateOptions = { unscoredCount?: number };
 
 export const THEME_STATE_LABEL: Record<ThemeState, string> = {
   normal: "Normal",
@@ -117,20 +118,32 @@ export const WARNLAGE_CHANNEL = {
 
 const NOTEWORTHY: ReadonlySet<ThemeZone> = new Set(["elevated", "critical"]);
 
-export function computeThemeState(inputs: ThemeIndicatorInput[]): ThemeStateResult {
+function unscoredReason(count: number): string {
+  if (count === 0) return "";
+  return count === 1
+    ? " 1 Beistellwert ohne Schwellenzone ist nicht eingerechnet."
+    : ` ${count} Beistellwerte ohne Schwellenzone sind nicht eingerechnet.`;
+}
+
+export function computeThemeState(inputs: ThemeIndicatorInput[], options?: ThemeStateOptions): ThemeStateResult {
   const drivers = inputs.filter((i) => NOTEWORTHY.has(i.zone));
   const critical = drivers.filter((i) => i.zone === "critical").length;
   const noteworthy = drivers.length;
+  const unscoredCount = options?.unscoredCount ?? 0;
 
   let state: ThemeState = "normal";
   if (critical >= 1 && noteworthy >= 2) state = "hoch";
   else if (critical >= 1 || noteworthy >= 2) state = "erhoeht";
   else if (noteworthy === 1) state = "beobachten";
 
-  const reason =
+  const indicatorLabel = unscoredCount > 0 ? "kalibrierten Indikatoren" : "Indikatoren";
+  const reasonBase =
     inputs.length === 0
-      ? "Keine Indikatordaten verfügbar."
-      : `${noteworthy} von ${inputs.length} Indikatoren auffällig (davon ${critical} kritisch).`;
+      ? unscoredCount > 0
+        ? "Keine kalibrierten Indikatordaten verfügbar."
+        : "Keine Indikatordaten verfügbar."
+      : `${noteworthy} von ${inputs.length} ${indicatorLabel} auffällig (davon ${critical} kritisch).`;
+  const reason = `${reasonBase}${unscoredReason(unscoredCount)}`;
   return { state, drivers, reason };
 }
 

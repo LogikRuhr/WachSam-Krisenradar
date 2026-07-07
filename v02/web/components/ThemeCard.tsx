@@ -34,6 +34,7 @@ function formatDriverMeta(currentValueDate: Date | null, sourceName: string | nu
 export function ThemeCard({ theme }: { theme: RadarTheme }) {
   const isWarnlage = theme.key === WARNLAGE_CHANNEL.key;
   const stand = formatStand(theme.sinceDate);
+  const unscoredIndicators = theme.unscoredIndicators ?? [];
 
   return (
     <article
@@ -78,6 +79,37 @@ export function ThemeCard({ theme }: { theme: RadarTheme }) {
             </li>
           ))}
         </ul>
+      ) : null}
+
+      {!isWarnlage && unscoredIndicators.length > 0 ? (
+        <div className="theme-unscored">
+          <span className="chain-label">Nicht eingerechnet</span>
+          <ul className="theme-driver-list">
+            {unscoredIndicators.map((indicator) => (
+              <li key={indicator.id} className="theme-driver">
+                <span className="theme-driver-main">
+                  <Link
+                    className="theme-driver-link"
+                    href={`/indikatoren/${indicator.id}`}
+                    aria-label={`${indicator.label} Indikator öffnen`}
+                  >
+                    {indicator.label}
+                  </Link>
+                  <span className="mono-label">ohne Schwellenzone</span>
+                  {indicator.currentValue != null ? (
+                    <span className="mono-meta">
+                      {indicator.currentValue}
+                      {indicator.unit ? ` ${indicator.unit}` : ""}
+                    </span>
+                  ) : null}
+                </span>
+                <span className="mono-meta theme-driver-stand">
+                  {formatDriverMeta(indicator.currentValueDate, indicator.sourceName)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
 
       {!isWarnlage && theme.sources.length > 0 ? <SourcePills sources={theme.sources} compact /> : null}
