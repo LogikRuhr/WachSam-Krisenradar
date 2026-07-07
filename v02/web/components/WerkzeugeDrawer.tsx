@@ -4,11 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 const sections = [
-  ["/lagebild", "Lagebild"],
-  ["/kosten", "Kosten"],
   ["/versorgung", "Versorgung"],
-  ["/kaskaden", "Kaskaden"],
-  ["/massnahmen", "Maßnahmen"],
   ["/quellen", "Quellen"],
   ["/governance", "Vertrauenslage"],
   ["/indikatoren", "Indikatoren"],
@@ -35,11 +31,12 @@ export function WerkzeugeDrawer() {
       <button
         aria-controls="werkzeuge-drawer"
         aria-expanded={open}
+        aria-label="Werkzeuge öffnen"
         className="drawer-trigger"
         type="button"
         onClick={() => setOpen(true)}
       >
-        Weitere Bereiche
+        Werkzeuge
       </button>
       <div className="drawer-root">
         <div className={open ? "drawer-backdrop open" : "drawer-backdrop"} onClick={() => setOpen(false)} />
@@ -51,24 +48,26 @@ export function WerkzeugeDrawer() {
           id="werkzeuge-drawer"
           role="dialog"
         >
-        <button
-          ref={closeButtonRef}
-          className="drawer-close"
-          type="button"
-          onClick={() => setOpen(false)}
-          aria-label="Weitere Bereiche schließen"
-        >
-          ×
-        </button>
-        <p className="mono-label">Navigation</p>
-        <h2 className="drawer-title" id="werkzeuge-title">Weitere Bereiche</h2>
-        <nav className="drawer-links" aria-label="Weitere Bereiche">
-          {sections.map(([href, label]) => (
-            <Link href={href} key={href} onClick={() => setOpen(false)}>
-              {label}
-            </Link>
-          ))}
-        </nav>
+          <button
+            ref={closeButtonRef}
+            className="drawer-close"
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Werkzeuge schließen"
+          >
+            ×
+          </button>
+          <p className="mono-label">Vertiefung</p>
+          <h2 className="drawer-title" id="werkzeuge-title">
+            Werkzeuge
+          </h2>
+          <nav className="drawer-links" aria-label="Werkzeuge">
+            {sections.map(([href, label]) => (
+              <Link href={href} key={href} onClick={() => setOpen(false)}>
+                {label}
+              </Link>
+            ))}
+          </nav>
         </aside>
       </div>
     </>
