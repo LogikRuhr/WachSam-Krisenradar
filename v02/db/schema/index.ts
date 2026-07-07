@@ -132,6 +132,21 @@ export const households = pgTable("households", {
   updatedAt,
 });
 
+export const userWatchlistItems = pgTable(
+  "user_watchlist_items",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    itemType: text("item_type").notNull(),
+    itemId: text("item_id").notNull(),
+    createdAt,
+    updatedAt,
+  },
+  (table) => [uniqueIndex("user_watchlist_items_user_item_unique").on(table.userId, table.itemType, table.itemId)],
+);
+
 export const facts = pgTable("facts", {
   id: text("id").primaryKey(),
   category: text("category").notNull(),
@@ -383,11 +398,19 @@ export const editorialAuditLog = pgTable("editorial_audit_log", {
 
 export const usersRelations = relations(users, ({ many }) => ({
   households: many(households),
+  watchlistItems: many(userWatchlistItems),
 }));
 
 export const householdsRelations = relations(households, ({ one }) => ({
   user: one(users, {
     fields: [households.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userWatchlistItemsRelations = relations(userWatchlistItems, ({ one }) => ({
+  user: one(users, {
+    fields: [userWatchlistItems.userId],
     references: [users.id],
   }),
 }));

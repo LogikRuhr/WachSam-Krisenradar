@@ -686,6 +686,17 @@ strong { color: var(--on-surface); font-weight: 700; }
 .household-mini-card p { color: var(--on-surface-variant); overflow-wrap: anywhere; }
 .household-check-boundary { color: var(--on-surface-variant); }
 
+/* --- Watchlist / Digest Preview --- */
+.watchlist-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .92fr); gap: 16px; align-items: start; }
+.watchlist-column { display: grid; gap: 10px; min-width: 0; }
+.watchlist-card-list, .watchlist-suggestion-list { display: grid; gap: 10px; min-width: 0; }
+.watchlist-suggestion { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: start; min-width: 0; border: 1px solid var(--outline); border-radius: 4px; background: rgba(13,13,13,.42); padding: 12px; }
+.watchlist-suggestion strong { display: block; overflow-wrap: anywhere; }
+.watchlist-suggestion p { margin: 5px 0 0; max-width: none; color: var(--on-surface-variant); font-size: 13px; line-height: 1.5; }
+.watchlist-suggestion form { align-self: center; }
+.digest-preview { display: grid; gap: 8px; margin-top: 14px; border: 1px solid rgba(212,84,10,.42); border-left: 3px solid var(--primary); border-radius: 0 4px 4px 0; background: rgba(212,84,10,.07); padding: 14px; }
+.digest-preview p { margin: 0; max-width: none; }
+
 @media (max-width: 820px) {
   .page-shell { padding: 22px 16px 48px; }
   .household-check { gap: 14px; padding: 16px; }
@@ -712,6 +723,7 @@ strong { color: var(--on-surface); font-weight: 700; }
   .household-check-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .household-field-wide, .household-check-note { grid-column: 1 / -1; }
   .household-check-form .input-mono { padding: 12px 10px; font-size: 13px; }
+  .watchlist-layout { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 520px) {
@@ -724,6 +736,8 @@ strong { color: var(--on-surface); font-weight: 700; }
   .household-result-kicker { align-items: flex-start; flex-direction: column; gap: 6px; }
   .household-cost-row { grid-template-columns: 1fr; gap: 6px; }
   .household-cost-value { justify-self: start; max-width: none; text-align: left; }
+  .watchlist-suggestion { grid-template-columns: 1fr; }
+  .watchlist-suggestion form { align-self: start; }
 }
 
 /* --- Gesamtstand: Vitals Board --- */

@@ -6,6 +6,7 @@ import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { ProfileStatus } from "@/components/ProfileStatus";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SignalChain } from "@/components/SignalChain";
+import { WatchlistPanel } from "@/components/WatchlistPanel";
 import { auth } from "@/lib/auth";
 import {
   aufwandLabel,
@@ -21,6 +22,9 @@ import { buildProfileOnboardingSteps } from "@/lib/onboarding";
 import { getHouseholdByUserId, upsertHouseholdAction } from "@/lib/profile";
 import { getCitizenActions, getSignalChains } from "@/lib/public-data";
 import { getCurrentUserProfile } from "@/lib/use-user-modus";
+import { getUserWatchlistState } from "@/lib/watchlist";
+import { buildWatchlistDigestPreview } from "@/lib/watchlist-digest";
+import { getWeeklyOverview } from "@/lib/weekly";
 import { ProfileForm } from "./profile-form";
 
 export const dynamic = "force-dynamic";
@@ -41,15 +45,38 @@ export default async function ProfilPage() {
     redirect("/login");
   }
 
-  const [household, profile, signalsState, actionsState] = await Promise.all([
+  const [household, profile, signalsState, actionsState, weeklyState] = await Promise.all([
     getHouseholdByUserId(userId),
     getCurrentUserProfile(),
     getSignalChains(8),
     getCitizenActions(),
+    getWeeklyOverview(),
   ]);
 
   const completeness = profileCompleteness(profile);
   const topChains = prioritizeSignalsForProfile(signalsState.rows, profile, 3);
+  const watchlist = await getUserWatchlistState(userId, signalsState.rows);
+  const watchlistIds = new Set(watchlist.itemIds);
+  const watchlistSuggestions = prioritizeSignalsForProfile(signalsState.rows, profile, 6)
+    .filter((chain) => !watchlistIds.has(chain.signal.id))
+    .slice(0, 4);
+  const digestPreview = buildWatchlistDigestPreview({
+    watchItems: watchlist.items.map((chain) => ({
+      id: chain.signal.id,
+      title: chain.signal.titel,
+      bereich: chain.signal.bereich,
+      severity: chain.signal.severity,
+      trend: chain.signal.trend,
+      impactTitle: chain.impact?.titel ?? null,
+    })),
+    weeklyItems: weeklyState.channels.map((channel) => ({
+      title: channel.title,
+      stateNow: channel.stateNow,
+      stateWeekAgo: channel.stateWeekAgo,
+      changed: channel.changed,
+      topMover: channel.topMover,
+    })),
+  });
   const energieNote = profile.heizart && profile.heizart !== "unbekannt" ? personalNote("energie", profile) : null;
   const actions = prioritizeActionsForProfile(actionsState.rows, profile, 4);
   const checkSteps = householdCheckSteps(profile);
@@ -78,6 +105,14 @@ export default async function ProfilPage() {
         label="Onboarding"
         description="WachSam wird nützlicher, sobald Profil, Lage, Maßnahmen und Prüfliste zusammen gelesen werden."
         steps={onboardingSteps}
+      />
+
+      <WatchlistPanel
+        signalsConnected={signalsState.connected}
+        signalsError={signalsState.error}
+        state={watchlist}
+        suggestions={watchlistSuggestions}
+        digest={digestPreview}
       />
 
       <section className="home-section" aria-labelledby="relevanz-title">
@@ -186,8 +221,9 @@ export default async function ProfilPage() {
         <h2 id="member-grenze-title" className="detail-title-small">Orientierung, keine Beratung</h2>
         <p>
           WachSam sortiert öffentlich einsehbare Lage-Einordnungen nach deinem Haushalt. Die Hinweise sind eine ruhige
-          Orientierung — keine Finanz-, Rechts- oder medizinische Beratung und keine sichere Vorhersage. Gespeichert sind nur
-          Modus, PLZ und Heizart; keine Verknüpfung mit Tracking oder Werbung.
+          Orientierung — keine Finanz-, Rechts- oder medizinische Beratung und keine sichere Vorhersage. Gespeichert sind
+          Modus, PLZ, Heizart und bei Nutzung der Watchlist die IDs beobachteter öffentlicher Lagekarten; keine Verknüpfung
+          mit Tracking oder Werbung.
         </p>
       </section>
     </main>
