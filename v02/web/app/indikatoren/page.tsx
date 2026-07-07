@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DbNotice } from "@/components/DbNotice";
 import { PainCard } from "@/components/PainCard";
+import { ScaleLegend } from "@/components/ScaleLegend";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { SourcePills } from "@/components/SourcePill";
@@ -20,6 +21,7 @@ export default async function IndikatorenPage() {
         <p>Schwellenwerte und Kennzahlen, bei denen sich die Lage für Haushalte verschärfen könnte.</p>
       </SectionHeader>
       {!state.connected ? <DbNotice error={state.error} /> : null}
+      <ScaleLegend variant="indicators" />
       <section className="card-grid">
         {state.rows.map((item, index) => {
           const currentVal = item.currentValue != null ? Number(item.currentValue) : null;

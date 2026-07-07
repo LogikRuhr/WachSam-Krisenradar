@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { DbNotice } from "@/components/DbNotice";
 import { InjectionTracker } from "@/components/InjectionTracker";
 import { MethodikHinweis } from "@/components/MethodikHinweis";
+import { ScaleLegend } from "@/components/ScaleLegend";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SeverityBadge } from "@/components/SeverityBadge";
 import { SourcePills } from "@/components/SourcePill";
@@ -109,6 +110,7 @@ export default async function IndicatorDetailPage({ params }: PageProps) {
                 zoneLabel={zoneResult?.zoneLabel ?? "Unkritisch"}
                 zoneText={zoneResult?.zoneText ?? null}
               />
+              <ScaleLegend variant="threshold" />
             </section>
           ) : null}
 
