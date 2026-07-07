@@ -61,7 +61,7 @@ export const THEME_CHANNELS: ThemeChannel[] = [
     key: "lebensmittel",
     title: "Lebensmittelpreise",
     question: "Wird der Einkauf teurer?",
-    indicatorIds: ["wi-fao-food-price-index", "wi-duengemittel-preis", "wi-inflation-vpi-de"],
+    indicatorIds: ["wi-fao-food-price-index", "wi-duengemittel-preis", "wi-destatis-lebensmittel-yoy-de"],
     leadText: {
       normal: "Vorlauf-Indikatoren für Lebensmittelpreise sind unauffällig.",
       beobachten: "Ein Vorlauf-Signal fällt auf — wirkt, wenn überhaupt, mit Monaten Verzögerung.",
@@ -112,7 +112,7 @@ export const WARNLAGE_CHANNEL = {
   key: "warnlage",
   title: "Akute Warnlage (amtlich)",
   question: "Gibt es amtliche Warnungen?",
-  indicatorId: "wi-dwd-warnings-de",
+  indicatorIds: ["wi-dwd-warnings-de", "wi-nina-zivilschutz-de"],
 } as const;
 
 const NOTEWORTHY: ReadonlySet<ThemeZone> = new Set(["elevated", "critical"]);

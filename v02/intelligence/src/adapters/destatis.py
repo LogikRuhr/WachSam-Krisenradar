@@ -184,7 +184,10 @@ def _year_over_year(values: dict[tuple[int, int], float], period: tuple[int, int
     return round(((current / previous_year) - 1) * 100, 1)
 
 
-def _extract_vpi_index_values(table: list[list[dict[str, str | int]]]) -> dict[tuple[int, int], float]:
+def _extract_vpi_index_values(
+    table: list[list[dict[str, str | int]]],
+    value_offset_after_month: int = 1,
+) -> dict[tuple[int, int], float]:
     values: dict[tuple[int, int], float] = {}
     active_year: int | None = None
     year_rows_remaining = 0
@@ -199,10 +202,12 @@ def _extract_vpi_index_values(table: list[list[dict[str, str | int]]]) -> dict[t
             active_year = int(texts[0])
             year_rows_remaining = int(row[0].get("rowspan") or 1)
             month_label = texts[1] if len(texts) > 1 else ""
-            value_label = texts[2] if len(texts) > 2 else ""
+            value_index = 1 + value_offset_after_month
+            value_label = texts[value_index] if len(texts) > value_index else ""
         elif active_year is not None and year_rows_remaining > 0:
             month_label = texts[0]
-            value_label = texts[1] if len(texts) > 1 else ""
+            value_index = value_offset_after_month
+            value_label = texts[value_index] if len(texts) > value_index else ""
         else:
             continue
 
@@ -219,6 +224,15 @@ def _extract_vpi_index_values(table: list[list[dict[str, str | int]]]) -> dict[t
             active_year = None
 
     return values
+
+
+def _find_category_offset(table: list[list[dict[str, str | int]]], required_terms: tuple[str, ...]) -> int:
+    for row in table:
+        texts = [str(cell["text"]).strip().lower() for cell in row]
+        for index, text in enumerate(texts):
+            if all(term in text for term in required_terms):
+                return index
+    raise ValueError(f"Destatis VPI HTML table category not found: {'/'.join(required_terms)}")
 
 
 def parse_vpi_index_html(html_text: str) -> VPILiveValue:
@@ -251,6 +265,47 @@ def parse_vpi_index_html(html_text: str) -> VPILiveValue:
     previous_yoy = _year_over_year(index_values, previous_period) if previous_period else None
     if current_yoy is None:
         raise ValueError("Destatis VPI HTML table current year-over-year value is missing")
+
+    return VPILiveValue(
+        current_value=current_yoy,
+        current_value_date=_format_period(*current_period),
+        previous_value=previous_yoy,
+        previous_value_date=_format_period(*previous_period) if previous_period else None,
+    )
+
+
+def parse_vpi_food_index_html(html_text: str) -> VPILiveValue:
+    parser = _DestatisTableParser()
+    parser.feed(html_text)
+
+    table = next(
+        (
+            candidate
+            for candidate in parser.tables
+            if any(
+                "nahrungsmittel" in str(cell["text"]).lower()
+                and "alkoholfreie" in str(cell["text"]).lower()
+                for row in candidate
+                for cell in row
+            )
+        ),
+        None,
+    )
+    if table is None:
+        raise ValueError("Destatis VPI food category HTML table not found")
+
+    value_offset = _find_category_offset(table, ("nahrungsmittel", "alkoholfreie"))
+    index_values = _extract_vpi_index_values(table, value_offset_after_month=value_offset)
+    periods = sorted(period for period in index_values if _year_over_year(index_values, period) is not None)
+    if not periods:
+        raise ValueError("Destatis VPI food category table does not contain comparable year-over-year values")
+
+    current_period = periods[-1]
+    previous_period = periods[-2] if len(periods) > 1 else None
+    current_yoy = _year_over_year(index_values, current_period)
+    previous_yoy = _year_over_year(index_values, previous_period) if previous_period else None
+    if current_yoy is None:
+        raise ValueError("Destatis VPI food category current year-over-year value is missing")
 
     return VPILiveValue(
         current_value=current_yoy,
@@ -401,6 +456,16 @@ class DestatisAdapter(BaseAdapter):
             raise ValueError(f"Destatis HTML HTTP {response.status_code}")
         return parse_vpi_index_html(response.text)
 
+    def _fetch_food_vpi_from_html(self) -> VPILiveValue:
+        response = requests.get(
+            VPI_TABLE_URL,
+            headers={"accept": "text/html"},
+            timeout=30,
+        )
+        if response.status_code != 200 or "nahrungsmittel" not in response.text.lower():
+            raise ValueError(f"Destatis food HTML HTTP {response.status_code}")
+        return parse_vpi_food_index_html(response.text)
+
     def _build_vpi_item(self, live_value: VPILiveValue, source_url: str) -> IngestionItem:
         return self.create_item(
             title=f"Inflation Deutschland: {live_value.current_value:.1f}% ({live_value.current_value_date})",
@@ -427,6 +492,35 @@ class DestatisAdapter(BaseAdapter):
             source_period_type="month",
         )
 
+    def _build_food_vpi_item(self, live_value: VPILiveValue) -> IngestionItem:
+        return self.create_item(
+            title=(
+                "Lebensmittelpreise Deutschland: "
+                f"{live_value.current_value:.1f}% zum Vorjahresmonat ({live_value.current_value_date})"
+            ),
+            description=(
+                "Destatis VPI-Teilindex Nahrungsmittel und alkoholfreie Getränke: "
+                f"Veränderung zum Vorjahresmonat {live_value.current_value:.1f}%."
+            ),
+            source_url=VPI_TABLE_URL,
+            germany_relevance=GermanyRelevance(
+                direct=True,
+                systems_affected=["lebensmittel", "finanzen"],
+                time_to_impact="wochen",
+                description="Der Teilindex misst direkt die Lebensmittelpreisentwicklung für deutsche Haushalte.",
+            ),
+            methodology_tag="bia",
+            affected_systems=["lebensmittel", "finanzen"],
+            indicator_id="wi-destatis-lebensmittel-yoy-de",
+            current_value=live_value.current_value,
+            current_value_date=live_value.current_value_date,
+            previous_value=live_value.previous_value,
+            previous_value_date=live_value.previous_value_date,
+            source_stand_date=live_value.current_value_date,
+            source_stand_label=live_value.current_value_date,
+            source_period_type="month",
+        )
+
     def fetch_vpi(self) -> List[IngestionItem]:
         try:
             try:
@@ -438,7 +532,18 @@ class DestatisAdapter(BaseAdapter):
                 self.log_error(f"GENESIS VPI fetch failed: {genesis_error}; trying Destatis HTML table")
                 live_value = self._fetch_vpi_from_html()
                 source_url = VPI_TABLE_URL
-            return [self._build_vpi_item(live_value, source_url)]
+            items = [self._build_vpi_item(live_value, source_url)]
+            try:
+                items.append(self._build_food_vpi_item(self._fetch_food_vpi_from_html()))
+            except Exception as food_error:
+                self.log_error(f"Destatis food VPI fetch failed: {food_error}")
+                self.record_source_error(
+                    "wi-destatis-lebensmittel-yoy-de",
+                    f"fetch_error: {food_error}" if str(food_error) else f"fetch_error: {type(food_error).__name__}",
+                    source_url=VPI_TABLE_URL,
+                    keep_previous=True,
+                )
+            return items
 
         except Exception as e:
             self.log_error(f"VPI fetch failed: {e}")

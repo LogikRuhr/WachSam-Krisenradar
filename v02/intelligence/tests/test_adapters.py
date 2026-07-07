@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 
 from src.adapters.destatis import DestatisAdapter
 from src.adapters.destatis import decode_genesis_table_response
+from src.adapters.destatis import parse_vpi_food_index_html
 from src.adapters.destatis import parse_vpi_index_html
 from src.adapters.destatis import parse_vpi_table
 from src.adapters.bnetza import BNetzAAdapter
@@ -111,6 +112,7 @@ _DESTATIS_VPI_HTML = """
         <tr>
           <th>Jahr, Monat</th>
           <th>Verbraucherpreisindex insgesamt</th>
+          <th>Nahrungsmittel und alkoholfreie Getränke 01</th>
         </tr>
       </thead>
       <tbody>
@@ -118,19 +120,23 @@ _DESTATIS_VPI_HTML = """
           <th rowspan="2">2026</th>
           <th><abbr title="Mai">Mai</abbr></th>
           <td>125,0</td>
+          <td>137,5</td>
         </tr>
         <tr>
           <th><abbr title="April">Apr</abbr></th>
           <td>125,2</td>
+          <td>138,6</td>
         </tr>
         <tr>
           <th rowspan="2">2025</th>
           <th><abbr title="Mai">Mai</abbr></th>
           <td>121,8</td>
+          <td>134,0</td>
         </tr>
         <tr>
           <th><abbr title="April">Apr</abbr></th>
           <td>122,6</td>
+          <td>135,0</td>
         </tr>
       </tbody>
     </table>
@@ -148,6 +154,15 @@ def test_parse_vpi_index_html_calculates_latest_year_over_year_value():
     assert result.previous_value_date == "2026-04"
 
 
+def test_parse_vpi_food_index_html_calculates_latest_year_over_year_value():
+    result = parse_vpi_food_index_html(_DESTATIS_VPI_HTML)
+
+    assert result.current_value == 2.6
+    assert result.current_value_date == "2026-05"
+    assert result.previous_value == 2.7
+    assert result.previous_value_date == "2026-04"
+
+
 def test_destatis_adapter_maps_vpi_to_indicator_live_value(monkeypatch):
     response = MagicMock()
     response.status_code = 200
@@ -161,8 +176,14 @@ def test_destatis_adapter_maps_vpi_to_indicator_live_value(monkeypatch):
     response.content = response.text.encode("utf-8")
 
     monkeypatch.setattr("src.adapters.destatis.requests.post", lambda *args, **kwargs: response)
+    html_response = MagicMock()
+    html_response.status_code = 200
+    html_response.text = _DESTATIS_VPI_HTML
+    monkeypatch.setattr("src.adapters.destatis.requests.get", lambda *args, **kwargs: html_response)
 
-    item = DestatisAdapter().fetch_latest()[0]
+    items = DestatisAdapter().fetch_latest()
+    by_id = {item.indicator_id: item for item in items}
+    item = by_id["wi-inflation-vpi-de"]
 
     assert item.indicator_id == "wi-inflation-vpi-de"
     assert item.current_value == 2.1
@@ -171,6 +192,12 @@ def test_destatis_adapter_maps_vpi_to_indicator_live_value(monkeypatch):
     assert item.previous_value_date == "2026-03"
     assert item.source_stand_date == "2026-04"
     assert item.source_period_type == "month"
+    food = by_id["wi-destatis-lebensmittel-yoy-de"]
+    assert food.current_value == 2.6
+    assert food.current_value_date == "2026-05"
+    assert food.previous_value == 2.7
+    assert food.previous_value_date == "2026-04"
+    assert food.source_period_type == "month"
 
 
 def test_destatis_adapter_uses_html_fallback_when_genesis_returns_json_error(monkeypatch):
@@ -189,13 +216,16 @@ def test_destatis_adapter_uses_html_fallback_when_genesis_returns_json_error(mon
     monkeypatch.setattr("src.adapters.destatis.requests.get", lambda *args, **kwargs: html_response)
 
     adapter = DestatisAdapter()
-    item = adapter.fetch_latest()[0]
+    items = adapter.fetch_latest()
+    by_id = {item.indicator_id: item for item in items}
+    item = by_id["wi-inflation-vpi-de"]
 
     assert adapter.source_errors == []
     assert item.indicator_id == "wi-inflation-vpi-de"
     assert item.current_value == 2.6
     assert item.current_value_date == "2026-05"
     assert item.source_url.endswith("Verbraucherpreise-12Kategorien.html")
+    assert by_id["wi-destatis-lebensmittel-yoy-de"].current_value == 2.6
 
 
 @pytest.mark.live

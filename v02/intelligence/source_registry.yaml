@@ -38,7 +38,7 @@ sources:
     operator: Statistisches Bundesamt
     source_url: https://www.destatis.de/DE/Themen/Wirtschaft/Preise/Verbraucherpreisindex/_inhalt.html
     adapter: src.adapters.destatis.DestatisAdapter
-    indicator_ids: [wi-inflation-vpi-de]
+    indicator_ids: [wi-inflation-vpi-de, wi-destatis-lebensmittel-yoy-de]
     status: active
     format: GENESIS REST with official Destatis HTML table fallback
     auth_required: optional-credentials

@@ -21,6 +21,12 @@ PLAUSIBILITY_RULES: dict[str, dict[str, float]] = {
     "wi-gasspeicher-fuellstand": {"plausibility_min": 0.0, "plausibility_max": 100.0, "max_delta_percent": 15.0},
     # VPI-Inflation YoY in %. Rate → relatives Delta volatil, daher großzügig.
     "wi-inflation-vpi-de": {"plausibility_min": -5.0, "plausibility_max": 30.0, "max_delta_percent": 50.0},
+    # VPI-Teilindex Nahrungsmittel und alkoholfreie Getränke YoY in %.
+    "wi-destatis-lebensmittel-yoy-de": {
+        "plausibility_min": -10.0,
+        "plausibility_max": 50.0,
+        "max_delta_percent": 100.0,
+    },
     # Brent Rohöl in USD/Barrel.
     "wi-oel-brent": {"plausibility_min": 0.0, "plausibility_max": 300.0, "max_delta_percent": 25.0},
     # FAO Food Price Index (Indexpunkte).
@@ -54,6 +60,20 @@ PLAUSIBILITY_RULES: dict[str, dict[str, float]] = {
     # >100 gleichzeitig; 2000 als konservative Obergrenze. Zähler kann bei Aktivierung
     # eines Großlage-Szenarios sprunghaft steigen → kein festes Delta-Limit.
     "wi-nina-zivilschutz-de": {"plausibility_min": 0.0, "plausibility_max": 2000.0, "max_delta_percent": None},
+    # Pegelonline-Wasserstände in cm. Stationen haben eigene Schwellen; diese Regel
+    # prüft nur physisch grob plausible Messwerte, keine Hoch-/Niedrigwasserwertung.
+    "wi-pegelonline-koeln": {"plausibility_min": 0.0, "plausibility_max": 1500.0, "max_delta_percent": None},
+    "wi-pegelonline-kaub": {"plausibility_min": 0.0, "plausibility_max": 1500.0, "max_delta_percent": None},
+    "wi-pegelonline-duisburg-ruhrort": {
+        "plausibility_min": 0.0,
+        "plausibility_max": 1500.0,
+        "max_delta_percent": None,
+    },
+    "wi-pegelonline-magdeburg-strombruecke": {
+        "plausibility_min": 0.0,
+        "plausibility_max": 1500.0,
+        "max_delta_percent": None,
+    },
 }
 
 
