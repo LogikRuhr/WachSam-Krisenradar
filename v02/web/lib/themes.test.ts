@@ -20,6 +20,16 @@ assert.equal(computeThemeState([mk("a", "critical"), mk("b", "elevated")]).state
 assert.equal(computeThemeState([mk("a", "pending"), mk("b", "pending")]).state, "normal", "pending → normal");
 // leere Liste → normal mit erklärendem reason
 assert.equal(computeThemeState([]).state, "normal", "leere Liste → normal");
+assert.equal(
+  computeThemeState([mk("a", "elevated")], { unscoredCount: 1 }).reason,
+  "1 von 1 kalibrierten Indikatoren auffällig (davon 0 kritisch). 1 Beistellwert ohne Schwellenzone ist nicht eingerechnet.",
+  "unkalibrierte Beistellwerte werden im Reason getrennt erklärt",
+);
+assert.equal(
+  computeThemeState([], { unscoredCount: 2 }).reason,
+  "Keine kalibrierten Indikatordaten verfügbar. 2 Beistellwerte ohne Schwellenzone sind nicht eingerechnet.",
+  "leere kalibrierte Basis bleibt ehrlich",
+);
 // drivers enthält nur auffällige Indikatoren
 assert.deepEqual(
   computeThemeState([mk("a", "critical"), mk("b", "uncritical")]).drivers.map((d) => d.id),

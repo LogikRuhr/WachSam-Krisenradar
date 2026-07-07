@@ -43,6 +43,15 @@ export type RadarTheme = {
     sourceName: string | null;
     sources: SourceRow[];
   }[];
+  unscoredIndicators?: {
+    id: string;
+    label: string;
+    currentValue: string | null;
+    unit: string | null;
+    currentValueDate: Date | null;
+    sourceName: string | null;
+    sources: SourceRow[];
+  }[];
   sinceDate: string | null;
   sources: SourceRow[];
   costEstimate?: CostEstimate | null;
@@ -71,6 +80,7 @@ const WARNLAGE_LEAD: Record<ThemeState, string> = {
 
 type IndicatorEntry = {
   input: ThemeIndicatorInput;
+  hasThresholdZone: boolean;
   currentValue: string | null;
   unit: string | null;
   currentValueDate: Date | null;
@@ -134,6 +144,7 @@ function buildIndicatorEntry(id: string, byId: IndicatorMap): IndicatorEntry {
   if (!row) {
     return {
       input: { id, zone: "pending", label: id },
+      hasThresholdZone: false,
       currentValue: null,
       unit: null,
       currentValueDate: null,
@@ -145,6 +156,7 @@ function buildIndicatorEntry(id: string, byId: IndicatorMap): IndicatorEntry {
   const zone: ThemeZone = vitals.zone?.zone ?? "pending";
   return {
     input: { id, zone, label: row.label },
+    hasThresholdZone: row.thresholdWarn != null && row.thresholdCritical != null,
     currentValue: row.currentValue,
     unit: row.unit,
     currentValueDate: vitals.currentValueDate,
@@ -166,7 +178,7 @@ function sourceKey(source: SourceRow): string {
   return stand ? `${source.sourceName}:${stand}` : `${source.sourceName}:${source.sourceUrl}`;
 }
 
-function collectThemeSources(entries: IndicatorEntry[]): SourceRow[] {
+function collectThemeSources(entries: Pick<IndicatorEntry, "sources">[]): SourceRow[] {
   const seen = new Set<string>();
   const sources: SourceRow[] = [];
   for (const entry of entries) {
@@ -183,8 +195,13 @@ function collectThemeSources(entries: IndicatorEntry[]): SourceRow[] {
 
 async function buildTheme(channel: ThemeChannel, byId: IndicatorMap): Promise<RadarTheme> {
   const entries = channel.indicatorIds.map((id) => buildIndicatorEntry(id, byId));
+  const scoredEntries = entries.filter((entry) => entry.hasThresholdZone);
+  const unscoredEntries = entries.filter((entry) => byId.has(entry.input.id) && !entry.hasThresholdZone);
   const entryById = new Map(entries.map((entry) => [entry.input.id, entry]));
-  const { state, drivers, reason } = computeThemeState(entries.map((entry) => entry.input));
+  const { state, drivers, reason } = computeThemeState(
+    scoredEntries.map((entry) => entry.input),
+    { unscoredCount: unscoredEntries.length },
+  );
   const costEstimate = channel.key in COST_MODEL_LEAD_INDICATOR ? await buildCostEstimate(channel.key, byId) : undefined;
 
   return {
@@ -207,7 +224,16 @@ async function buildTheme(channel: ThemeChannel, byId: IndicatorMap): Promise<Ra
         sources: entry?.sources ?? [],
       };
     }),
-    sinceDate: latestDate(entries),
+    unscoredIndicators: unscoredEntries.map((entry) => ({
+      id: entry.input.id,
+      label: entry.input.label,
+      currentValue: entry.currentValue,
+      unit: entry.unit,
+      currentValueDate: entry.currentValueDate,
+      sourceName: entry.sourceName,
+      sources: entry.sources,
+    })),
+    sinceDate: latestDate(scoredEntries),
     sources: collectThemeSources(entries),
     costEstimate,
   };
