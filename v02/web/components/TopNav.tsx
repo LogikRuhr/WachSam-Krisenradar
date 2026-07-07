@@ -2,10 +2,10 @@ import Link from "next/link";
 import { auth, isAuthRuntimeConfigured, signOut } from "@/lib/auth";
 
 const tabs = [
+  ["/kosten", "Haushalt"],
+  ["/lagebild", "Lage"],
   ["/radar", "Radar"],
   ["/woche", "Woche"],
-  ["/lagebild", "Lage"],
-  ["/kosten", "Haushalt"],
   ["/kaskaden", "Wirkungsketten"],
   ["/massnahmen", "Maßnahmen"],
   ["/quellen", "Quellen"],

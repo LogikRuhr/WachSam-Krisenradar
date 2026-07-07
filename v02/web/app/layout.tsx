@@ -10,8 +10,9 @@ const sans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "
 const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "WachSam — Krisenradar",
-  description: "Deutschland-zentriertes Krisen- und Haushalts-Auswirkungsradar",
+  title: "WachSam — Haushalts-Krisencheck",
+  description:
+    "Persönlicher Haushalts-Krisencheck für Deutschland: Was betrifft meinen Haushalt, was kostet es ungefähr pro Monat, und was kann ich konkret tun?",
 };
 
 export const viewport: Viewport = {
