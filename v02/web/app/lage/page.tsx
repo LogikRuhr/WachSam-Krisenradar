@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Gesamtstand Deutschland · WachSam",
   description:
-    "Nationale Gesamteinordnung und Vitalwerte für Deutschland — mit Quellenstand, Zonen und ehrlichen Leerzuständen.",
+    "Startpunkt der WachSam-Lage: nationale Gesamteinordnung und Vitalwerte für Deutschland.",
 };
 
 const DATE_FMT = new Intl.DateTimeFormat("de-DE", { day: "numeric", month: "long", year: "numeric" });
@@ -54,7 +54,7 @@ export default async function LagePage() {
     const error = national.error ?? vitals.error ?? chains.error;
     return (
       <main className="page-shell" aria-labelledby="page-title">
-        <SectionHeader label="Gesamtstand" title="Deutschland im Überblick" />
+        <SectionHeader label="Lage" title="Gesamtstand Deutschland" />
         <LageViewsNav current="gesamtstand" />
         <DbNotice error={error} />
       </main>
@@ -80,10 +80,10 @@ export default async function LagePage() {
 
   return (
     <main className="page-shell" aria-labelledby="page-title">
-      <SectionHeader label="Gesamtstand" title="Deutschland im Überblick">
+      <SectionHeader label="Lage" title="Gesamtstand Deutschland">
         <p>
-          Eine ruhige Gesamteinordnung der Lage in Deutschland: Wie ist der Stand, woran
-          würde sich die Einschätzung ändern — und welche Vitalwerte tragen das Bild?
+          Startpunkt der Lage-Sichten: Wie ist der Stand in Deutschland, woran würde sich die
+          Einschätzung ändern — und welche Vitalwerte tragen das Bild?
         </p>
       </SectionHeader>
 

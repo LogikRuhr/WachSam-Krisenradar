@@ -7,25 +7,25 @@ const views: Array<{ key: LageViewKey; href: string; label: string; description:
     key: "gesamtstand",
     href: "/lage",
     label: "Gesamtstand",
-    description: "Nationale Einordnung und Vitalwerte.",
+    description: "Startpunkt: nationale Einordnung und Vitalwerte.",
   },
   {
     key: "lagebild",
     href: "/lagebild",
-    label: "Lagebild",
-    description: "Zehn Bereiche mit Wirkung auf Haushalte.",
+    label: "Bereiche",
+    description: "Detailansicht mit zehn Haushaltsbereichen.",
   },
   {
     key: "radar",
     href: "/radar",
-    label: "Radar",
-    description: "Themenkanäle aus aktuellen Indikatoren.",
+    label: "Treiber",
+    description: "Themenkanäle, Indikator-Zonen und Warnlage.",
   },
   {
     key: "woche",
     href: "/woche",
-    label: "Woche",
-    description: "Stufenwechsel und Bewegungen.",
+    label: "Änderungen",
+    description: "Was sich seit letzter Woche bewegt hat.",
   },
 ];
 

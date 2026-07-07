@@ -9,8 +9,8 @@ import { getWeeklyOverview, type WeeklyChannel } from "@/lib/weekly";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Die Woche im Überblick · WachSam",
-  description: "Stufe der Themenkanäle heute im Vergleich zu vor 7 Tagen.",
+  title: "Was sich diese Woche verändert hat · WachSam",
+  description: "Änderungsansicht der Themenkanäle: Stufe heute im Vergleich zu vor 7 Tagen.",
 };
 
 const STATE_RANK: Record<ThemeState, number> = { normal: 0, beobachten: 1, erhoeht: 2, hoch: 3 };
@@ -37,10 +37,10 @@ export default async function WochePage() {
 
   return (
     <main className="page-shell" aria-labelledby="page-title">
-      <SectionHeader label="Woche" title="Die Woche im Überblick">
+      <SectionHeader label="Änderungen" title="Was sich diese Woche verändert hat">
         <p>
-          Stufe der Themenkanäle heute im Vergleich zu vor 7 Tagen — deterministisch aus den
-          zuletzt veröffentlichten Indikatorwerten abgeleitet.
+          Änderungsansicht der Lage: Stufe der Themenkanäle heute im Vergleich zu vor 7 Tagen —
+          deterministisch aus den zuletzt veröffentlichten Indikatorwerten abgeleitet.
         </p>
       </SectionHeader>
 
