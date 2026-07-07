@@ -112,7 +112,11 @@ strong { color: var(--on-surface); font-weight: 700; }
 .theme-card-head { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .theme-reason { margin: 0; color: var(--on-surface-variant); font-size: 14px; line-height: 1.55; }
 .theme-driver-list { display: grid; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none; }
-.theme-driver { color: var(--on-surface); font-size: 14px; }
+.theme-driver { display: grid; gap: 3px; color: var(--on-surface); font-size: 14px; }
+.theme-driver-main { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 7px; min-width: 0; }
+.theme-driver-link { min-width: 0; color: var(--on-surface); font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+.theme-driver-link:hover { color: var(--primary-hover); }
+.theme-driver-stand { display: block; line-height: 1.45; overflow-wrap: anywhere; }
 .theme-cost { display: flex; flex-direction: column; gap: 2px; margin: 2px 0 0; }
 .theme-cost-value { color: var(--on-surface); font-family: var(--font-mono); font-size: 15px; font-weight: 700; }
 .theme-cost-note { margin: 0; color: var(--on-surface-variant); font-size: 12px; line-height: 1.45; }
