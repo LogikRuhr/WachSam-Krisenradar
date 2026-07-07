@@ -1,5 +1,8 @@
 import Link from "next/link";
+import { ModusSwitcher } from "@/components/ModusSwitcher";
+import { WerkzeugeDrawer } from "@/components/WerkzeugeDrawer";
 import { auth, isAuthRuntimeConfigured, signOut } from "@/lib/auth";
+import { getCurrentUserModus } from "@/lib/use-user-modus";
 
 const tabs = [
   ["/kosten", "Haushalt"],
@@ -8,12 +11,12 @@ const tabs = [
   ["/woche", "Woche"],
   ["/kaskaden", "Wirkungsketten"],
   ["/massnahmen", "Maßnahmen"],
-  ["/quellen", "Quellen"],
 ];
 
 export async function TopNav() {
   const session = isAuthRuntimeConfigured() ? await auth() : null;
   const isSignedIn = !!session?.user;
+  const currentModus = isSignedIn ? await getCurrentUserModus() : null;
 
   async function logoutAction() {
     "use server";
@@ -33,6 +36,8 @@ export async function TopNav() {
         ))}
       </nav>
       <div className="nav-tools">
+        <ModusSwitcher initialModus={currentModus} isSignedIn={isSignedIn} />
+        <WerkzeugeDrawer />
         {isSignedIn ? (
           <div className="auth-chip">
             <Link href="/profil">Mein Bereich</Link>

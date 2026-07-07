@@ -6,8 +6,11 @@ const publicRoutes = [
   { path: "/woche", title: /Die Woche im Überblick/i },
   { path: "/lagebild", title: /Deutschland in zehn Bereichen/i },
   { path: "/kosten", title: /Was teurer werden kann/i },
+  { path: "/versorgung", title: /Was knapp werden kann/i },
   { path: "/massnahmen", title: /Was ich tun kann/i },
   { path: "/quellen", title: /Quellen & Methodik/i },
+  { path: "/governance", title: /Versprechen und Realität/i },
+  { path: "/indikatoren", title: /Worauf WachSam achtet/i },
 ];
 
 test.describe("public WachSam smoke", () => {
@@ -54,6 +57,27 @@ test.describe("public WachSam smoke", () => {
     await page.locator(".pfad-hub").getByRole("link", { name: /Aktuelle Lage ansehen/ }).click();
     await expect(page).toHaveURL(/\/lagebild$/);
     await expect(page.getByRole("main")).toContainText(/Deutschland in zehn Bereichen/i);
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("opens the tools drawer and links secondary routes", async ({ page }) => {
+    await page.goto("/");
+
+    await page.getByRole("button", { name: "Werkzeuge öffnen" }).click();
+    const drawer = page.getByRole("dialog", { name: "Werkzeuge" });
+    await expect(drawer).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "Versorgung" })).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "Quellen" })).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "Vertrauenslage" })).toBeVisible();
+    await expect(drawer.getByRole("link", { name: "Indikatoren" })).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Werkzeuge öffnen" }).click();
+    await page.getByRole("dialog", { name: "Werkzeuge" }).getByRole("link", { name: "Indikatoren" }).click();
+    await expect(page).toHaveURL(/\/indikatoren$/);
+    await expect(page.getByRole("main")).toContainText(/Worauf WachSam achtet/i);
     await expectNoHorizontalOverflow(page);
   });
 
