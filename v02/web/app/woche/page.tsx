@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DbNotice } from "@/components/DbNotice";
+import { LageViewsNav } from "@/components/LageViewsNav";
 import { SectionHeader } from "@/components/SectionHeader";
 import { ThemeStateBadge } from "@/components/ThemeStateBadge";
 import { type ThemeState } from "@/lib/themes";
@@ -42,6 +43,8 @@ export default async function WochePage() {
           zuletzt veröffentlichten Indikatorwerten abgeleitet.
         </p>
       </SectionHeader>
+
+      <LageViewsNav current="woche" />
 
       {!connected ? <DbNotice /> : null}
 

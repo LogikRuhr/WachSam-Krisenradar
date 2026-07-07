@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DbNotice } from "@/components/DbNotice";
+import { LageViewsNav } from "@/components/LageViewsNav";
 import { SectionHeader } from "@/components/SectionHeader";
 import { Verdict } from "@/components/Verdict";
 import { VitalsBoard } from "@/components/VitalsBoard";
@@ -54,6 +55,7 @@ export default async function LagePage() {
     return (
       <main className="page-shell" aria-labelledby="page-title">
         <SectionHeader label="Gesamtstand" title="Deutschland im Überblick" />
+        <LageViewsNav current="gesamtstand" />
         <DbNotice error={error} />
       </main>
     );
@@ -84,6 +86,8 @@ export default async function LagePage() {
           würde sich die Einschätzung ändern — und welche Vitalwerte tragen das Bild?
         </p>
       </SectionHeader>
+
+      <LageViewsNav current="gesamtstand" />
 
       <Verdict verdict={verdict} stand={verdictStand} />
 

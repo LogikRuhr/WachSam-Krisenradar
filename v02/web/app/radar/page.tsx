@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { DbNotice } from "@/components/DbNotice";
+import { LageViewsNav } from "@/components/LageViewsNav";
 import { RegionSwitcher } from "@/components/RegionSwitcher";
 import { ScaleLegend } from "@/components/ScaleLegend";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -31,6 +32,8 @@ export default async function RadarPage() {
           {warnlageStand ? `Stand amtliche Warnlage: ${warnlageStand}` : "Stand amtliche Warnlage: ausstehend"}
         </p>
       </SectionHeader>
+
+      <LageViewsNav current="radar" />
 
       {!connected ? <DbNotice /> : null}
 
