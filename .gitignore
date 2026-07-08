@@ -53,3 +53,8 @@ outputs/**/*.json
 outputs/**/*.csv
 outputs/**/*.sqlite
 outputs/**/*.db
+outputs/daily-*.md
+outputs/security-secret-sweep-*.md
+!outputs/daily-findings-*.md
+!outputs/*-findings-*.md
+!outputs/findings/**/*.md

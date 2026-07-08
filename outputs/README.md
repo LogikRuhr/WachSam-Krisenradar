@@ -17,3 +17,17 @@ YYYY-MM-DD-kurzer-titel.md
 ```
 
 HTML-Mockups, Screenshots und Tool-Rohdaten bleiben lokal oder gitignored, außer sie werden ausdrücklich als dauerhaftes Projektartefakt freigegeben.
+
+Routine-Daily-Reports bleiben untracked:
+
+```text
+daily-*.md
+security-secret-sweep-*.md
+```
+
+Wenn ein Daily-Run echte Findings enthält, wird er bewusst als trackbares Artefakt benannt:
+
+```text
+daily-findings-YYYY-MM-DD.md
+YYYY-MM-DD-findings-kurzer-titel.md
+```
