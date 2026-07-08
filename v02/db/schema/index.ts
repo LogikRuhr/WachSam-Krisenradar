@@ -518,7 +518,7 @@ export const cascadeIndicatorLinksRelations = relations(cascadeIndicatorLinks, (
 
 /**
  * In-App-Feedback der Bürger:innen. Anonym erlaubt (userId nullable, set null
- * beim Löschen des Kontos); contactEmail rein freiwillig. Kein IP-/Tracking-Feld —
+ * beim Löschen des Kontos). Kein Kontaktfeld, kein IP-/Tracking-Feld -
  * DSGVO-minimal. Auswertung über das Editorial-CMS (editor/admin).
  */
 export const feedback = pgTable("feedback", {
@@ -528,7 +528,6 @@ export const feedback = pgTable("feedback", {
   message: text("message").notNull(),
   pagePath: text("page_path"),
   rating: integer("rating"),
-  contactEmail: text("contact_email"),
   createdAt,
 });
 

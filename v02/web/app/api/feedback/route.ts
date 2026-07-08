@@ -67,7 +67,6 @@ export async function POST(request: Request) {
     message: parsed.data.message,
     pagePath: parsed.data.pagePath ?? null,
     rating: parsed.data.rating ?? null,
-    contactEmail: parsed.data.contactEmail ?? null,
   });
 
   return NextResponse.json({ ok: true });

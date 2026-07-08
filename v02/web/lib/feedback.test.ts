@@ -1,13 +1,17 @@
 import assert from "node:assert/strict";
 import { parseFeedbackInput } from "./feedback";
 
+function assertNoContactEmail(data: object, message: string) {
+  assert.equal(Object.prototype.hasOwnProperty.call(data, "contactEmail"), false, message);
+}
+
 // --- Gültige Minimaleingabe: Kategorie-Default, getrimmte Nachricht ------------
 
 const ok = parseFeedbackInput({ message: "Sehr hilfreiche Einordnung." });
 assert.equal(ok.ok, true, "valide Minimaleingabe");
 assert.equal(ok.ok && ok.data.category, "sonstiges", "fehlende Kategorie → Default sonstiges");
 assert.equal(ok.ok && ok.data.rating, undefined, "kein Rating → undefined");
-assert.equal(ok.ok && ok.data.contactEmail, undefined, "keine E-Mail → undefined");
+if (ok.ok) assertNoContactEmail(ok.data, "FeedbackData enthält kein contactEmail");
 
 const trimmed = parseFeedbackInput({ message: "   knapp daneben   " });
 assert.equal(trimmed.ok && trimmed.data.message, "knapp daneben", "Nachricht wird getrimmt");
@@ -31,14 +35,13 @@ assert.equal(parseFeedbackInput({ message: "passt schon", rating: 9 }).ok, false
 assert.equal(parseFeedbackInput({ message: "passt schon", rating: 0 }).ok, false, "Rating < 1 → Fehler");
 assert.equal(parseFeedbackInput({ message: "passt schon", rating: 2.5 }).ok, false, "Rating nicht ganzzahlig → Fehler");
 
-// --- Kontakt-E-Mail (freiwillig) ------------------------------------------------
+// --- Kontakt-E-Mail wird als unbekanntes Feld ignoriert -------------------------
 
-const withMail = parseFeedbackInput({ message: "passt schon", contactEmail: "a@b.de" });
-assert.equal(withMail.ok && withMail.data.contactEmail, "a@b.de", "gültige E-Mail bleibt erhalten");
-assert.equal(parseFeedbackInput({ message: "passt schon", contactEmail: "keine-mail" }).ok, false, "ungültige E-Mail → Fehler");
-const emptyMail = parseFeedbackInput({ message: "passt schon", contactEmail: "" });
-assert.equal(emptyMail.ok, true, "leere E-Mail erlaubt");
-assert.equal(emptyMail.ok && emptyMail.data.contactEmail, undefined, "leere E-Mail → undefined (nicht gespeichert)");
+const withIgnoredMail = parseFeedbackInput({ message: "passt schon", contactEmail: "keine-mail" });
+assert.equal(withIgnoredMail.ok, true, "contactEmail wird nicht validiert");
+if (withIgnoredMail.ok) {
+  assertNoContactEmail(withIgnoredMail.data, "contactEmail wird nicht zurückgegeben");
+}
 
 // --- Honeypot -------------------------------------------------------------------
 

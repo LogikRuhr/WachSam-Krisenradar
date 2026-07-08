@@ -24,7 +24,6 @@ export function FeedbackWidget() {
     const payload = {
       category: String(data.get("category") ?? "sonstiges"),
       message: String(data.get("message") ?? ""),
-      contactEmail: String(data.get("contactEmail") ?? ""),
       rating: ratingRaw ? Number(ratingRaw) : undefined,
       website: String(data.get("website") ?? ""),
       pagePath: pathname,
@@ -92,16 +91,6 @@ export function FeedbackWidget() {
               ))}
             </select>
 
-            <label htmlFor="fb-email">E-Mail für Rückfragen (optional, freiwillig)</label>
-            <input
-              id="fb-email"
-              name="contactEmail"
-              type="email"
-              className="input-mono"
-              autoComplete="email"
-              maxLength={240}
-            />
-
             {/* Honeypot — für Menschen unsichtbar, fängt Bots ab. */}
             <div className="feedback-hp" aria-hidden="true">
               <label htmlFor="fb-website">Website (bitte leer lassen)</label>
@@ -109,8 +98,8 @@ export function FeedbackWidget() {
             </div>
 
             <p className="feedback-hint mono-label">
-              Bitte keine sensiblen oder Gesundheitsdaten angeben. Die E-Mail ist freiwillig und wird
-              nur für eine mögliche Rückfrage genutzt.
+              Bitte keine sensiblen Daten oder Kontaktangaben angeben. Feedback ist ein Einweg-Hinweis
+              zur Verbesserung von WachSam.
             </p>
 
             {status === "error" && error ? (

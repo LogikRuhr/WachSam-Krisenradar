@@ -69,6 +69,20 @@ assertDoesNotInclude("web/lib/auth.ts", "build-placeholder-resend-key", "auth ru
 assertIncludes("web/app/login/page.tsx", "assertAuthRuntimeReady", "login action must fail explicitly when auth runtime env is missing");
 assertIncludes("web/app/register/page.tsx", "assertAuthRuntimeReady", "register action must fail explicitly when auth runtime env is missing");
 
+for (const file of [
+  "web/lib/feedback.ts",
+  "web/app/api/feedback/route.ts",
+  "web/components/FeedbackWidget.tsx",
+  "web/app/admin/feedback/page.tsx",
+]) {
+  assertDoesNotInclude(file, "contactEmail", "active feedback web paths must not accept, render, or persist contactEmail");
+  assertDoesNotInclude(file, "contact_email", "active feedback web paths must not persist contact_email");
+}
+assertDoesNotInclude("web/app/admin/feedback/page.tsx", "<th>Kontakt</th>", "feedback admin table must not expose a contact column");
+assertDoesNotInclude("web/app/admin/feedback/page.tsx", 'data-label="Kontakt"', "feedback admin rows must not expose a contact cell");
+assertDoesNotInclude("web/app/datenschutz/page.tsx", "freiwillige Kontakt-E-Mail", "privacy copy must not describe feedback contact email collection");
+assertIncludes("web/app/datenschutz/page.tsx", "keine Kontaktadressen", "privacy copy must state that feedback stores no contact addresses");
+
 assertIncludes("db/package.json", "\"generate\": \"drizzle-kit generate\"", "db generate script must be Windows-compatible");
 assertIncludes("web/package.json", "eslint .", "lint must be non-interactive and not use deprecated next lint");
 

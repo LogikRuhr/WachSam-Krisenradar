@@ -17,8 +17,7 @@ export default async function AdminFeedbackPage() {
         <p className="mono-label">Nutzer-Feedback</p>
         <h1 className="focus-title">Feedback-Eingang</h1>
         <p className="lead">
-          In-App-Feedback der Besucher:innen, neueste zuerst. Anonyme Einträge ohne Nutzer-ID;
-          E-Mail nur, wenn freiwillig angegeben.
+          In-App-Feedback der Besucher:innen, neueste zuerst. Anonyme Einträge ohne Nutzer-ID.
         </p>
       </header>
       <div className="admin-table-wrap">
@@ -30,7 +29,6 @@ export default async function AdminFeedbackPage() {
               <th>Bewertung</th>
               <th>Nachricht</th>
               <th>Seite</th>
-              <th>Kontakt</th>
               <th>Nutzer-ID</th>
             </tr>
           </thead>
@@ -46,7 +44,6 @@ export default async function AdminFeedbackPage() {
                 <td data-label="Seite">
                   <code>{row.pagePath ?? "—"}</code>
                 </td>
-                <td data-label="Kontakt">{row.contactEmail ?? "—"}</td>
                 <td data-label="Nutzer-ID">
                   <code>{row.userId ?? "anonym"}</code>
                 </td>
@@ -54,7 +51,7 @@ export default async function AdminFeedbackPage() {
             ))}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={7}>Noch kein Feedback eingegangen.</td>
+                <td colSpan={6}>Noch kein Feedback eingegangen.</td>
               </tr>
             ) : null}
           </tbody>
