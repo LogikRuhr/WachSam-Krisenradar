@@ -27,7 +27,9 @@ const adminPermissions = read("web/lib/admin/permissions.ts");
 const publicData = read("web/lib/public-data.ts");
 
 assert.equal(middleware.includes("matcher: []"), false, "middleware must not be disabled with an empty matcher");
-assertIncludes("web/middleware.ts", "NextAuth(authConfig)", "protected routes must use the shared edge-safe auth config");
+assert.equal(middleware.includes("NextAuth(authConfig)"), false, "middleware must not decode database session cookies as JWT");
+assertIncludes("web/middleware.ts", "hasSessionCookie(request)", "protected routes must keep a session-cookie gate");
+assertIncludes("web/middleware.ts", 'loginUrl.pathname = "/login"', "protected routes must redirect unauthenticated users to login");
 assertIncludes("web/auth.config.ts", 'path.startsWith("/profil")', "profile route must stay protected after W1.5");
 assertIncludes("web/auth.config.ts", 'path.startsWith("/admin")', "admin routes must be protected for W1.6a+");
 assertIncludes("web/auth.config.ts", 'role === "editor" || role === "admin"', "admin gate must require editor/admin role");
