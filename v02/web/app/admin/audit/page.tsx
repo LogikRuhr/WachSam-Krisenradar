@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { AdminAuditTable } from "@/components/admin/AdminAuditTable";
 import { listAuditEvents } from "@/lib/admin/editorial-read";
+import { withEditorRedirect } from "@/lib/admin/redirect";
 
 export default async function AdminAuditPage() {
-  const events = await listAuditEvents(150);
+  const events = await withEditorRedirect(() => listAuditEvents(150));
 
   return (
     <section>

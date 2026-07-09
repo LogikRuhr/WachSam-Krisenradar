@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { auth } from "../auth";
+import { auth, isAuthRuntimeConfigured } from "../auth";
 import { db, schema } from "../db";
 
 export type EditorRole = "editor" | "admin";
@@ -12,6 +12,9 @@ export class NotAuthorizedError extends Error {
 }
 
 export async function requireEditorRole(): Promise<{ userId: string; role: EditorRole }> {
+  if (!isAuthRuntimeConfigured()) {
+    throw new NotAuthorizedError("Auth-Runtime nicht konfiguriert.");
+  }
   const session = await auth();
   if (!session?.user?.id) {
     throw new NotAuthorizedError("Keine Session — Login erforderlich.");

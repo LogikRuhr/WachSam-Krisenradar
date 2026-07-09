@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
@@ -19,20 +19,29 @@ function assertIncludes(file: string, expected: string, reason: string) {
   assert.equal(content.includes(expected), true, `${file}: ${reason}`);
 }
 
-const middleware = read("web/middleware.ts");
+function assertFileMissing(file: string, reason: string) {
+  assert.equal(existsSync(join(root, file)), false, `${file}: ${reason}`);
+}
+
 const authConfig = read("web/auth.config.ts");
 const authRuntime = read("web/lib/auth.ts");
 const adminEditorial = read("web/lib/admin/editorial.ts");
 const adminPermissions = read("web/lib/admin/permissions.ts");
 const publicData = read("web/lib/public-data.ts");
 
-assert.equal(middleware.includes("matcher: []"), false, "middleware must not be disabled with an empty matcher");
-assertIncludes("web/middleware.ts", "NextAuth(authConfig)", "protected routes must use the shared edge-safe auth config");
-assertIncludes("web/auth.config.ts", 'path.startsWith("/profil")', "profile route must stay protected after W1.5");
-assertIncludes("web/auth.config.ts", 'path.startsWith("/admin")', "admin routes must be protected for W1.6a+");
+assertFileMissing("web/middleware.ts", "database-session auth must be enforced by node server checks, not edge cookie gates");
+assertIncludes("web/app/profil/page.tsx", 'redirect("/login")', "profile route must stay protected after W1.5");
+assertIncludes("web/app/admin/layout.tsx", "requireEditorRole", "admin routes must be protected for W1.6a+");
+assertIncludes("web/app/admin/layout.tsx", 'dynamic = "force-dynamic"', "admin routes must not prerender auth redirects");
+assertIncludes("web/app/review/layout.tsx", "requireEditorRole", "review routes must be protected for W1.6a+");
+assertIncludes("web/app/review/layout.tsx", 'dynamic = "force-dynamic"', "review routes must not prerender auth redirects");
+assertIncludes("web/lib/admin/permissions.ts", "isAuthRuntimeConfigured", "admin role checks must not call auth() when DB auth runtime is missing");
+assertIncludes("web/lib/admin/redirect.ts", 'redirect("/login")', "admin/review page loaders must redirect cleanly on auth failure");
+assertIncludes("web/app/admin/page.tsx", "withEditorRedirect", "admin overview must redirect auth failures at page boundary");
+assertIncludes("web/app/review/page.tsx", "withEditorRedirect", "review queue must redirect auth failures at page boundary");
 assertIncludes("web/auth.config.ts", 'role === "editor" || role === "admin"', "admin gate must require editor/admin role");
-const adminAuthBlock = authConfig.slice(authConfig.indexOf('path.startsWith("/admin")'));
-assert.equal(adminAuthBlock.includes("hasSessionCookie"), false, "admin routes must not rely on session-cookie presence only");
+assertDoesNotInclude("web/auth.config.ts", "hasSessionCookie", "middleware must not trust raw session-cookie presence");
+assertDoesNotInclude("web/auth.config.ts", "sessionCookiePresent", "middleware must not trust raw session-cookie presence");
 assert.equal(authConfig.includes("@wachsam/db"), false, "edge auth config must not import database schema");
 assert.equal(authConfig.includes("./lib/db"), false, "edge auth config must not import database client");
 assertIncludes("web/lib/auth.ts", "sessionUser.role", "node auth runtime must expose user role to the session");
@@ -82,6 +91,22 @@ assertDoesNotInclude("web/app/admin/feedback/page.tsx", "<th>Kontakt</th>", "fee
 assertDoesNotInclude("web/app/admin/feedback/page.tsx", 'data-label="Kontakt"', "feedback admin rows must not expose a contact cell");
 assertDoesNotInclude("web/app/datenschutz/page.tsx", "freiwillige Kontakt-E-Mail", "privacy copy must not describe feedback contact email collection");
 assertIncludes("web/app/datenschutz/page.tsx", "keine Kontaktadressen", "privacy copy must state that feedback stores no contact addresses");
+
+assertDoesNotInclude("web/app/profil/profile-form.tsx", 'name="plz"', "profile form must not collect postal codes");
+assertDoesNotInclude("web/components/HouseholdCheck.tsx", "check-plz", "anonymous household check must not ask for postal codes");
+assertIncludes("web/lib/profile.ts", "plz: null", "profile writes must clear legacy postal code storage");
+assertIncludes("web/app/datenschutz/page.tsx", "keine PLZ", "privacy copy must state that household profile stores no postal code");
+assertDoesNotInclude("web/lib/use-user-modus.ts", "plz:", "profile helper must not expose postal codes");
+assertDoesNotInclude("web/lib/household-check.ts", "plz:", "household check profile input must not accept postal codes");
+assertDoesNotInclude("web/lib/personalization.ts", "plz:", "personalization profile input must not accept postal codes");
+assertDoesNotInclude("web/lib/onboarding.ts", "PLZ", "active onboarding copy must not ask for postal codes");
+
+assertIncludes("web/lib/watchlist.ts", "onConflictDoNothing", "watchlist add must be idempotent under duplicate submissions");
+assertIncludes("web/lib/watchlist.ts", "eq(userWatchlistItems.userId, userId)", "watchlist delete must stay scoped to current user");
+
+assertIncludes("web/components/RegionSwitcher.tsx", "Regionalisiert nur die DWD-Warnlage", "region selector must explain its limited scope");
+assertIncludes("web/app/radar/page.tsx", "ausschließlich die amtliche DWD-Warnlage", "radar page must explain regional filter scope");
+assertDoesNotInclude("web/lib/indicator-zones.ts", "Infinity", "injection period must not emit non-finite rates");
 
 assertIncludes("db/package.json", "\"generate\": \"drizzle-kit generate\"", "db generate script must be Windows-compatible");
 assertIncludes("web/package.json", "eslint .", "lint must be non-interactive and not use deprecated next lint");

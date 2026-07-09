@@ -7,7 +7,7 @@ import { ProfileStatus } from "@/components/ProfileStatus";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SignalChain } from "@/components/SignalChain";
 import { WatchlistPanel } from "@/components/WatchlistPanel";
-import { auth } from "@/lib/auth";
+import { auth, isAuthRuntimeConfigured } from "@/lib/auth";
 import {
   aufwandLabel,
   bereichLabel,
@@ -39,6 +39,9 @@ function formatStand(value: Date | string | null | undefined): string | null {
 }
 
 export default async function ProfilPage() {
+  if (!isAuthRuntimeConfigured()) {
+    redirect("/login");
+  }
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) {
@@ -211,7 +214,6 @@ export default async function ProfilPage() {
         <ProfileForm
           action={upsertHouseholdAction}
           defaultModus={household?.modus ?? "familie"}
-          defaultPlz={household?.plz ?? ""}
           defaultHeizart={household?.heizart ?? "unbekannt"}
         />
       </section>
@@ -222,7 +224,7 @@ export default async function ProfilPage() {
         <p>
           WachSam sortiert öffentlich einsehbare Lage-Einordnungen nach deinem Haushalt. Die Hinweise sind eine ruhige
           Orientierung — keine Finanz-, Rechts- oder medizinische Beratung und keine sichere Vorhersage. Gespeichert sind
-          Modus, PLZ, Heizart und bei Nutzung der Watchlist die IDs beobachteter öffentlicher Lagekarten; keine Verknüpfung
+          Modus, Heizart und bei Nutzung der Watchlist die IDs beobachteter öffentlicher Lagekarten; keine Verknüpfung
           mit Tracking oder Werbung.
         </p>
       </section>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminItemsTable } from "@/components/admin/AdminItemsTable";
 import { getTypeMeta, listEditorialItems, parseEditorialType } from "@/lib/admin/editorial-read";
+import { withEditorRedirect } from "@/lib/admin/redirect";
 
 export default async function AdminTypePage({ params }: { params: Promise<{ type: string }> }) {
   const { type: typeParam } = await params;
@@ -9,7 +10,7 @@ export default async function AdminTypePage({ params }: { params: Promise<{ type
   if (!itemType) notFound();
 
   const meta = getTypeMeta(itemType);
-  const items = await listEditorialItems(itemType);
+  const items = await withEditorRedirect(() => listEditorialItems(itemType));
 
   return (
     <section>

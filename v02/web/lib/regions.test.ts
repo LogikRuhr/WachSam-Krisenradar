@@ -29,5 +29,7 @@ assert.equal(regionName("XX"), "Bundesweit", "unbekannter Code → Bundesweit (k
 assert.equal(regionName("NS"), "Niedersachsen", "live-verifizierter Code NS löst auf");
 assert.equal(regionName("MV"), "Mecklenburg-Vorpommern", "live-verifizierter Code MV löst auf");
 assert.equal(regionName("SH"), "Schleswig-Holstein", "live-verifizierter Code SH löst auf");
+assert.equal(regionName("NRW"), "Nordrhein-Westfalen", "NRW löst auf");
+assert.equal(regionName("NW"), "Nordrhein-Westfalen", "DWD-Alias NW wird auf NRW normalisiert");
 
 console.log("regions.test.ts ok");

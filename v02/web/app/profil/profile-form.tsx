@@ -22,11 +22,10 @@ const heizarten: Array<{ value: HouseholdHeizart; label: string }> = [
 type ProfileFormProps = {
   action: (previousState: ProfileActionState, formData: FormData) => Promise<ProfileActionState>;
   defaultModus: HouseholdModus;
-  defaultPlz: string;
   defaultHeizart: HouseholdHeizart;
 };
 
-export function ProfileForm({ action, defaultModus, defaultPlz, defaultHeizart }: ProfileFormProps) {
+export function ProfileForm({ action, defaultModus, defaultHeizart }: ProfileFormProps) {
   const [state, formAction, isPending] = useActionState(action, { ok: false, message: null });
 
   return (
@@ -52,24 +51,6 @@ export function ProfileForm({ action, defaultModus, defaultPlz, defaultHeizart }
         </div>
       </fieldset>
 
-      <label className="auth-label" htmlFor="plz">
-        PLZ
-      </label>
-      <input
-        className="input-mono"
-        id="plz"
-        name="plz"
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]{5}"
-        maxLength={5}
-        minLength={5}
-        autoComplete="postal-code"
-        placeholder="12345"
-        defaultValue={defaultPlz}
-        required
-      />
-
       <label className="auth-label" htmlFor="heizart">
         Heizart
       </label>
@@ -91,7 +72,7 @@ export function ProfileForm({ action, defaultModus, defaultPlz, defaultHeizart }
         {isPending ? "Speichert..." : "Profil speichern"}
       </button>
 
-      <div className="dsgvo-hinweis">Nur Modus, PLZ und Heizart gespeichert. Keine Verknüpfung mit Tracking oder Werbung.</div>
+      <div className="dsgvo-hinweis">Nur Modus und Heizart gespeichert. Keine PLZ, keine Verknüpfung mit Tracking oder Werbung.</div>
     </form>
   );
 }

@@ -99,12 +99,11 @@ export function HouseholdCheck({
 }: HouseholdCheckProps) {
   const [modus, setModus] = useState<HouseholdModus>("familie");
   const [heizart, setHeizart] = useState<HouseholdHeizart>("unbekannt");
-  const [plz, setPlz] = useState("");
   const [hasAdjustedProfile, setHasAdjustedProfile] = useState(false);
 
   const result = useMemo(
-    () => deriveHouseholdCheck({ profile: { modus, heizart, plz: plz.trim() || null }, chains }),
-    [chains, heizart, modus, plz],
+    () => deriveHouseholdCheck({ profile: { modus, heizart }, chains }),
+    [chains, heizart, modus],
   );
   const costView = useMemo(
     () => deriveHouseholdCostView({ profile: { modus, heizart }, inputs: costInputs }),
@@ -118,7 +117,7 @@ export function HouseholdCheck({
   const nextStepText = result.nextStep?.text ?? "Aktuelle Abschläge und Fixkosten ruhig gegen den letzten Verbrauch prüfen.";
   const hasResultDetails =
     result.secondaryRelevant.length > 0 || result.secondaryCostOrSupply.length > 0 || result.indirectAreas.length > 0;
-  const hasProfileInput = hasAdjustedProfile || heizart !== "unbekannt" || plz.length === 5;
+  const hasProfileInput = hasAdjustedProfile || heizart !== "unbekannt";
   const hasFirstValue =
     connected && hasProfileInput && (result.primaryConcern !== null || result.primaryImpact !== null || result.primaryAction !== null);
   const showCostPanel = connected && (costView.ranges.length > 0 || costView.unavailable.length > 0);
@@ -201,24 +200,6 @@ export function HouseholdCheck({
             </select>
           </div>
 
-          <div className="household-field household-field-wide">
-            <label className="auth-label" htmlFor="check-plz">PLZ optional</label>
-            <input
-              className="input-mono"
-              id="check-plz"
-              name="plz"
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]{5}"
-              maxLength={5}
-              placeholder="z.B. 45127"
-              value={plz}
-              onChange={(event) => {
-                setPlz(event.target.value.replace(/\D/g, "").slice(0, 5));
-                setHasAdjustedProfile(true);
-              }}
-            />
-          </div>
           <p className="household-check-note">{result.privacy}</p>
         </form>
 

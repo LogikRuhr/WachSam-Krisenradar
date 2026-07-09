@@ -199,7 +199,7 @@ export function personalNote(
 
 // --- Member-Bereich: Profilstatus & Relevanz ---------------------------------
 
-export type ProfileField = { key: "modus" | "plz" | "heizart"; label: string; set: boolean };
+export type ProfileField = { key: "modus" | "heizart"; label: string; set: boolean };
 export type ProfileCompleteness = { filled: number; total: number; fields: ProfileField[] };
 
 /**
@@ -208,12 +208,10 @@ export type ProfileCompleteness = { filled: number; total: number; fields: Profi
  */
 export function profileCompleteness(profile: {
   modus: HouseholdModus | null;
-  plz: string | null;
   heizart: HouseholdHeizart | null;
 }): ProfileCompleteness {
   const fields: ProfileField[] = [
     { key: "modus", label: "Haushaltsmodus", set: profile.modus != null },
-    { key: "plz", label: "Postleitzahl", set: profile.plz != null && profile.plz.trim() !== "" },
     { key: "heizart", label: "Heizart", set: profile.heizart != null && profile.heizart !== "unbekannt" },
   ];
   return { filled: fields.filter((field) => field.set).length, total: fields.length, fields };

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { saveEditorialItem } from "@/app/admin/actions";
 import { AdminEditorForm } from "@/components/admin/AdminEditorForm";
 import { getEditorialItem, getTypeMeta, parseEditorialType } from "@/lib/admin/editorial-read";
+import { withEditorRedirect } from "@/lib/admin/redirect";
 import { editorialStatusExplain, editorialStatusLabel } from "@/lib/editorial";
 
 function formatDate(value: Date | null) {
@@ -16,7 +17,7 @@ export default async function AdminEditItemPage({ params }: { params: Promise<{ 
   if (!itemType) notFound();
 
   const meta = getTypeMeta(itemType);
-  const item = await getEditorialItem(itemType, id);
+  const item = await withEditorRedirect(() => getEditorialItem(itemType, id));
   if (!item) notFound();
   const action = saveEditorialItem.bind(null, itemType, "update");
 

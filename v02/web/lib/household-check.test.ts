@@ -38,7 +38,7 @@ const mkChain = (
 });
 
 const result = deriveHouseholdCheck({
-  profile: { modus: "familie", heizart: "gas", plz: "45127" },
+  profile: { modus: "familie", heizart: "gas" },
   chains: [mkChain("industrie", "industrie", "kritisch", "steigend"), mkChain("energie", "energie", "beobachten")],
 });
 
@@ -52,9 +52,10 @@ assert.equal(result.secondaryCostOrSupply.length, 1, "kompakte Details zeigen nu
 assert.ok(result.nextStep?.text.includes("Gas") || result.nextStep?.text.includes("gas"), "nächster Prüfschritt nutzt vorhandene Heizart-Checkliste");
 assert.ok(result.boundary.includes("keine Beratung"), "Grenzhinweis nennt Beratungsausschluss");
 assert.ok(result.privacy.includes("nicht gespeichert"), "Privacy-Hinweis stellt klar, dass anonyme Eingaben nicht gespeichert werden");
+assert.ok(result.privacy.includes("keine PLZ"), "Privacy-Hinweis stellt klar, dass keine PLZ abgefragt wird");
 
 const many = deriveHouseholdCheck({
-  profile: { modus: "familie", heizart: "unbekannt", plz: null },
+  profile: { modus: "familie", heizart: "unbekannt" },
   chains: [
     mkChain("energy", "energie", "kritisch", "steigend"),
     mkChain("food", "lebensmittel", "kritisch"),
@@ -71,7 +72,7 @@ assert.equal(many.secondaryCostOrSupply.length, 2, "Detail-Wirkungen lassen die 
 assert.equal(many.notDirectlyRelevant.length, 2, "indirekte Treffer bleiben begrenzt");
 
 const lateImpact = deriveHouseholdCheck({
-  profile: { modus: "single", heizart: "unbekannt", plz: null },
+  profile: { modus: "single", heizart: "unbekannt" },
   chains: [
     mkChain("energy-no-impact", "energie", "kritisch", "steigend", { hasImpact: false }),
     mkChain("food-no-impact", "lebensmittel", "kritisch", "gleichbleibend", { hasImpact: false }),
@@ -87,7 +88,7 @@ assert.equal(lateImpact.primaryAction?.signal.id, "energy-no-impact", "primaere 
 assert.equal(lateImpact.costOrSupply.length, 1, "spaete echte Haushaltswirkung wird nicht ausgeblendet");
 
 const lateAction = deriveHouseholdCheck({
-  profile: { modus: "single", heizart: "unbekannt", plz: null },
+  profile: { modus: "single", heizart: "unbekannt" },
   chains: [
     mkChain("energy-no-action", "energie", "kritisch", "steigend", { hasImpact: false }),
     mkChain("food-no-action", "lebensmittel", "kritisch", "gleichbleibend", { hasImpact: false }),
@@ -97,7 +98,7 @@ const lateAction = deriveHouseholdCheck({
 
 assert.equal(lateAction.primaryAction?.signal.id, "finance-action", "wenn Top-Signale keine Massnahme haben, wird die naechste echte Massnahme genutzt");
 
-const empty = deriveHouseholdCheck({ profile: { modus: null, heizart: null, plz: null }, chains: [] });
+const empty = deriveHouseholdCheck({ profile: { modus: null, heizart: null }, chains: [] });
 assert.deepEqual(empty.relevant, [], "ohne Daten keine erfundenen relevanten Signale");
 assert.deepEqual(empty.costOrSupply, [], "ohne Daten keine erfundenen Kosten- oder Versorgungswirkungen");
 assert.deepEqual(empty.secondaryRelevant, [], "ohne Daten keine erfundenen Detailtreffer");

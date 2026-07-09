@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { requireEditorRole } from "@/lib/admin/permissions";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   try {
     await requireEditorRole();

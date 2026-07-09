@@ -15,7 +15,7 @@ from src.adapters.eia import EIAAdapter
 from src.adapters.fred import FREDAdapter
 from src.adapters.fao import FAOAdapter
 from src.adapters.pegelonline import PegelonlineAdapter
-from src.adapters.dwd import DWDAdapter, decode_warnwetter_response, summarize_warnings, summarize_by_state
+from src.adapters.dwd import DWDAdapter, decode_warnwetter_response, normalize_state_code, summarize_warnings, summarize_by_state
 from src.adapters.nina import NINAAdapter
 from src.adapters.eurostat import EurostatAdapter
 from src.adapters.warning_indicators import WarningIndicatorsAdapter
@@ -593,6 +593,26 @@ def test_dwd_summarize_by_state_counts_and_max_level():
     assert records["BY"]["warning_count"] == 1
     assert records["TH"]["warning_count"] == 0
     assert records["TH"]["max_level"] == 0
+
+
+def test_dwd_normalizes_north_rhine_westphalia_state_codes():
+    assert normalize_state_code("NW") == "NRW"
+    assert normalize_state_code("NRW") == "NRW"
+
+    payload = {
+        "time": 1751600000000,
+        "warnings": {
+            "r1": [
+                {"level": 2, "event": "WINDBÖEN", "stateShort": "NW"},
+                {"level": 3, "event": "GEWITTER", "stateShort": "NRW"},
+            ],
+        },
+    }
+
+    records = {r["region_code"]: r for r in summarize_by_state(payload)}
+    assert records["NRW"]["warning_count"] == 2
+    assert records["NRW"]["max_level"] == 3
+    assert "NW" not in records
 
 
 def test_dwd_summarize_by_state_resets_all_states_when_no_warnings():

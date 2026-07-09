@@ -2,13 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EditorialReviewDetail } from "@/components/review/EditorialReviewDetail";
 import { getMobileEditorialReviewItem, parseEditorialType } from "@/lib/admin/editorial-read";
+import { withEditorRedirect } from "@/lib/admin/redirect";
 
 export default async function ReviewDetailPage({ params }: { params: Promise<{ type: string; id: string }> }) {
   const { type: typeParam, id } = await params;
   const itemType = parseEditorialType(typeParam);
   if (!itemType) notFound();
 
-  const item = await getMobileEditorialReviewItem(itemType, id);
+  const item = await withEditorRedirect(() => getMobileEditorialReviewItem(itemType, id));
   if (!item) notFound();
 
   return (

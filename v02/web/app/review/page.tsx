@@ -1,8 +1,9 @@
 import { EditorialReviewCard } from "@/components/review/EditorialReviewCard";
 import { getMobileEditorialReviewQueue } from "@/lib/admin/editorial-read";
+import { withEditorRedirect } from "@/lib/admin/redirect";
 
 export default async function ReviewPage() {
-  const queue = await getMobileEditorialReviewQueue(30);
+  const queue = await withEditorRedirect(() => getMobileEditorialReviewQueue(30));
 
   return (
     <section>

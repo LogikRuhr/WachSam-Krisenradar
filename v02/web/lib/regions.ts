@@ -35,9 +35,11 @@ export const BUNDESLAENDER: Bundesland[] = [
 ];
 
 const BUNDESLAND_BY_CODE = new Map(BUNDESLAENDER.map((land) => [land.code, land.name]));
+const REGION_CODE_ALIASES = new Map([["NW", "NRW"]]);
 
 /** Löst einen Bundesland-Code zum Anzeigenamen auf; null/leer/unbekannt → "Bundesweit" (nie ein Crash). */
 export function regionName(code: string | null | undefined): string {
   if (!code) return "Bundesweit";
-  return BUNDESLAND_BY_CODE.get(code) ?? "Bundesweit";
+  const normalized = REGION_CODE_ALIASES.get(code.toUpperCase()) ?? code.toUpperCase();
+  return BUNDESLAND_BY_CODE.get(normalized) ?? "Bundesweit";
 }

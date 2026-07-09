@@ -7,21 +7,13 @@ import { userWatchlistItems } from "@wachsam/db/schema";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { SignalChain } from "@/lib/public-data";
+import { isMissingWatchlistTable, parseWatchlistActionInput, WATCHLIST_ITEM_TYPE } from "./watchlist-core";
 
-export const WATCHLIST_ITEM_TYPE = "lagebild" as const;
+export { WATCHLIST_ITEM_TYPE } from "./watchlist-core";
 
 export type UserWatchlistState =
   | { available: true; itemIds: string[]; items: SignalChain[]; reason: null }
   | { available: false; itemIds: string[]; items: SignalChain[]; reason: "no_database" | "schema_pending" | "read_error" };
-
-function isMissingWatchlistTable(error: unknown): boolean {
-  const message = error instanceof Error ? error.message : String(error);
-  return message.includes("user_watchlist_items") && (message.includes("does not exist") || message.includes("42P01"));
-}
-
-function validItemId(value: string): boolean {
-  return /^[a-z0-9._:-]+$/i.test(value) && value.length <= 160;
-}
 
 export async function getUserWatchlistState(userId: string, chains: SignalChain[]): Promise<UserWatchlistState> {
   if (!db) return { available: false, itemIds: [], items: [], reason: "no_database" };
@@ -49,10 +41,9 @@ export async function toggleWatchlistItemAction(formData: FormData): Promise<voi
   const userId = session?.user?.id;
   if (!userId || !db) return;
 
-  const itemType = String(formData.get("itemType") ?? "");
-  const itemId = String(formData.get("itemId") ?? "");
-  const intent = String(formData.get("intent") ?? "");
-  if (itemType !== WATCHLIST_ITEM_TYPE || !validItemId(itemId)) return;
+  const parsed = parseWatchlistActionInput(formData);
+  if (!parsed.ok) return;
+  const { itemId, intent } = parsed;
 
   try {
     if (intent === "remove") {
@@ -66,27 +57,19 @@ export async function toggleWatchlistItemAction(formData: FormData): Promise<voi
           ),
         );
     } else if (intent === "add") {
-      const existing = await db
-        .select({ id: userWatchlistItems.id })
-        .from(userWatchlistItems)
-        .where(
-          and(
-            eq(userWatchlistItems.userId, userId),
-            eq(userWatchlistItems.itemType, WATCHLIST_ITEM_TYPE),
-            eq(userWatchlistItems.itemId, itemId),
-          ),
-        )
-        .limit(1);
-      if (existing.length === 0) {
-        await db.insert(userWatchlistItems).values({
+      await db
+        .insert(userWatchlistItems)
+        .values({
           id: randomUUID(),
           userId,
           itemType: WATCHLIST_ITEM_TYPE,
           itemId,
           createdAt: new Date(),
           updatedAt: new Date(),
+        })
+        .onConflictDoNothing({
+          target: [userWatchlistItems.userId, userWatchlistItems.itemType, userWatchlistItems.itemId],
         });
-      }
     }
   } catch (error) {
     if (!isMissingWatchlistTable(error)) throw error;

@@ -49,6 +49,8 @@ test.describe("public WachSam smoke", () => {
   test("shows the official Warnlage card on /radar even without a database", async ({ page }) => {
     await page.goto("/radar");
     await expect(page.getByRole("main")).toContainText("Radar-Stufe und Treiber-Zone");
+    await expect(page.getByLabel("Bundesland für amtliche Warnlage auswählen")).toBeVisible();
+    await expect(page.getByRole("main")).toContainText("Regionalisiert nur die DWD-Warnlage");
     const warnlageCard = page.getByRole("article", { name: /Themenkanal Akute Warnlage \(amtlich\)/i });
     await expect(warnlageCard).toBeVisible();
     await expect(warnlageCard).toContainText("Quelle: DWD (amtlich)");
@@ -112,6 +114,7 @@ test.describe("public WachSam smoke", () => {
 
     await expect(heading).toBeVisible();
     await expect(householdType).toBeVisible();
+    await expect(page.getByLabel(/PLZ/i)).toHaveCount(0);
     await expect(dataStatus).toBeVisible();
     await expect(onboarding).toBeVisible();
     await expect(priceRadar).toBeVisible();
