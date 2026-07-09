@@ -7,9 +7,10 @@ import { z } from "zod";
 import { households } from "@wachsam/db/schema";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { HEIZART_VALUES, MODUS_VALUES } from "@/lib/household-values";
 
-const modusValues = ["single", "familie", "selbststaendig", "rentner"] as const;
-const heizartValues = ["gas", "oel", "fernwaerme", "waermepumpe", "strom", "unbekannt"] as const;
+const modusValues = MODUS_VALUES;
+const heizartValues = HEIZART_VALUES;
 const profileSchema = z.object({
   modus: z.enum(modusValues, { message: "Bitte wähle einen gültigen Modus." }),
   heizart: z.enum(heizartValues, { message: "Bitte wähle eine gültige Heizart." }),

@@ -5,6 +5,7 @@ import {
   parseHousehold,
   serializeHousehold,
 } from "./household-cookie";
+import { HEIZART_VALUES, MODUS_VALUES } from "./household-values";
 
 // --- Cookie-Name und Max-Age -----------------------------------------------------
 
@@ -17,9 +18,6 @@ assert.equal(serializeHousehold("familie", "gas"), "familie|gas", "modus|heizart
 assert.equal(serializeHousehold("single", "unbekannt"), "single|unbekannt");
 
 // --- Round-Trip: parse(serialize(...)) ergibt dieselben Werte für jede Kombination
-
-const MODUS_VALUES = ["single", "familie", "selbststaendig", "rentner"] as const;
-const HEIZART_VALUES = ["gas", "oel", "fernwaerme", "waermepumpe", "strom", "unbekannt"] as const;
 
 for (const modus of MODUS_VALUES) {
   for (const heizart of HEIZART_VALUES) {

@@ -1,3 +1,4 @@
+import { HEIZART_VALUES, MODUS_VALUES } from "./household-values";
 import type { HouseholdHeizart, HouseholdModus } from "./profile";
 
 // Anonymer, rein funktionaler Cookie für die "Eingabe merken"-Funktion des
@@ -8,16 +9,6 @@ import type { HouseholdHeizart, HouseholdModus } from "./profile";
 
 export const HOUSEHOLD_COOKIE = "ws-household";
 export const HOUSEHOLD_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365; // 1 Jahr
-
-const MODUS_VALUES: readonly HouseholdModus[] = ["single", "familie", "selbststaendig", "rentner"];
-const HEIZART_VALUES: readonly HouseholdHeizart[] = [
-  "gas",
-  "oel",
-  "fernwaerme",
-  "waermepumpe",
-  "strom",
-  "unbekannt",
-];
 
 function isHouseholdModus(value: string): value is HouseholdModus {
   return (MODUS_VALUES as readonly string[]).includes(value);
