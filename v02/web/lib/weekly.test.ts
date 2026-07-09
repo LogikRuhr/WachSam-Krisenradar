@@ -46,11 +46,18 @@ function channel(overrides: Partial<WeeklyChannel>): WeeklyChannel {
   };
 }
 
-// keine Vorwoche-Stufe bekannt → keine Hochstufung, auch wenn "changed" true wäre
+// keine Vorwoche-Stufe bekannt und changed=false → keine Hochstufung
 assert.equal(
   isWeeklyUpgrade(channel({ stateNow: "erhoeht", stateWeekAgo: null, changed: false })),
   false,
   "ohne Vorwoche-Stufe keine Hochstufung",
+);
+
+// Short-Circuit-Guard: stateWeekAgo=null liefert false, auch wenn "changed" true ist
+assert.equal(
+  isWeeklyUpgrade(channel({ stateNow: "erhoeht", stateWeekAgo: null, changed: true })),
+  false,
+  "stateWeekAgo=null erzwingt false unabhaengig von changed",
 );
 
 // Stufe gestiegen (normal -> erhoeht) und changed=true → Hochstufung
