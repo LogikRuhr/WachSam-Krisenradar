@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { deriveHouseholdCostView, type HouseholdCostInput, type HouseholdCostView } from "@/lib/household-costs";
 import { deriveHouseholdCheck, type HouseholdCheckChain } from "@/lib/household-check";
+import { HOUSEHOLD_COOKIE, HOUSEHOLD_COOKIE_MAX_AGE_SECONDS, serializeHousehold } from "@/lib/household-cookie";
 import { buildPublicOnboardingSteps } from "@/lib/onboarding";
 import { aufwandLabel, bereichLabel } from "@/lib/personalization";
 import type { HouseholdHeizart, HouseholdModus } from "@/lib/profile";
@@ -33,6 +35,9 @@ type HouseholdCheckProps = {
   headingLevel?: "h1" | "h2";
   sourceCount?: number;
   latestStand?: string | null;
+  /** Gemerkte anonyme Eingabe aus dem ws-household-Cookie (siehe app/page.tsx). */
+  initialModus?: HouseholdModus;
+  initialHeizart?: HouseholdHeizart;
 };
 
 const COST_DATE_FMT = new Intl.DateTimeFormat("de-DE", { day: "numeric", month: "long", year: "numeric" });
@@ -96,10 +101,18 @@ export function HouseholdCheck({
   headingLevel = "h2",
   sourceCount = 0,
   latestStand,
+  initialModus,
+  initialHeizart,
 }: HouseholdCheckProps) {
-  const [modus, setModus] = useState<HouseholdModus>("familie");
-  const [heizart, setHeizart] = useState<HouseholdHeizart>("unbekannt");
+  const router = useRouter();
+  const [modus, setModus] = useState<HouseholdModus>(initialModus ?? "familie");
+  const [heizart, setHeizart] = useState<HouseholdHeizart>(initialHeizart ?? "unbekannt");
   const [hasAdjustedProfile, setHasAdjustedProfile] = useState(false);
+
+  function rememberHousehold(nextModus: HouseholdModus, nextHeizart: HouseholdHeizart) {
+    document.cookie = `${HOUSEHOLD_COOKIE}=${serializeHousehold(nextModus, nextHeizart)}; path=/; max-age=${HOUSEHOLD_COOKIE_MAX_AGE_SECONDS}; SameSite=Lax`;
+    router.refresh();
+  }
 
   const result = useMemo(
     () => deriveHouseholdCheck({ profile: { modus, heizart }, chains }),
@@ -173,8 +186,10 @@ export function HouseholdCheck({
               id="check-modus"
               value={modus}
               onChange={(event) => {
-                setModus(event.target.value as HouseholdModus);
+                const nextModus = event.target.value as HouseholdModus;
+                setModus(nextModus);
                 setHasAdjustedProfile(true);
+                rememberHousehold(nextModus, heizart);
               }}
             >
               {MODUS_OPTIONS.map((option) => (
@@ -190,8 +205,10 @@ export function HouseholdCheck({
               id="check-heizart"
               value={heizart}
               onChange={(event) => {
-                setHeizart(event.target.value as HouseholdHeizart);
+                const nextHeizart = event.target.value as HouseholdHeizart;
+                setHeizart(nextHeizart);
                 setHasAdjustedProfile(true);
+                rememberHousehold(modus, nextHeizart);
               }}
             >
               {HEIZART_OPTIONS.map((option) => (

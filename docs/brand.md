@@ -221,6 +221,8 @@ Der Modus ändert ausschließlich die **Sprache** der App — welche Beispiele i
 
 Sichtbar im UI durch einen ruhigen Modus-Switcher in der App-Shell (Drawer oder kompaktes Dropdown, kein prominenter Hero). Default ohne Login: kein Modus aktiv, App spricht modus-frei.
 
+Ausnahme für anonymes "Eingabe merken": Der öffentliche Haushalts-Check auf der Startseite darf eine anonyme Eingabe (Haushaltstyp/Heizart) über einen rein funktionalen, nicht-httpOnly Cookie (`ws-household`, siehe /datenschutz) zwischen Seitenaufrufen merken, damit die Formularfelder und die Sortierung der Startseite konsistent bleiben. Das bleibt brand-konform, solange (a) daraus kein eingeloggt-wirkendes Modus-Identitätsbadge entsteht — insbesondere keine Konto-Kennzeichnung wie "· dein Profil" für anonyme Nutzer — und (b) die Home ohne gesetzten Cookie weiterhin komplett modus-frei bleibt (keine Personalisierung, kein aktives Modus-Badge). Der Cookie ist kein Ersatz für das persistente Login-Profil, sondern nur eine anonyme Komfortfunktion.
+
 ### Editorial-Status-Indikatoren
 
 Pro Source und pro Item führt v0.3 einen Editorial-Status-Indikator ein als zusätzlicher Trust-Layer:

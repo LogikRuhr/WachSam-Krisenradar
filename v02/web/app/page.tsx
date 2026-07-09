@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { DbNotice } from "@/components/DbNotice";
 import { HouseholdCheck } from "@/components/HouseholdCheck";
@@ -8,8 +9,10 @@ import { PriceRadar } from "@/components/PriceRadar";
 import { SignalChain } from "@/components/SignalChain";
 import { Verdict } from "@/components/Verdict";
 import { VitalsBoard } from "@/components/VitalsBoard";
+import { auth, isAuthRuntimeConfigured } from "@/lib/auth";
+import { HOUSEHOLD_COOKIE, parseHousehold } from "@/lib/household-cookie";
 import { HOUSEHOLD_COST_INDICATOR_IDS, type HouseholdCostInput } from "@/lib/household-costs";
-import { computeVerdict, personalNote, type Verdict as VerdictData, type VerdictTone } from "@/lib/personalization";
+import { computeVerdict, personalNote, prioritizeSignalsForProfile, type Verdict as VerdictData, type VerdictTone } from "@/lib/personalization";
 import { getFrontDoorSignals, getHeadlineVitals, getIndicatorObservations, getIndicators, getNationalState, getPriceRadar } from "@/lib/public-data";
 import { getCurrentUserProfile } from "@/lib/use-user-modus";
 import { countWeeklyUpgrades, formatDeltaPercent, getWeeklyOverview } from "@/lib/weekly";
@@ -66,7 +69,19 @@ async function getHouseholdCostInputs(): Promise<HouseholdCostInput[]> {
 }
 
 export default async function HomePage() {
-  const profile = await getCurrentUserProfile();
+  // Effektives Personalisierungsprofil: eingeloggte Nutzer bekommen unverändert
+  // ihr gespeichertes Konto-Profil. Anonyme Nutzer OHNE Login bekommen nur dann
+  // eine Personalisierung, wenn sie ihre Eingabe im Haushalts-Check aktiv über
+  // den ws-household-Cookie gemerkt haben ("Eingabe merken", siehe
+  // HouseholdCheck.tsx). Ohne Login und ohne Cookie bleibt die Home modus-frei
+  // (Brand-Guardrail docs/brand.md: kein Modus aktiv als Default).
+  const authProfile = await getCurrentUserProfile();
+  const isLoggedIn = isAuthRuntimeConfigured() ? Boolean((await auth())?.user) : false;
+  const stored = parseHousehold((await cookies()).get(HOUSEHOLD_COOKIE)?.value ?? null);
+  const anonHasValues = stored.modus !== null || stored.heizart !== null;
+  const profile = isLoggedIn ? authProfile : anonHasValues ? stored : { modus: null, heizart: null };
+  const hasProfileValues = profile.modus !== null || profile.heizart !== null;
+
   const [signals, national, vitals, priceRadar, costInputs, weekly] = await Promise.all([
     getFrontDoorSignals(8),
     getNationalState(),
@@ -76,7 +91,12 @@ export default async function HomePage() {
     getWeeklyOverview(),
   ]);
   const verdict = computeVerdict(signals.rows.map((chain) => chain.signal));
-  const chainsWithImpact = signals.rows.filter((chain) => chain.impact).slice(0, 3);
+  // Nur bei effektivem Profil mit Werten nach Haushaltsrelevanz sortieren (siehe
+  // profil/lagebild); ohne Profil bleibt die bisherige, unpersonalisierte Reihenfolge.
+  const impactChains = signals.rows.filter((chain) => chain.impact);
+  const chainsWithImpact = hasProfileValues
+    ? prioritizeSignalsForProfile(impactChains, { heizart: profile.heizart }, 3)
+    : impactChains.slice(0, 3);
 
   // Wochen-Teaser: gleiche Ableitung wie /woche (countWeeklyUpgrades), aber nur
   // die kompakte Kurzfassung — kein eigenständiger Wert, keine Duplikation.
@@ -143,6 +163,8 @@ export default async function HomePage() {
         sourceCount={sourceCount}
         latestStand={formatStand(latestStand)}
         costInputs={costInputs}
+        initialModus={stored.modus ?? undefined}
+        initialHeizart={stored.heizart ?? undefined}
       />
 
       <section className="home-context-strip" aria-label="WachSam Kontext">
@@ -265,7 +287,10 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      <NutzenBoard activeModus={profile.modus} />
+      {/* Bewusst an authProfile statt am effektiven (auch anonymen) Profil: die
+          "· dein Profil"-Auszeichnung ist ein Konto-Identitätsmerkmal und darf
+          laut Brand-Guardrail nur für tatsächlich eingeloggte Nutzer erscheinen. */}
+      <NutzenBoard activeModus={authProfile.modus} />
 
       <section className="home-impact-band" aria-labelledby="haushalt-title">
         <div>
