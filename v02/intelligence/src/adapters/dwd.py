@@ -31,6 +31,10 @@ DWD_STATE_CODES = (
     "TH",
 )
 
+DWD_STATE_ALIASES = {
+    "NW": "NRW",
+}
+
 _LEVEL_TO_SEVERITY = {
     0: "stabil",
     1: "beobachten",
@@ -56,6 +60,11 @@ def _millis_to_iso(value: int | float | None) -> str | None:
     return datetime.fromtimestamp(value / 1000, tz=timezone.utc).isoformat()
 
 
+def normalize_state_code(value: object) -> str:
+    code = str(value or "unknown").strip().upper()
+    return DWD_STATE_ALIASES.get(code, code)
+
+
 def summarize_warnings(payload: dict) -> dict:
     warnings_by_region = payload.get("warnings") or {}
     warnings = [warning for region in warnings_by_region.values() for warning in region]
@@ -64,7 +73,7 @@ def summarize_warnings(payload: dict) -> dict:
     by_state: dict[str, int] = {}
     for warning in warnings:
         event = str(warning.get("event") or "unknown").lower()
-        state = str(warning.get("stateShort") or warning.get("state") or "unknown")
+        state = normalize_state_code(warning.get("stateShort") or warning.get("state"))
         by_event[event] = by_event.get(event, 0) + 1
         by_state[state] = by_state.get(state, 0) + 1
     return {
@@ -91,7 +100,7 @@ def summarize_by_state(payload: dict) -> list[dict]:
     }
     for region in warnings_by_region.values():
         for warning in region:
-            state = str(warning.get("stateShort") or warning.get("state") or "unknown")
+            state = normalize_state_code(warning.get("stateShort") or warning.get("state"))
             level = int(warning.get("level") or 0)
             entry = by_state.setdefault(
                 state, {"region_code": state, "warning_count": 0, "max_level": 0, "source": "dwd"}

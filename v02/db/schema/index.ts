@@ -126,7 +126,7 @@ export const households = pgTable("households", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   modus: householdModusEnum("modus").notNull(),
-  plz: text("plz").notNull(),
+  plz: text("plz"),
   heizart: heizartEnum("heizart").notNull().default("unbekannt"),
   createdAt,
   updatedAt,

@@ -25,9 +25,9 @@ export function RegionSwitcher({ currentRegion }: { currentRegion: string | null
 
   return (
     <div className="region-switcher">
-      <label className="auth-label" htmlFor="region-select">Bundesland</label>
+      <label className="auth-label" htmlFor="region-select">Bundesland für amtliche Warnlage</label>
       <select
-        aria-label="Bundesland für die Warnlage auswählen"
+        aria-label="Bundesland für amtliche Warnlage auswählen"
         className="input-mono"
         defaultValue={currentRegion ?? ""}
         id="region-select"
@@ -40,6 +40,7 @@ export function RegionSwitcher({ currentRegion }: { currentRegion: string | null
           </option>
         ))}
       </select>
+      <p className="mono-label">Regionalisiert nur die DWD-Warnlage; alle anderen Themenkanäle bleiben bundesweit.</p>
     </div>
   );
 }

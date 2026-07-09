@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { withEditorRedirect } from "@/lib/admin/redirect";
 import { listFeedback } from "@/lib/admin/feedback-read";
 import { FEEDBACK_CATEGORY_LABEL, type FeedbackCategory } from "@/lib/feedback";
 
@@ -7,7 +8,7 @@ function formatDate(value: Date) {
 }
 
 export default async function AdminFeedbackPage() {
-  const rows = await listFeedback(200);
+  const rows = await withEditorRedirect(() => listFeedback(200));
 
   return (
     <section>

@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { requireEditorRole } from "@/lib/admin/permissions";
 
 export const metadata = { title: "Review — WachSam Editorial" };
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export default async function ReviewLayout({ children }: { children: ReactNode }) {
   try {

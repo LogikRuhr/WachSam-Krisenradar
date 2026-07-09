@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { AdminOverviewTable } from "@/components/admin/AdminOverviewTable";
 import { getEditorialOverview, getEditorialReviewQueue } from "@/lib/admin/editorial-read";
+import { withEditorRedirect } from "@/lib/admin/redirect";
 
 export const metadata = { title: "Admin — WachSam Editorial" };
 
 export default async function AdminPage() {
-  const [rows, queue] = await Promise.all([getEditorialOverview(), getEditorialReviewQueue()]);
+  const [rows, queue] = await withEditorRedirect(() => Promise.all([getEditorialOverview(), getEditorialReviewQueue()]));
 
   return (
     <section>

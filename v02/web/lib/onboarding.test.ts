@@ -15,6 +15,7 @@ const initialPublic = buildPublicOnboardingSteps({
 });
 
 assert.equal(initialPublic[0].status, "active", "Public-Onboarding startet bei der Haushalts-Eingabe");
+assert.doesNotMatch(initialPublic[0].text, /PLZ/, "Public-Onboarding nennt keine PLZ");
 assert.equal(initialPublic[1].status, "open", "Wirkung wird nicht vor Nutzer-Eingabe als erledigt markiert");
 assert.equal(initialPublic[2].status, "open", "Pruefschritt wartet vor Nutzer-Eingabe");
 assert.deepEqual(onboardingSummary(initialPublic), { completed: 0, total: 3, label: "0/3 bereit" });
@@ -49,18 +50,19 @@ assert.doesNotMatch(blockedPublic[2].text, /vorhandene Maßnahme/, "Ohne echte M
 
 const incompleteProfile = buildProfileOnboardingSteps({
   profileFieldsFilled: 1,
-  profileFieldsTotal: 3,
+  profileFieldsTotal: 2,
   hasRelevantSignals: true,
   hasActions: true,
   hasCheckSteps: true,
 });
 
 assert.equal(incompleteProfile[0].status, "active", "Profil-Onboarding beginnt bei unvollstaendigem Profil");
+assert.doesNotMatch(incompleteProfile[0].text, /PLZ/, "Profil-Onboarding nennt keine PLZ");
 assert.equal(incompleteProfile[1].status, "open", "Lage-Lesen wartet auf Profilvollstaendigkeit");
 
 const completeProfile = buildProfileOnboardingSteps({
-  profileFieldsFilled: 3,
-  profileFieldsTotal: 3,
+  profileFieldsFilled: 2,
+  profileFieldsTotal: 2,
   hasRelevantSignals: true,
   hasActions: true,
   hasCheckSteps: true,

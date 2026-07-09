@@ -177,8 +177,9 @@ export function computeInjectionPeriod(
 
   const daysRemaining = Math.max(0, Math.ceil((deadlineMs - nowMs) / msPerDay));
   const gapToTarget = Math.max(0, targetValue - currentValue);
+  const periodActive = nowMs < deadlineMs;
 
-  const requiredDailyRate = daysRemaining > 0 ? gapToTarget / daysRemaining : gapToTarget > 0 ? Infinity : 0;
+  const requiredDailyRate = daysRemaining > 0 ? gapToTarget / daysRemaining : 0;
 
   let actualDailyChange: number | null = null;
   let onTrack: boolean | null = null;
@@ -186,10 +187,8 @@ export function computeInjectionPeriod(
   if (previousValue != null) {
     actualDailyChange = currentValue - previousValue;
     // onTrack if daily gain meets or exceeds required rate (or gap is already closed)
-    onTrack = gapToTarget <= 0 || actualDailyChange >= requiredDailyRate;
+    onTrack = gapToTarget <= 0 || (periodActive && actualDailyChange >= requiredDailyRate);
   }
-
-  const periodActive = nowMs < deadlineMs;
 
   return {
     daysRemaining,

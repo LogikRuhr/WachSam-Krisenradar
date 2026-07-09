@@ -35,7 +35,7 @@ export function buildPublicOnboardingSteps(input: {
     {
       id: "household-input",
       title: "Haushalt einordnen",
-      text: "Haushaltstyp und Heizart reichen fuer den ersten Abgleich. PLZ bleibt optional.",
+      text: "Haushaltstyp und Heizart reichen fuer den ersten Abgleich.",
       status: input.hasProfileInput ? "done" : "active",
     },
     {
@@ -73,7 +73,7 @@ export function buildProfileOnboardingSteps(input: {
     {
       id: "profile-complete",
       title: "Profil vervollständigen",
-      text: "Modus, PLZ und Heizart steuern nur die Sortierung im persönlichen Bereich.",
+      text: "Modus und Heizart steuern nur die Sortierung im persönlichen Bereich.",
       status: profileComplete ? "done" : "active",
       href: "#profil-bearbeiten",
       actionLabel: "Profil bearbeiten",

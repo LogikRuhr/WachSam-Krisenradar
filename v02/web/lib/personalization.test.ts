@@ -113,17 +113,18 @@ assert.equal(personalNote("lebensmittel", { modus: null, heizart: null }), null,
 
 // --- profileCompleteness: ehrliche Vollständigkeit ----------------------------
 
-const voll = profileCompleteness({ modus: "familie", plz: "44787", heizart: "gas" });
-assert.equal(voll.filled, 3, "volles Profil → 3/3");
-assert.equal(voll.total, 3);
+const voll = profileCompleteness({ modus: "familie", heizart: "gas" });
+assert.equal(voll.filled, 2, "volles Profil → 2/2 ohne PLZ");
+assert.equal(voll.total, 2);
 
-const leer = profileCompleteness({ modus: null, plz: null, heizart: null });
-assert.equal(leer.filled, 0, "leeres Profil → 0/3");
+const leer = profileCompleteness({ modus: null, heizart: null });
+assert.equal(leer.filled, 0, "leeres Profil → 0/2");
 
-const teil = profileCompleteness({ modus: "single", plz: "   ", heizart: "unbekannt" });
-assert.equal(teil.filled, 1, "leere PLZ und heizart 'unbekannt' zählen nicht als gesetzt");
+const teil = profileCompleteness({ modus: "single", heizart: "unbekannt" });
+assert.equal(teil.filled, 1, "heizart 'unbekannt' zählt nicht als gesetzt");
 assert.equal(teil.fields.find((f) => f.key === "modus")?.set, true, "modus gesetzt");
 assert.equal(teil.fields.find((f) => f.key === "heizart")?.set, false, "heizart 'unbekannt' = nicht gesetzt");
+assert.equal(teil.fields.some((f) => (f.key as string) === "plz"), false, "PLZ ist kein Profil-Vollstaendigkeitsfeld mehr");
 
 // --- prioritizeActionsForProfile: relevant zuerst, dann niedriger Aufwand ------
 

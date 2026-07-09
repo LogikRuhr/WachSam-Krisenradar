@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { saveEditorialItem } from "@/app/admin/actions";
 import { AdminEditorForm } from "@/components/admin/AdminEditorForm";
 import { getTypeMeta, parseEditorialType } from "@/lib/admin/editorial-read";
+import { requireEditorRole } from "@/lib/admin/permissions";
+import { withEditorRedirect } from "@/lib/admin/redirect";
 
 export default async function AdminNewItemPage({ params }: { params: Promise<{ type: string }> }) {
   const { type: typeParam } = await params;
@@ -10,6 +12,7 @@ export default async function AdminNewItemPage({ params }: { params: Promise<{ t
   if (!itemType) notFound();
 
   const meta = getTypeMeta(itemType);
+  await withEditorRedirect(() => requireEditorRole());
   const action = saveEditorialItem.bind(null, itemType, "create");
 
   return (

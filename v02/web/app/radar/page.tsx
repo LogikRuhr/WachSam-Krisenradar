@@ -31,6 +31,10 @@ export default async function RadarPage() {
           Warum die Lage-Stufen entstehen: Themenkanäle, Indikator-Zonen und amtliche Warnlage —
           deterministisch aus den zuletzt veröffentlichten Daten abgeleitet.
         </p>
+        <p>
+          Der Bundeslandfilter betrifft ausschließlich die amtliche DWD-Warnlage. Die übrigen
+          Themenkanäle bleiben bundesweite Einordnungen.
+        </p>
         <p className="mono-label">
           {warnlageStand ? `Stand amtliche Warnlage: ${warnlageStand}` : "Stand amtliche Warnlage: ausstehend"}
         </p>
