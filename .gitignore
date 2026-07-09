@@ -53,3 +53,9 @@ outputs/**/*.json
 outputs/**/*.csv
 outputs/**/*.sqlite
 outputs/**/*.db
+
+# Routine reports stay local unless promoted to a findings artifact.
+outputs/daily-monitor-*.md
+outputs/security-secret-sweep-*.md
+outputs/source-health-*.md
+!outputs/*findings*.md
