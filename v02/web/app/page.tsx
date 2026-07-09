@@ -12,6 +12,7 @@ import { HOUSEHOLD_COST_INDICATOR_IDS, type HouseholdCostInput } from "@/lib/hou
 import { computeVerdict, personalNote, type Verdict as VerdictData, type VerdictTone } from "@/lib/personalization";
 import { getFrontDoorSignals, getHeadlineVitals, getIndicatorObservations, getIndicators, getNationalState, getPriceRadar } from "@/lib/public-data";
 import { getCurrentUserProfile } from "@/lib/use-user-modus";
+import { countWeeklyUpgrades, formatDeltaPercent, getWeeklyOverview } from "@/lib/weekly";
 import type { HouseholdCheckChain } from "@/lib/household-check";
 
 export const dynamic = "force-dynamic";
@@ -66,15 +67,25 @@ async function getHouseholdCostInputs(): Promise<HouseholdCostInput[]> {
 
 export default async function HomePage() {
   const profile = await getCurrentUserProfile();
-  const [signals, national, vitals, priceRadar, costInputs] = await Promise.all([
+  const [signals, national, vitals, priceRadar, costInputs, weekly] = await Promise.all([
     getFrontDoorSignals(8),
     getNationalState(),
     getHeadlineVitals(),
     getPriceRadar(),
     getHouseholdCostInputs(),
+    getWeeklyOverview(),
   ]);
   const verdict = computeVerdict(signals.rows.map((chain) => chain.signal));
   const chainsWithImpact = signals.rows.filter((chain) => chain.impact).slice(0, 3);
+
+  // Wochen-Teaser: gleiche Ableitung wie /woche (countWeeklyUpgrades), aber nur
+  // die kompakte Kurzfassung — kein eigenständiger Wert, keine Duplikation.
+  const weeklyUpgrades = countWeeklyUpgrades(weekly.channels);
+  const weeklyTopMover = weekly.channels.reduce<{ label: string; deltaPercent: number } | null>((best, channel) => {
+    if (!channel.topMover) return best;
+    if (!best || Math.abs(channel.topMover.deltaPercent) > Math.abs(best.deltaPercent)) return channel.topMover;
+    return best;
+  }, null);
 
   // Gesamtstand-Block: publizierter national_state bevorzugt, sonst der aus den
   // Signalen abgeleitete Verdict (kein eigenständiges Gesamturteil erfunden).
@@ -165,6 +176,30 @@ export default async function HomePage() {
           <Link className="text-link" href="/woche">Woche im Überblick</Link>
         </div>
       </section>
+
+      {weekly.connected ? (
+        <section className="home-week weekly-honesty" aria-label="Wochenüberblick">
+          <p className="mono-label">Diese Woche</p>
+          <p>
+            {weeklyUpgrades === 0
+              ? "Keine Hochstufungen in dieser Woche."
+              : `${weeklyUpgrades} von ${weekly.channels.length} Themenkanälen wurden diese Woche hochgestuft.`}
+          </p>
+          {weeklyTopMover ? (
+            <p className="weekly-mover-inline">
+              Größte Bewegung: {weeklyTopMover.label} ({formatDeltaPercent(weeklyTopMover.deltaPercent)})
+            </p>
+          ) : null}
+          <div className="home-actions">
+            <Link className="text-link" href="/woche">Alle Änderungen ansehen</Link>
+          </div>
+        </section>
+      ) : (
+        <section className="home-week weekly-honesty" aria-label="Wochenüberblick">
+          <p className="mono-label">Diese Woche</p>
+          <p>Noch keine Wochendaten verfügbar.</p>
+        </section>
+      )}
 
       {signals.connected ? (
         <section className="app-state-band" aria-label="Quellen, Datenstand und Qualität dieser Lageeinordnung">

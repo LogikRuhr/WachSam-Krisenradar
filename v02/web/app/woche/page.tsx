@@ -3,8 +3,7 @@ import { DbNotice } from "@/components/DbNotice";
 import { LageViewsNav } from "@/components/LageViewsNav";
 import { SectionHeader } from "@/components/SectionHeader";
 import { ThemeStateBadge } from "@/components/ThemeStateBadge";
-import { type ThemeState } from "@/lib/themes";
-import { getWeeklyOverview, type WeeklyChannel } from "@/lib/weekly";
+import { countWeeklyUpgrades, formatDeltaPercent, getWeeklyOverview, type WeeklyChannel } from "@/lib/weekly";
 
 export const dynamic = "force-dynamic";
 
@@ -13,24 +12,11 @@ export const metadata: Metadata = {
   description: "Änderungsansicht der Themenkanäle: Stufe heute im Vergleich zu vor 7 Tagen.",
 };
 
-const STATE_RANK: Record<ThemeState, number> = { normal: 0, beobachten: 1, erhoeht: 2, hoch: 3 };
-
-/** Hochstufung: Stufe ist gestiegen UND eine Vorwoche-Stufe war überhaupt bekannt. */
-function isUpgrade(channel: WeeklyChannel): boolean {
-  return channel.changed && channel.stateWeekAgo != null && STATE_RANK[channel.stateNow] > STATE_RANK[channel.stateWeekAgo];
-}
-
-/** "+3,2 %" bzw. "−1,5 %" — Minuszeichen (U+2212) statt Bindestrich, Komma statt Punkt. */
-function formatDeltaPercent(value: number): string {
-  const sign = value >= 0 ? "+" : "−";
-  return `${sign}${Math.abs(value).toFixed(1).replace(".", ",")} %`;
-}
-
 type MoverChannel = WeeklyChannel & { topMover: NonNullable<WeeklyChannel["topMover"]> };
 
 export default async function WochePage() {
   const { channels, connected } = await getWeeklyOverview();
-  const upgrades = channels.filter(isUpgrade).length;
+  const upgrades = countWeeklyUpgrades(channels);
   const movers: MoverChannel[] = channels
     .filter((channel): channel is MoverChannel => channel.topMover != null)
     .sort((a, b) => Math.abs(b.topMover.deltaPercent) - Math.abs(a.topMover.deltaPercent));

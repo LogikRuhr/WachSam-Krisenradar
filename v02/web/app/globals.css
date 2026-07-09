@@ -861,6 +861,10 @@ strong { color: var(--on-surface); font-weight: 700; }
 .weekly-honesty { border: 1px solid var(--outline); border-left: 3px solid var(--primary); border-radius: 0 4px 4px 0; background: rgba(27,30,37,.72); padding: 22px; }
 .weekly-methodology { margin-top: 8px; font-size: 13px; }
 
+/* --- Home: Wochen-Teaser (Kurzfassung von /woche) --- */
+.home-week { margin: 0 0 28px; }
+.weekly-mover-inline { margin-top: 8px; color: var(--on-surface-variant); font-family: var(--font-mono); font-size: 13px; }
+
 @media (max-width: 820px) {
   .weekly-channel-row, .weekly-mover { grid-template-columns: 1fr; }
 }
