@@ -45,6 +45,7 @@ strong { color: var(--on-surface); font-weight: 700; }
 .path-tabs { min-width: 0; justify-content: center; }
 .nav-tools { min-width: 0; justify-content: flex-end; }
 .path-tab, .drawer-trigger, .modus-chip, .btn-rost, .text-link { border: 1px solid var(--outline); border-radius: 4px; background: #141414; color: var(--on-surface); padding: 9px 12px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; transition: all .2s; }
+.path-tab-active { border-color: rgba(212,84,10,.72); background: rgba(212,84,10,.08); color: var(--primary); }
 .cross-link { color: var(--primary); font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; transition: color .2s; }
 .cross-link:hover { color: var(--primary-hover); }
 .drawer-trigger, .modus-chip { cursor: pointer; white-space: nowrap; }

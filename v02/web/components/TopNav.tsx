@@ -1,17 +1,9 @@
 import Link from "next/link";
 import { ModusSwitcher } from "@/components/ModusSwitcher";
+import { PathTabs } from "@/components/PathTabs";
 import { WerkzeugeDrawer } from "@/components/WerkzeugeDrawer";
 import { auth, isAuthRuntimeConfigured, signOut } from "@/lib/auth";
 import { getCurrentUserModus } from "@/lib/use-user-modus";
-
-const tabs = [
-  ["/kosten", "Haushalt"],
-  ["/lage", "Lage"],
-  ["/radar", "Radar"],
-  ["/woche", "Woche"],
-  ["/kaskaden", "Wirkungsketten"],
-  ["/massnahmen", "Maßnahmen"],
-];
 
 export async function TopNav() {
   const session = isAuthRuntimeConfigured() ? await auth() : null;
@@ -29,11 +21,7 @@ export async function TopNav() {
         Wach<span>Sam</span>
       </Link>
       <nav className="path-tabs" aria-label="WachSam Hauptnavigation">
-        {tabs.map(([href, label]) => (
-          <Link className="path-tab hover-rost" href={href} key={href}>
-            {label}
-          </Link>
-        ))}
+        <PathTabs />
       </nav>
       <div className="nav-tools">
         <ModusSwitcher initialModus={currentModus} isSignedIn={isSignedIn} />
