@@ -66,6 +66,33 @@ test.describe("public WachSam smoke", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("renders 2026 auth onboarding pages without account enumeration copy", async ({ page }) => {
+    await page.goto("/login");
+    await expect(page.getByRole("heading", { name: "Anmelden" })).toBeVisible();
+    await expect(page.getByText(/Bestehendes Konto/i)).toBeVisible();
+    await expect(page.getByText(/Wir zeigen nicht an, ob dazu bereits ein Konto besteht/i)).toBeVisible();
+    await expect(page.getByRole("link", { name: /Konto anlegen/i })).toHaveAttribute("href", "/register");
+    await expectNoHorizontalOverflow(page);
+
+    await page.goto("/register");
+    await expect(page.getByRole("heading", { name: "Konto anlegen" })).toBeVisible();
+    await expect(page.getByText(/Profil-Onboarding/i)).toBeVisible();
+    await expect(page.getByText(/ausschließlich für die Anmeldung/i)).toBeVisible();
+    await expect(page.getByRole("link", { name: "Bereits ein Konto · Anmelden" })).toHaveAttribute("href", "/login");
+    await expectNoHorizontalOverflow(page);
+
+    await page.goto("/login/verify");
+    await expect(page.getByRole("heading", { name: "Mail ist verschickt" })).toBeVisible();
+    await expect(page.getByRole("main")).toContainText(/Falls die Adresse genutzt werden kann/i);
+    await expect(page.getByRole("main")).not.toContainText(/Konto gefunden|registriert|existiert/i);
+    await expectNoHorizontalOverflow(page);
+
+    await page.goto("/login/error?error=Configuration");
+    await expect(page.getByRole("heading", { name: /vorübergehend nicht verfügbar/i })).toBeVisible();
+    await expect(page.getByRole("main")).not.toContainText(/RESEND|DATABASE_URL|AUTH_SECRET/i);
+    await expectNoHorizontalOverflow(page);
+  });
+
   test("connects the public Lage views", async ({ page }) => {
     for (const path of ["/lage", "/lagebild", "/radar", "/woche"]) {
       await page.goto(path);

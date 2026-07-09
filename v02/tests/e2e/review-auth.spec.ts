@@ -6,6 +6,7 @@ test.describe("review auth gate", () => {
 
     await expect(page).toHaveURL(/\/login/);
     await expect(page.getByRole("heading", { name: /Anmelden/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Konto anlegen/i })).toHaveAttribute("href", "/register");
     await expectNoHorizontalOverflow(page);
   });
 

@@ -1,30 +1,36 @@
 import Link from "next/link";
 import { assertAuthRuntimeReady, signIn } from "@/lib/auth";
+import { authRedirectForIntent, getAuthPageCopy } from "@/lib/auth-onboarding";
 
 async function sendMagicLink(formData: FormData) {
   "use server";
 
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   assertAuthRuntimeReady();
-  await signIn("resend", { email, redirectTo: "/" });
+  await signIn("resend", { email, redirectTo: authRedirectForIntent("register") });
 }
 
 export default function RegisterPage() {
+  const copy = getAuthPageCopy("register");
+
   return (
     <main className="page-shell auth-shell">
       <section className="auth-card" aria-labelledby="register-title">
         <div className="strich" />
-        <p className="mono-label auth-anchor">WachSam · Konto</p>
-        <p className="mono-label">Bereich: Registrierung</p>
+        <p className="mono-label auth-anchor">{copy.anchor}</p>
+        <p className="mono-label">{copy.label}</p>
         <h1 id="register-title" className="bebas-title auth-title">
-          Konto anlegen
+          {copy.title}
         </h1>
-        <p className="lead">Du erhältst einen Magic-Link per Mail. Klick darauf, um dich einzuloggen.</p>
+        <p className="lead">{copy.lead}</p>
 
         <form action={sendMagicLink} className="auth-form">
           <label className="auth-label" htmlFor="email">
             E-Mail Adresse
           </label>
+          <p id="email-help" className="admin-help">
+            {copy.emailHelp}
+          </p>
           <input
             className="input-mono"
             id="email"
@@ -32,38 +38,31 @@ export default function RegisterPage() {
             type="email"
             placeholder="name@beispiel.de"
             autoComplete="email"
+            aria-describedby="email-help"
             required
           />
           <button className="btn-primary" type="submit">
-            Magic-Link senden
+            {copy.submitLabel}
           </button>
         </form>
 
-        <div className="dsgvo-hinweis">
-          Wir speichern für den Login deine E-Mail-Adresse. Keine Tracker, keine Ads.
-        </div>
+        {copy.privacyNote ? <div className="dsgvo-hinweis">{copy.privacyNote}</div> : null}
 
         <div className="auth-secondary">
-          <Link className="cross-link" href="/login">
-            Bereits ein Konto · Anmelden
+          <Link className="cross-link" href={copy.secondaryHref}>
+            {copy.secondaryLabel}
           </Link>
         </div>
       </section>
 
       <aside className="auth-side" aria-label="Warum diese Angaben?">
         <p className="mono-label">Warum diese Angaben?</p>
-        <div className="auth-side-block">
-          <span>01 · Login</span>
-          <p>Magic-Link statt Passwort: kurze Anmeldung, weniger gespeicherte Daten.</p>
-        </div>
-        <div className="auth-side-block">
-          <span>02 · Haushalt</span>
-          <p>Dein Modus hilft später bei verständlichen Haushaltswirkungen.</p>
-        </div>
-        <div className="auth-side-block">
-          <span>03 · Kontrolle</span>
-          <p>Du behältst Zugriff und kannst Angaben später ergänzen oder ändern.</p>
-        </div>
+        {copy.sideBlocks?.map((block) => (
+          <div className="auth-side-block" key={block.label}>
+            <span>{block.label}</span>
+            <p><strong>{block.title}.</strong> {block.text}</p>
+          </div>
+        ))}
       </aside>
     </main>
   );

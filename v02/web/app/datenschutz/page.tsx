@@ -25,7 +25,7 @@ export default function DatenschutzPage() {
             <h2 className="font-semibold text-[var(--on-surface)]">2. Welche Daten wir verarbeiten</h2>
             <p className="mt-2">WachSam verarbeitet nur die Daten, die für den Betrieb der Plattform notwendig sind:</p>
             <ul className="mt-2 list-inside list-disc space-y-1">
-              <li><strong>E-Mail-Adresse</strong> — für die Anmeldung per Magic-Link (Auth.js v5 via Resend)</li>
+              <li><strong>E-Mail-Adresse</strong> — ausschließlich für Registrierung, Anmeldung und Kontozugriff per Magic-Link (Auth.js v5 via Resend)</li>
               <li><strong>Session-Cookie</strong> — technisch notwendig für die Sitzungsverwaltung, kein Tracking</li>
               <li><strong>Haushalts-Profil</strong> — Modus (Single/Familie/Selbstständig/Rentebeziehende) und Heizart, keine PLZ und keine personenbezogenen Scores</li>
               <li><strong>Feedback</strong> — frei eingegebener Text sowie optionale Kategorie und Bewertung. Bei angemeldeten Nutzern wird das Feedback mit dem Konto verknüpft, sonst anonym gespeichert. Es werden keine Kontaktadressen oder IP-Adressen gespeichert.</li>
@@ -36,7 +36,7 @@ export default function DatenschutzPage() {
           <div>
             <h2 className="font-semibold text-[var(--on-surface)]">3. Rechtsgrundlage</h2>
             <ul className="mt-2 list-inside list-disc space-y-1">
-              <li>Einwilligung (Art. 6 Abs. 1 lit. a DSGVO) — für die Erstellung eines Kontos</li>
+              <li>Einwilligung (Art. 6 Abs. 1 lit. a DSGVO) — für die Erstellung eines Kontos und Magic-Link-Anmeldung</li>
               <li>Berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO) — für technisch notwendige Session-Cookies</li>
             </ul>
           </div>

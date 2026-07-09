@@ -32,13 +32,17 @@ export const runtime = "nodejs";
 
 const DATE_FMT = new Intl.DateTimeFormat("de-DE", { day: "numeric", month: "long", year: "numeric" });
 
+type ProfilPageProps = {
+  searchParams?: Promise<{ welcome?: string | string[] }>;
+};
+
 function formatStand(value: Date | string | null | undefined): string | null {
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? null : DATE_FMT.format(date);
 }
 
-export default async function ProfilPage() {
+export default async function ProfilPage({ searchParams }: ProfilPageProps) {
   if (!isAuthRuntimeConfigured()) {
     redirect("/login");
   }
@@ -91,6 +95,9 @@ export default async function ProfilPage() {
     hasActions: actions.length > 0,
     hasCheckSteps: checkSteps.length > 0,
   });
+  const params = await searchParams;
+  const welcome = Array.isArray(params?.welcome) ? params?.welcome[0] : params?.welcome;
+  const showWelcome = welcome === "1";
 
   return (
     <main className="page-shell">
@@ -100,6 +107,23 @@ export default async function ProfilPage() {
           {modusIntro ?? "Lege unten dein Profil an, damit die Hinweise zu dir passen."}
         </p>
       </SectionHeader>
+
+      {showWelcome ? (
+        <section className="home-impact-band" aria-labelledby="welcome-title">
+          <div>
+            <p className="mono-label">Konto bereit</p>
+            <h2 id="welcome-title" className="detail-title-small">Starte mit zwei Haushaltsangaben</h2>
+            <p>
+              WachSam speichert hier nur Modus und Heizart. Damit werden Lagekarten, Maßnahmen und Prüfschritte
+              nach Haushaltsrelevanz sortiert.
+            </p>
+          </div>
+          <div>
+            <p className="mono-label">Nächster Schritt</p>
+            <p><Link className="text-link" href="#profil-bearbeiten">Profil-Onboarding öffnen</Link></p>
+          </div>
+        </section>
+      ) : null}
 
       <ProfileStatus completeness={completeness} />
 

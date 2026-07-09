@@ -1,17 +1,20 @@
 import Link from "next/link";
+import { getVerifyRequestCopy } from "@/lib/auth-onboarding";
 
 export default function VerifyRequestPage() {
+  const copy = getVerifyRequestCopy();
+
   return (
     <main className="page-shell auth-shell auth-shell-compact">
       <section className="auth-card" aria-labelledby="verify-title">
         <div className="strich" />
         <p className="mono-label">Magic-Link</p>
         <h1 id="verify-title" className="bebas-title auth-title">
-          Mail ist verschickt
+          {copy.title}
         </h1>
-        <p className="lead">Mail ist verschickt. Bitte schau in dein Postfach. Der Link gilt 10 Minuten.</p>
+        <p className="lead">{copy.lead}</p>
         <Link className="btn-primary auth-inline-button" href="/">
-          Zur Startseite
+          {copy.actionLabel}
         </Link>
       </section>
     </main>

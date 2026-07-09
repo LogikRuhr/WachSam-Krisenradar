@@ -77,6 +77,13 @@ assertDoesNotInclude("web/components/TopNav.tsx", "title={email}", "full email m
 assertDoesNotInclude("web/lib/auth.ts", "build-placeholder-resend-key", "auth runtime must not use placeholder provider secrets");
 assertIncludes("web/app/login/page.tsx", "assertAuthRuntimeReady", "login action must fail explicitly when auth runtime env is missing");
 assertIncludes("web/app/register/page.tsx", "assertAuthRuntimeReady", "register action must fail explicitly when auth runtime env is missing");
+assertIncludes("web/lib/auth-onboarding.ts", 'login: "/profil"', "login magic-link redirect must open the personal area");
+assertIncludes("web/lib/auth-onboarding.ts", 'register: "/profil?welcome=1"', "register magic-link redirect must open profile onboarding");
+assertIncludes("web/app/login/page.tsx", 'authRedirectForIntent("login")', "login page must use the central login redirect");
+assertIncludes("web/app/register/page.tsx", 'authRedirectForIntent("register")', "register page must use the central registration redirect");
+assertDoesNotInclude("web/app/login/verify/page.tsx", "Konto gefunden", "verify request page must not confirm account existence");
+assertDoesNotInclude("web/app/login/verify/page.tsx", "registriert", "verify request page must not confirm registration state");
+assertIncludes("web/app/profil/page.tsx", 'welcome === "1"', "profile page must support first-login onboarding without persistence");
 
 for (const file of [
   "web/lib/feedback.ts",
