@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { valueAt } from "./weekly";
+import { countWeeklyUpgrades, isWeeklyUpgrade, valueAt, type WeeklyChannel } from "./weekly";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const base = new Date("2026-01-01T00:00:00Z");
@@ -31,5 +31,64 @@ assert.equal(valueAt(unsorted, addDays(base, 7)), "2.0", "unsortierte Liste lief
 
 // leere Liste → null
 assert.equal(valueAt([], base), null, "leere Liste liefert null");
+
+// --- isWeeklyUpgrade / countWeeklyUpgrades: Hochstufungs-Logik (pure) ---------
+
+function channel(overrides: Partial<WeeklyChannel>): WeeklyChannel {
+  return {
+    key: "test",
+    title: "Test",
+    stateNow: "normal",
+    stateWeekAgo: null,
+    changed: false,
+    topMover: null,
+    ...overrides,
+  };
+}
+
+// keine Vorwoche-Stufe bekannt und changed=false → keine Hochstufung
+assert.equal(
+  isWeeklyUpgrade(channel({ stateNow: "erhoeht", stateWeekAgo: null, changed: false })),
+  false,
+  "ohne Vorwoche-Stufe keine Hochstufung",
+);
+
+// Short-Circuit-Guard: stateWeekAgo=null liefert false, auch wenn "changed" true ist
+assert.equal(
+  isWeeklyUpgrade(channel({ stateNow: "erhoeht", stateWeekAgo: null, changed: true })),
+  false,
+  "stateWeekAgo=null erzwingt false unabhaengig von changed",
+);
+
+// Stufe gestiegen (normal -> erhoeht) und changed=true → Hochstufung
+assert.equal(
+  isWeeklyUpgrade(channel({ stateNow: "erhoeht", stateWeekAgo: "normal", changed: true })),
+  true,
+  "Anstieg der Stufe zaehlt als Hochstufung",
+);
+
+// Stufe gesunken (hoch -> beobachten) und changed=true → keine Hochstufung
+assert.equal(
+  isWeeklyUpgrade(channel({ stateNow: "beobachten", stateWeekAgo: "hoch", changed: true })),
+  false,
+  "Ruecksstufung ist keine Hochstufung",
+);
+
+// unveraendert (changed=false, gleiche Stufe) → keine Hochstufung
+assert.equal(
+  isWeeklyUpgrade(channel({ stateNow: "beobachten", stateWeekAgo: "beobachten", changed: false })),
+  false,
+  "unveraenderte Stufe ist keine Hochstufung",
+);
+
+const mixedChannels: WeeklyChannel[] = [
+  channel({ key: "a", stateNow: "erhoeht", stateWeekAgo: "normal", changed: true }), // Hochstufung
+  channel({ key: "b", stateNow: "beobachten", stateWeekAgo: "hoch", changed: true }), // Ruecksstufung
+  channel({ key: "c", stateNow: "hoch", stateWeekAgo: "beobachten", changed: true }), // Hochstufung
+  channel({ key: "d", stateNow: "normal", stateWeekAgo: null, changed: false }), // keine Historie
+];
+
+assert.equal(countWeeklyUpgrades(mixedChannels), 2, "zaehlt nur echte Hochstufungen");
+assert.equal(countWeeklyUpgrades([]), 0, "leere Liste liefert 0 Hochstufungen");
 
 console.log("weekly.test.ts ok");

@@ -30,6 +30,7 @@ export default function DatenschutzPage() {
               <li><strong>Haushalts-Profil</strong> — Modus (Single/Familie/Selbstständig/Rentebeziehende) und Heizart, keine PLZ und keine personenbezogenen Scores</li>
               <li><strong>Feedback</strong> — frei eingegebener Text sowie optionale Kategorie und Bewertung. Bei angemeldeten Nutzern wird das Feedback mit dem Konto verknüpft, sonst anonym gespeichert. Es werden keine Kontaktadressen oder IP-Adressen gespeichert.</li>
               <li><strong>Regionsfilter-Cookie (ws-region)</strong> — rein funktionale Einstellung auf /radar, speichert ausschließlich ein Bundesland-Kürzel (z.B. &bdquo;NS&ldquo;), um die amtliche Warnlage regional statt bundesweit anzuzeigen. Kein Konto- oder Personenbezug, kein Tracking.</li>
+              <li><strong>Haushalts-Cookie (ws-household)</strong> — rein funktionale Einstellung, speichert ausschließlich Haushaltstyp und Heizart (z.B. &bdquo;familie|gas&ldquo;), um die persönliche Einordnung zu merken. Kein Konto- oder Personenbezug, kein Tracking.</li>
             </ul>
           </div>
 
@@ -58,6 +59,7 @@ export default function DatenschutzPage() {
               <li>Haushalts-Profil (Modus und Heizart): bis zur Kontolöschung</li>
               <li>Feedback-Einträge: bis zur Auswertung für Produktverbesserungen, längstens 24 Monate</li>
               <li>Regionsfilter-Cookie (ws-region): 1 Jahr oder bis zur manuellen Löschung im Browser</li>
+              <li>Haushalts-Cookie (ws-household): 1 Jahr oder bis zur manuellen Löschung im Browser</li>
             </ul>
           </div>
 

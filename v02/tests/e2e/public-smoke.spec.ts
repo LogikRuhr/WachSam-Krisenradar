@@ -102,6 +102,54 @@ test.describe("public WachSam smoke", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("shows the mobile bottom navigation with the correct active tab", async ({ page }) => {
+    const nav = page.getByRole("navigation", { name: "WachSam Schnellzugriff" });
+
+    if (test.info().project.name !== "mobile-chromium") {
+      await page.goto("/lage");
+      await expect(nav).toBeHidden();
+      return;
+    }
+
+    const targets: Array<[path: string, label: string]> = [
+      ["/", "Start"],
+      ["/lage", "Lage"],
+      ["/radar", "Radar"],
+      ["/massnahmen", "Maßnahmen"],
+    ];
+
+    for (const [path, label] of targets) {
+      await page.goto(path);
+      await expect(nav).toBeVisible();
+      await expect(nav.locator('a[aria-current="page"]')).toHaveCount(1);
+      await expect(nav.getByRole("link", { name: label })).toHaveAttribute("aria-current", "page");
+      await expectNoHorizontalOverflow(page);
+    }
+  });
+
+  test("highlights the active tab in the primary navigation", async ({ page }) => {
+    const nav = page.getByRole("navigation", { name: "WachSam Hauptnavigation" });
+
+    await page.goto("/");
+    await expect(nav).toBeVisible();
+    await expect(nav.locator('a[aria-current="page"]')).toHaveCount(0);
+
+    const targets: Array<[path: string, label: string]> = [
+      ["/kosten", "Haushalt"],
+      ["/lage", "Lage"],
+      ["/radar", "Radar"],
+      ["/woche", "Woche"],
+      ["/kaskaden", "Wirkungsketten"],
+      ["/massnahmen", "Maßnahmen"],
+    ];
+
+    for (const [path, label] of targets) {
+      await page.goto(path);
+      await expect(nav.locator('a[aria-current="page"]')).toHaveCount(1);
+      await expect(nav.getByRole("link", { name: label })).toHaveAttribute("aria-current", "page");
+    }
+  });
+
   test("starts home as household cockpit", async ({ page }) => {
     await page.goto("/");
 

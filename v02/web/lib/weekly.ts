@@ -171,3 +171,21 @@ export async function getWeeklyOverview(now: Date = new Date()): Promise<{
 
   return { channels, generatedFor: now.toISOString(), connected: indicators.connected };
 }
+
+const STATE_RANK: Record<ThemeState, number> = { normal: 0, beobachten: 1, erhoeht: 2, hoch: 3 };
+
+/** Hochstufung: Stufe ist gestiegen UND eine Vorwoche-Stufe war überhaupt bekannt. */
+export function isWeeklyUpgrade(channel: WeeklyChannel): boolean {
+  return channel.changed && channel.stateWeekAgo != null && STATE_RANK[channel.stateNow] > STATE_RANK[channel.stateWeekAgo];
+}
+
+/** Anzahl der Themenkanäle, die gegenüber vor 7 Tagen hochgestuft wurden — genutzt von /woche und dem Home-Teaser. */
+export function countWeeklyUpgrades(channels: WeeklyChannel[]): number {
+  return channels.filter(isWeeklyUpgrade).length;
+}
+
+/** "+3,2 %" bzw. "−1,5 %" — Minuszeichen (U+2212) statt Bindestrich, Komma statt Punkt. */
+export function formatDeltaPercent(value: number): string {
+  const sign = value >= 0 ? "+" : "−";
+  return `${sign}${Math.abs(value).toFixed(1).replace(".", ",")} %`;
+}
