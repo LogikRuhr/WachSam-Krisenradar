@@ -4,6 +4,30 @@
 >
 > Aktive Arbeitsbasis ist `v02/`. Ältere v0.2/v0.3-Layoutabschnitte beschreiben weiterhin gültige Pattern, solange sie der aktuellen Produktwahrheit in `docs/product-current.md` nicht widersprechen.
 
+## Aktueller Live-Stand (v02, Haushalt-first) — maßgeblich
+
+Diese Kurzreferenz beschreibt die **live ausgelieferte** `v02/web`-App (wachsam.ruhrlogik.de) und hat bei Widerspruch Vorrang vor den historischen v0.2-/v0.3-Abschnitten unten. Die `v01/`-React-Router-Muster (`react-router-dom`, `NavLink`, `<Navigate>`, Tailwind v4) sind Referenz, **nicht** Runtime — `v02/web` ist Next.js 15 App Router mit Vanilla-CSS (`app/globals.css`), interne Links via `next/link` `<Link>`.
+
+- **Default-Screen `/` = Haushalts-Cockpit**, nicht Lage-Headline. `HomePage` (Server Component, `force-dynamic`) rendert `HouseholdCheck` mit H1 „Was betrifft meinen Haushalt jetzt?" (Haushalt-first seit `af70890`).
+  - Anonyme Eingabe (Haushaltstyp/Heizart) wird über den funktionalen Cookie `ws-household` (`modus|heizart`, keine PII, Muster wie `ws-region`) gemerkt; ohne Cookie bleibt die Home modus-frei (Guardrail `docs/brand.md`).
+  - Wochen-Teaser „Diese Woche" aus `getWeeklyOverview()` (ehrlicher Wortlaut, kein „Live"/„Echtzeit").
+- **Primär-Navigation = `TopNav` (Server Component) mit `PathTabs` (Client-Insel).** Sechs Tabs in dieser Reihenfolge:
+
+  | Label | Route |
+  |---|---|
+  | Haushalt | `/kosten` |
+  | Lage | `/lage` |
+  | Radar | `/radar` |
+  | Woche | `/woche` |
+  | Wirkungsketten | `/kaskaden` |
+  | Maßnahmen | `/massnahmen` |
+
+  Aktiver Tab via `usePathname()` → `aria-current="page"` + CSS-Klasse `.path-tab-active` (Helper `lib/nav-active.ts`: Home matcht nur exakt, sonst Segment-Präfix). aria-label der Nav: „WachSam Hauptnavigation".
+- **Mobile-BottomNav** (`components/BottomNav.tsx`, nur `@media (max-width: 820px)`, `position: fixed` unten) mit vier Daumenzielen: Start `/`, Lage `/lage`, Radar `/radar`, Maßnahmen `/massnahmen`; aria-label „WachSam Schnellzugriff", gleicher Aktiv-Mechanismus. Body-`padding-bottom` (≤820px) verhindert Verdeckung von Footer/FeedbackWidget.
+- **Sekundär = Werkzeuge-Drawer** (`WerkzeugeDrawer`) für Versorgung `/versorgung`, Quellen `/quellen`, Governance `/governance`, Frühwarnindikatoren `/indikatoren`.
+- **Lage-Sichten** über `LageViewsNav` (Prop `current`, aria-label „Lage-Sichten"): Gesamtstand `/lage`, Bereiche `/lagebild`, Treiber `/radar`, Änderungen `/woche`.
+- **Lade-Feedback:** je öffentliche + Detail-Route ein `loading.tsx`-Skeleton (reine Server Component, `role="status"`, `aria-busy`, `sr-only`), Muster `app/indikatoren/loading.tsx`.
+
 ## App-Shell und Layout
 
 - Jede neue UI-Welle beginnt beim Haushaltsnutzen: Was betrifft den Nutzer, welche Kosten-/Versorgungsrichtung ist plausibel, welcher nächste Prüfschritt hilft?
@@ -354,6 +378,8 @@ v0.3 verlagert die Produktrunntime nach `v02/` (Next.js 15 + Postgres 16 + Drizz
 
 ### Default-Screen 00: Lage-Headline
 
+> **Korrigiert (Live v02):** Der Default-Screen `/` ist das **Haushalts-Cockpit** (`HouseholdCheck`, „Was betrifft meinen Haushalt jetzt?"), **nicht** `LageHeadlinePage` — siehe „Aktueller Live-Stand" oben. Der folgende Lage-Headline-Entwurf ist historischer v0.3-Plan, nicht der ausgelieferte Screen.
+
 Neue Default-Route in v0.3 ist `/` mit `LageHeadlinePage`. Inhalt:
 
 - **Strich-Marker** (40 × 3 px Rost) wie alle Section-Header.
@@ -371,6 +397,8 @@ Regeln:
 - Editorial-Status-Indikator (`live` / `stale` / `error`) erscheint klein neben der Headline-Quelle, niemals als großflächiger Alarm.
 
 ### Pfad-Hub und Hybrid-Navigation
+
+> **Korrigiert (Live v02):** Die ausgelieferte Primär-Nav hat **sechs** Tabs (Haushalt `/kosten`, Lage `/lage`, Radar `/radar`, Woche `/woche`, Wirkungsketten `/kaskaden`, Maßnahmen `/massnahmen`) via `PathTabs` + eine **Mobile-BottomNav** — nicht die unten skizzierten vier Pfade in der Reihenfolge Lage/Haushalt/Wirkungsketten/Maßnahmen. Maßgeblich ist „Aktueller Live-Stand" oben. Der folgende 4-Pfad-Entwurf ist historischer v0.3-Plan.
 
 v0.3 löst das v0.2-Acht-Tab-Layout durch eine zweischichtige Navigation ab:
 
