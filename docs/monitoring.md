@@ -11,7 +11,7 @@ Zwei Schichten prüfen täglich, dass die öffentliche App (`wachsam.ruhrlogik.d
 ## 2. Backup: Claude Cloud Routine (Alerting-Schicht)
 
 - Routine **`WachSam Daily Health Monitor (Backup)`** — ID `trig_01Um8tddfwj8CBS2VLTW5GzZ`, täglich **08:43 Europe/Berlin** (`43 6 * * *` UTC, versetzt nach dem Codex-Lauf), Modell `claude-sonnet-5`, Env `Ruhrlogik`.
-- Unabhängiger Uptime-Check der öffentlichen Flächen. **Alarmiert bei FAIL** durch ein GitHub-Issue `[monitor] WachSam FAIL <Datum>` (robust ohne interaktiven MCP-Auth). Bei PASS still — kein Rauschen.
+- Unabhängiger **Uptime- und Source-Health-Check** der öffentlichen Flächen (inkl. `/status`, siehe „Source-Health" unten). **Alarmiert bei FAIL** durch ein GitHub-Issue `[monitor] WachSam FAIL <Datum>` (robust ohne interaktiven MCP-Auth). Bei PASS still — kein Rauschen.
 - Verwalten / manuell auslösen: https://claude.ai/code/routines/trig_01Um8tddfwj8CBS2VLTW5GzZ
 
 ## Was geprüft wird (nur öffentlich/anonym, keine PII)
@@ -19,6 +19,7 @@ Zwei Schichten prüfen täglich, dass die öffentliche App (`wachsam.ruhrlogik.d
 - `GET /` → 200, H1 „Was betrifft meinen Haushalt jetzt?", Wochenblock „Diese Woche"
 - `GET /lage` → 200, „Gesamtstand Deutschland"
 - `GET /api/health` → 200, `{ status: ok, db: ok }`
+- `GET /status` → 200, Live-Datenquellen-Health-Tabelle (Backup-Routine wertet sie aus, siehe „Source-Health")
 - Codex zusätzlich: Working-Tree clean, `scripts/verify.sh` + `pnpm verify` grün, keine Console-/Page-Errors, kein horizontaler Overflow.
 
 ## Report-Vorlage (Codex daily-monitor)
@@ -39,6 +40,13 @@ Status: PASS | FAIL
 
 Regel: `Status: FAIL`, sobald **irgendein** Teil-Check fehlschlägt (auch ein dirty Working Tree). Kein „Live"/„Echtzeit"-Wording (Verbotsliste, siehe `docs/brand.md`).
 
+## Source-Health (Datenquellen)
+
+- Die **Live**-Datenquellen-Health ist ein echtes Subsystem (`v02/intelligence/src/source_health.py`, ADR-040, DB-Tabelle `source_health`). Jeder Ingestion-Lauf schreibt je Quelle einen Status: `fresh` (Aktuell/erwartbarer Verzug), `stale` (Veraltet), `error` (Quellenfehler), `anomaly`, `disabled`, `unknown`.
+- Öffentlich sichtbar unter **`/status`** (`getSourceHealthOverview()`), ohne Login: Quelle, Ziel, Status, letzter Erfolg, zuletzt geprüft, Treffer/Fehler. Interne Fehlerdetails werden bewusst nicht gezeigt.
+- **Alarm-Schwelle (Backup-Routine):** nur bei `error`/„Quellenfehler" oder leerer/nicht verbundener Tabelle. **Nicht** bei `stale`/„Veraltet" — planmäßig verzögerte amtliche Quellen (monatlich/quartalsweise, z. B. BIP, EZBLeitzins, FRED, BNetzA) dürfen nicht dauer-alarmieren.
+- Die `outputs/source-health-*.md` sind **manuelle Ad-hoc-Audits** (z. B. 07-03, 07-10), **kein** Cron — „unregelmäßig" ist erwartbar, kein Defekt. Sie ergänzen die Live-Sicht um vertiefte Befunde.
+
 ## Runbook
 
 - Neuesten Report lesen: `ls -t outputs/daily-monitor-*.md | head -1`.
@@ -51,4 +59,5 @@ Regel: `Status: FAIL`, sobald **irgendein** Teil-Check fehlschlägt (auch ein di
 - **2026-07-09:** Codex-Daily-Run ausgefallen (keine `daily-monitor-2026-07-09.md`), still und unbemerkt — Auslöser für die Backup-Alarm-Schicht oben.
 - **07-11 bis 07-13:** wiederkehrender Git-`dirty`-Befund (`.gitignore`-Dublette + `outputs/source-health-*.md`); Ursache am 2026-07-13 behoben (`.gitignore`-Dublette verworfen, `source-health-*.md` ist via `.gitignore` ignoriert, Working Tree clean).
 - Codex-Reports sind lokal-only → keine zentrale Historie. Die Backup-Routine deckt **Alerting** ab, nicht Historie. Optional später: PASS/FAIL in einen sichtbaren Kanal (n8n) spiegeln.
-- `outputs/source-health-*.md` (separate Codex-Routine) läuft unregelmäßig (nur 07-03, 07-10) — separat prüfen, falls die Quellen-Health-Überwachung verbindlich sein soll.
+- **Source-Health ist live** (`/status`) und wird von der Backup-Routine überwacht; die `.md`-Audits sind on-demand (kein Cron), daher unregelmäßig — das ist kein Defekt.
+- **Offene Engineering-Themen aus dem Audit 07-10 (nicht Monitoring, getrennt planen):** Destatis VPI hängt am HTML-Fallback (GENESIS liefert keinen Quader); RSS/LLM-Dry-Run verbraucht LLM-Quota (`LLM quota exhausted`); mehrere Indikatoren ohne DB-Schwellen → Plausibility-Gate C3 übersprungen; Handelsblatt-RSS `disabled` (0 Items). Brauchen Intelligence-/DB-Scope (DB ist Deny-gegated). Die Backup-Routine alarmiert davon nur, wenn eine Quelle auf `/status` echten `error`-Status zeigt.
