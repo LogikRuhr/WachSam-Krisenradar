@@ -1,11 +1,11 @@
 :root {
   --surface: #0D0D0D;
   --surface-dim: #111318;
-  --surface-bright: #141414;
+  --surface-bright: #16181D;
   --surface-container: #1B1E25;
-  --outline: #2A2E38;
+  --outline: #2B303C;
   --on-surface: #F9FAFB;
-  --on-surface-variant: #9CA3AF;
+  --on-surface-variant: #A7AEBB;
   --primary: #D4540A;
   --color-accent: var(--primary);
   --primary-hover: #E8682A;
@@ -35,7 +35,7 @@ body {
 body.font-sans, button, input, textarea, select { font-family: var(--font-body); }
 a { color: inherit; text-decoration: none; }
 code { color: var(--on-surface); font-family: var(--font-mono); }
-p { max-width: 760px; margin: 0 0 16px; color: var(--on-surface-variant); font-size: 16px; line-height: 1.7; }
+p { max-width: 760px; margin: 0 0 16px; color: var(--on-surface-variant); font-size: 16px; line-height: 1.65; }
 strong { color: var(--on-surface); font-weight: 700; }
 
 .logo { color: var(--on-surface); font-family: var(--font-display); font-size: 28px; letter-spacing: 0.05em; line-height: 1; white-space: nowrap; }
@@ -44,7 +44,7 @@ strong { color: var(--on-surface); font-weight: 700; }
 .path-tabs, .nav-tools, .modus-switcher, .card-meta, .source-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .path-tabs { min-width: 0; justify-content: center; }
 .nav-tools { min-width: 0; justify-content: flex-end; }
-.path-tab, .drawer-trigger, .modus-chip, .btn-rost, .text-link { border: 1px solid var(--outline); border-radius: 4px; background: #141414; color: var(--on-surface); padding: 9px 12px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; transition: all .2s; }
+.path-tab, .drawer-trigger, .modus-chip, .btn-rost, .text-link { border: 1px solid var(--outline); border-radius: 4px; background: #16181D; color: var(--on-surface); padding: 9px 12px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; transition: all .2s; }
 .path-tab-active { border-color: rgba(212,84,10,.72); background: rgba(212,84,10,.08); color: var(--primary); }
 .cross-link { color: var(--primary); font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; transition: color .2s; }
 .cross-link:hover { color: var(--primary-hover); }
@@ -307,7 +307,7 @@ strong { color: var(--on-surface); font-weight: 700; }
 .check-steps { margin: 0; padding-left: 20px; list-style: disc; }
 .check-steps li { color: var(--on-surface); line-height: 1.6; margin-bottom: 8px; }
 .check-steps li:last-child { margin-bottom: 0; }
-.auth-chip { display: inline-flex; align-items: center; gap: 8px; max-width: 280px; border: 1px solid var(--outline); border-radius: 999px; background: #141414; color: var(--on-surface); padding: 8px 10px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.auth-chip { display: inline-flex; align-items: center; gap: 8px; max-width: 280px; border: 1px solid var(--outline); border-radius: 999px; background: #16181D; color: var(--on-surface); padding: 8px 10px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 .auth-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .auth-chip a, .auth-chip button, .auth-chip-link {
   border: 0;
@@ -323,7 +323,7 @@ strong { color: var(--on-surface); font-weight: 700; }
 .admin-shell { max-width: 1180px; }
 .admin-nav, .admin-toolbar, .admin-actions, .admin-inline-form, .admin-form-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .admin-nav { justify-content: flex-end; margin-bottom: 24px; }
-.admin-nav a, .admin-link, .admin-small-link, .admin-small-button { border: 1px solid var(--outline); border-radius: 4px; background: #141414; color: var(--on-surface); padding: 9px 12px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+.admin-nav a, .admin-link, .admin-small-link, .admin-small-button { border: 1px solid var(--outline); border-radius: 4px; background: #16181D; color: var(--on-surface); padding: 9px 12px; font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
 .admin-nav a:hover, .admin-link:hover, .admin-small-link:hover, .admin-small-button:hover { border-color: var(--primary-hover); color: var(--primary-hover); }
 .admin-link.secondary { color: var(--on-surface-variant); }
 .admin-toolbar { margin: 0 0 20px; }
@@ -375,7 +375,7 @@ strong { color: var(--on-surface); font-weight: 700; }
 .review-nav a, .review-button {
   border: 1px solid var(--outline);
   border-radius: 4px;
-  background: #141414;
+  background: #16181D;
   color: var(--on-surface);
   padding: 10px 12px;
   font-family: var(--font-mono);
