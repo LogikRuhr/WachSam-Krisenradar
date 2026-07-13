@@ -1,9 +1,11 @@
 import NextAuth from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Resend from "next-auth/providers/resend";
+import { and, eq, ne } from "drizzle-orm";
 import authConfig from "../auth.config";
 import { db } from "./db";
 import { accounts, sessions, users, verificationTokens } from "@wachsam/db/schema";
+import { isAllowlistedAdmin } from "./admin/admin-allowlist";
 
 const adapter = db
   ? DrizzleAdapter(db, {
@@ -30,6 +32,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       sessionUser.id = user.id;
       sessionUser.role = (user as typeof user & { role?: string }).role;
       return session;
+    },
+  },
+  events: {
+    /**
+     * Promote allowlisted operators to admin on sign-in. Lets the betreiber gain
+     * CMS access by logging in with an ADMIN_EMAILS address — no manual DB write,
+     * no CLI. Idempotent: only writes when the role is not already admin, and
+     * covers both freshly created and existing (viewer) accounts. The session
+     * callback reads role fresh from the DB, so it takes effect on the next
+     * request after login (a single reload if promoted during the same login).
+     */
+    async signIn({ user }) {
+      const email = user.email?.trim().toLowerCase();
+      if (!db || !email || !isAllowlistedAdmin(email, process.env.ADMIN_EMAILS)) return;
+      await db
+        .update(users)
+        .set({ role: "admin" })
+        .where(and(eq(users.email, email), ne(users.role, "admin")));
     },
   },
   session: { strategy: "database" },
