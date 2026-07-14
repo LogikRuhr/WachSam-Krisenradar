@@ -22,6 +22,16 @@ ggf. **einmal neu laden**, dann greift die Admin-Rolle.
 **Fallback ohne Allowlist** (einmalig, DB-Write): erst per Magic-Link einloggen (legt `users`-Zeile
 an), dann `cd v02 && pnpm operator:role -- --email deine-login@example.de --role admin --confirm`.
 
+## Keine Mail? Resend-Absender / Domain
+Resend sendet **nur von einer verifizierten Domain**. Zeigt Resend „Domain not verified:
+Verify ruhrlogik.de or update your from domain", gibt es zwei Wege:
+- **Schnell, ohne DNS (Solo-Betrieb):** `AUTH_EMAIL_FROM=onboarding@resend.dev` setzen (Resends
+  Test-Absender). Sendet **nur an die E-Mail deines Resend-Kontos** → mit genau dieser Adresse
+  einloggen (und sie in `ADMIN_EMAILS` eintragen). Kein DNS nötig.
+- **Sauber (Produktion):** Domain in Resend verifizieren — die von Resend gezeigten DNS-Records
+  (SPF-TXT, DKIM, MX) beim DNS-Anbieter von `ruhrlogik.de` (IONOS) eintragen, dann in Resend
+  „Verify". Nötig, sobald andere Adressen Mails bekommen sollen.
+
 ## Login klappt nicht? („Link konnte nicht geprüft werden")
 Der Magic-Link ist ein **Einmal-Token**. Wird er vor dem Klick abgerufen, gilt er als „benutzt".
 - **Resend „Click Tracking" + „Open Tracking" deaktivieren** (Dashboard → Domain). Tracking
