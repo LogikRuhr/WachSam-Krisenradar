@@ -7,7 +7,7 @@ import { db } from "./db";
 import { accounts, sessions, users, verificationTokens } from "@wachsam/db/schema";
 import { isAllowlistedAdmin } from "./admin/admin-allowlist";
 
-const adapter = db
+const baseAdapter = db
   ? DrizzleAdapter(db, {
       usersTable: users,
       accountsTable: accounts,
@@ -16,6 +16,35 @@ const adapter = db
     })
   : undefined;
 
+/**
+ * Prefetch-tolerant magic-link verification.
+ *
+ * Email security scanners and tracking redirects (e.g. Resend click tracking)
+ * pre-fetch the magic-link URL, which drives the default adapter's
+ * `useVerificationToken` to DELETE the single-use token before the human ever
+ * clicks — the click then fails with "Link konnte nicht geprüft werden".
+ *
+ * We look the token up WITHOUT deleting it, so a pre-fetch no longer invalidates
+ * the real click. @auth/core still enforces `expires` after this returns, so the
+ * token stays valid only within its short lifetime (Resend `maxAge` below), which
+ * bounds the reuse window. Expired rows are left to age out.
+ */
+const adapter =
+  baseAdapter
+    ? {
+        ...baseAdapter,
+        async useVerificationToken({ identifier, token }: { identifier: string; token: string }) {
+          if (!db) return null;
+          const [row] = await db
+            .select()
+            .from(verificationTokens)
+            .where(and(eq(verificationTokens.identifier, identifier), eq(verificationTokens.token, token)))
+            .limit(1);
+          return row ?? null;
+        },
+      }
+    : undefined;
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   adapter,
@@ -23,6 +52,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Resend({
       from: process.env.AUTH_EMAIL_FROM ?? "wachsam@ruhrlogik.de",
       apiKey: process.env.RESEND_API_KEY,
+      // Bounds the window in which a magic link can be (re)used (see adapter note).
+      // Matches the "gilt 10 Minuten" copy on /login/verify.
+      maxAge: 60 * 10,
     }),
   ],
   callbacks: {
