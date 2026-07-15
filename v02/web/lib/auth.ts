@@ -6,8 +6,9 @@ import authConfig from "../auth.config";
 import { db } from "./db";
 import { accounts, sessions, users, verificationTokens } from "@wachsam/db/schema";
 import { isAllowlistedAdmin } from "./admin/admin-allowlist";
+import { buildConfirmUrl } from "./auth-confirm";
 
-const baseAdapter = db
+const adapter = db
   ? DrizzleAdapter(db, {
       usersTable: users,
       accountsTable: accounts,
@@ -16,34 +17,45 @@ const baseAdapter = db
     })
   : undefined;
 
-/**
- * Prefetch-tolerant magic-link verification.
- *
- * Email security scanners and tracking redirects (e.g. Resend click tracking)
- * pre-fetch the magic-link URL, which drives the default adapter's
- * `useVerificationToken` to DELETE the single-use token before the human ever
- * clicks — the click then fails with "Link konnte nicht geprüft werden".
- *
- * We look the token up WITHOUT deleting it, so a pre-fetch no longer invalidates
- * the real click. @auth/core still enforces `expires` after this returns, so the
- * token stays valid only within its short lifetime (Resend `maxAge` below), which
- * bounds the reuse window. Expired rows are left to age out.
- */
-const adapter =
-  baseAdapter
-    ? {
-        ...baseAdapter,
-        async useVerificationToken({ identifier, token }: { identifier: string; token: string }) {
-          if (!db) return null;
-          const [row] = await db
-            .select()
-            .from(verificationTokens)
-            .where(and(eq(verificationTokens.identifier, identifier), eq(verificationTokens.token, token)))
-            .limit(1);
-          return row ?? null;
-        },
-      }
-    : undefined;
+/** Minimal HTML/text template for the "confirm sign-in" mail (deutsche Copy). */
+function confirmEmailHtml(url: string) {
+  return `
+<body style="background:#f9f9f9;">
+  <table width="100%" border="0" cellspacing="20" cellpadding="0"
+    style="background:#fff; max-width:600px; margin:auto; border-radius:10px;">
+    <tr>
+      <td align="center"
+        style="padding:10px 0; font-size:22px; font-family:Helvetica,Arial,sans-serif; color:#444;">
+        WachSam · Anmeldung bestätigen
+      </td>
+    </tr>
+    <tr>
+      <td align="center"
+        style="padding:0 24px 20px; font-size:15px; line-height:22px; font-family:Helvetica,Arial,sans-serif; color:#444;">
+        Bitte bestätige deine Anmeldung. Der Link gilt 10 Minuten und kann nur einmal verwendet werden.
+      </td>
+    </tr>
+    <tr>
+      <td align="center" style="padding:0 0 20px;">
+        <a href="${url}" target="_blank"
+          style="font-size:16px; font-family:Helvetica,Arial,sans-serif; color:#fff; text-decoration:none; border-radius:5px; padding:12px 24px; background:#D4540A; display:inline-block; font-weight:bold;">
+          Anmeldung bestätigen
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center"
+        style="padding:0 24px 10px; font-size:13px; line-height:20px; font-family:Helvetica,Arial,sans-serif; color:#777;">
+        Wenn du diese Anmeldung nicht ausgelöst hast, kannst du diese Mail ignorieren.
+      </td>
+    </tr>
+  </table>
+</body>`;
+}
+
+function confirmEmailText(url: string) {
+  return `WachSam · Anmeldung bestätigen\n\n${url}\n\nDer Link gilt 10 Minuten und kann nur einmal verwendet werden.\n`;
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -52,9 +64,33 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Resend({
       from: process.env.AUTH_EMAIL_FROM ?? "wachsam@ruhrlogik.de",
       apiKey: process.env.RESEND_API_KEY,
-      // Bounds the window in which a magic link can be (re)used (see adapter note).
+      // Bounds how long the confirmation link stays valid end-to-end.
       // Matches the "gilt 10 Minuten" copy on /login/verify.
       maxAge: 60 * 10,
+      // Der Mail-Link führt auf /login/confirm, nicht direkt auf den Callback.
+      // Der Token wird erst konsumiert, wenn dort der Bestätigen-Button geklickt
+      // wird (Einmal-Token, strikt) — Scanner-/Tracking-Prefetches der Mail
+      // verbrennen ihn dadurch nicht mehr.
+      async sendVerificationRequest({ identifier: to, provider, url }) {
+        const confirmUrl = buildConfirmUrl(url);
+        const res = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${provider.apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: provider.from,
+            to,
+            subject: "WachSam · Anmeldung bestätigen",
+            html: confirmEmailHtml(confirmUrl),
+            text: confirmEmailText(confirmUrl),
+          }),
+        });
+        if (!res.ok) {
+          throw new Error(`Resend error (${res.status}): ${JSON.stringify(await res.json())}`);
+        }
+      },
     }),
   ],
   callbacks: {

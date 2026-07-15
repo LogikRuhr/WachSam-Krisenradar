@@ -33,11 +33,19 @@ Verify ruhrlogik.de or update your from domain", gibt es zwei Wege:
   „Verify". Nötig, sobald andere Adressen Mails bekommen sollen.
 
 ## Login klappt nicht? („Link konnte nicht geprüft werden")
-Der Magic-Link ist ein **Einmal-Token**. Wird er vor dem Klick abgerufen, gilt er als „benutzt".
-- **Resend „Click Tracking" + „Open Tracking" deaktivieren** (Dashboard → Domain). Tracking
-  schreibt den Link auf einen Redirect um und verbrennt den Token. Häufigste Ursache.
+Der Magic-Link ist ein **strikter Einmal-Token**. Der Mail-Link führt nicht direkt auf den
+Callback, sondern auf `/login/confirm` — eine Zwischenseite, die den Token nur anzeigt, aber noch
+nicht einlöst. Erst der Klick auf **„Anmeldung bestätigen"** ruft den eigentlichen Callback auf und
+verbraucht den Token. Scanner-/Tracking-Prefetches der Mail (Virenscanner, Vorschau, Resend
+Click-/Open-Tracking) laden dadurch zwar `/login/confirm` vorab, lösen den Callback aber nicht aus
+— der Token bleibt bis zum echten Klick gültig.
+- **Resend „Click Tracking" + „Open Tracking" deaktivieren** (Dashboard → Domain) bleibt trotzdem
+  empfohlen, um unnötige Prefetches zu vermeiden — für den Login selbst ist es aber nicht mehr
+  zwingend nötig.
 - `AUTH_URL=https://wachsam.ruhrlogik.de` auf dem VPS gesetzt? (Basis des Links in der Mail.)
 - Sessions halten ~30 Tage (DB-Strategie) → **einmal** einloggen reicht, kein Login pro Besuch.
+- Kommt „Link konnte nicht geprüft werden" trotzdem: Der Link ist älter als 10 Minuten oder wurde
+  bereits per Button bestätigt — neue Mail anfordern.
 
 ## Mobil freigeben
 1. `wachsam.ruhrlogik.de/review` öffnen (mobile Freigabe-Queue).
