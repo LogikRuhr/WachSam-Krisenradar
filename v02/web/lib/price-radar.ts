@@ -40,6 +40,7 @@ export type PriceRadarCard = {
   value: number | null;
   unit: string | null;
   stand: Date | null;
+  retrievedAt: Date | null;
   pending: boolean;
   zone: Zone | null;
   zoneLabel: string | null;
@@ -121,6 +122,8 @@ const SOURCE_STATUS_LABEL: Record<string, { label: string; tone: PriceRadarCard[
   unknown: { label: "Status offen", tone: "none" },
 };
 
+const LIVE_SAMPLE_CURRENT_FOR_MS = 90 * 60 * 1000;
+
 function sourceHealthFor(definition: PriceRadarDefinition, healthRows: PriceRadarSourceHealthInput[]) {
   if (!definition.healthMatch) return null;
   const needle = definition.healthMatch.toLocaleLowerCase("de-DE");
@@ -129,8 +132,22 @@ function sourceHealthFor(definition: PriceRadarDefinition, healthRows: PriceRada
   ) ?? null;
 }
 
-function sourceStatus(definition: PriceRadarDefinition, health: PriceRadarSourceHealthInput | null) {
-  if (health) return SOURCE_STATUS_LABEL[health.status] ?? { label: health.status, tone: "none" as const };
+function sourceStatus(
+  definition: PriceRadarDefinition,
+  health: PriceRadarSourceHealthInput | null,
+  now: Date,
+) {
+  if (health) {
+    if (
+      definition.sourceMode === "live-sample"
+      && health.status === "fresh"
+      && health.lastSuccessAt
+      && now.getTime() - health.lastSuccessAt.getTime() > LIVE_SAMPLE_CURRENT_FOR_MS
+    ) {
+      return { label: "Abruf älter als 90 Min.", tone: "elevated" as const };
+    }
+    return SOURCE_STATUS_LABEL[health.status] ?? { label: health.status, tone: "none" as const };
+  }
   if (definition.sourceMode === "editorial") return { label: "Redaktioneller Stand", tone: "none" as const };
   return { label: "Quelle ausstehend", tone: "none" as const };
 }
@@ -138,6 +155,7 @@ function sourceStatus(definition: PriceRadarDefinition, health: PriceRadarSource
 export function buildPriceRadar(
   indicators: PriceRadarIndicatorInput[],
   healthRows: PriceRadarSourceHealthInput[] = [],
+  now: Date = new Date(),
 ): PriceRadarCard[] {
   const byId = new Map(indicators.map((indicator) => [indicator.id, indicator]));
 
@@ -145,7 +163,7 @@ export function buildPriceRadar(
     const indicator = byId.get(definition.id) ?? null;
     const vitals = indicator ? indicatorVitals(indicator) : null;
     const health = sourceHealthFor(definition, healthRows);
-    const status = sourceStatus(definition, health);
+    const status = sourceStatus(definition, health, now);
 
     return {
       id: definition.id,
@@ -159,6 +177,7 @@ export function buildPriceRadar(
       value: vitals?.currentValue ?? null,
       unit: indicator?.unit ?? null,
       stand: vitals?.currentValueDate ?? null,
+      retrievedAt: definition.sourceMode === "live-sample" ? health?.lastSuccessAt ?? null : null,
       pending: vitals?.pending ?? true,
       zone: vitals?.zone?.zone ?? null,
       zoneLabel: vitals?.zone?.zoneLabel ?? null,

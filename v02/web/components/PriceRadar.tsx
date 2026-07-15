@@ -2,6 +2,14 @@ import Link from "next/link";
 import type { PriceRadarCard } from "@/lib/price-radar";
 
 const DATE_FMT = new Intl.DateTimeFormat("de-DE", { day: "numeric", month: "short", year: "numeric" });
+const DATE_TIME_FMT = new Intl.DateTimeFormat("de-DE", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Europe/Berlin",
+});
 
 const NUMBER_FMT = new Intl.NumberFormat("de-DE", {
   minimumFractionDigits: 1,
@@ -10,6 +18,13 @@ const NUMBER_FMT = new Intl.NumberFormat("de-DE", {
 
 function formatStand(value: Date | null) {
   return value ? DATE_FMT.format(value) : "Stand ausstehend";
+}
+
+function formatSourceStand(card: PriceRadarCard) {
+  if (card.sourceMode === "live-sample" && card.retrievedAt) {
+    return `Abruf ${DATE_TIME_FMT.format(card.retrievedAt)} Uhr`;
+  }
+  return formatStand(card.stand);
 }
 
 function unitLabel(unit: string | null) {
@@ -39,7 +54,7 @@ function PriceCard({ card }: { card: PriceRadarCard }) {
       <span className={card.pending ? "price-value price-value-pending" : "price-value"}>{formatValue(card)}</span>
       <span className="price-description">{card.description}</span>
       <span className="mono-label price-source">
-        {card.sourceName} · {formatStand(card.stand)}
+        {card.sourceName} · {formatSourceStand(card)}
       </span>
       <span className="price-note">{card.sourceNote}</span>
     </>

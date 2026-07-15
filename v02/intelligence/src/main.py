@@ -56,6 +56,33 @@ ADAPTER_TYPE_MAP = {
     "Insolvenzen": "indicators",
 }
 
+TARGETABLE_ADAPTERS = {"Tankerkoenig"}
+
+
+def build_adapters(adapter_names: set[str] | None = None):
+    if adapter_names is not None:
+        unsupported = adapter_names - TARGETABLE_ADAPTERS
+        if unsupported:
+            raise ValueError(f"Nicht gezielt ausführbare Adapter: {', '.join(sorted(unsupported))}")
+        return [TankerkoenigAdapter()]
+
+    return [
+        DestatisAdapter(),
+        BNetzAAdapter(),
+        EIAAdapter(),
+        FREDAdapter(),
+        FAOAdapter(),
+        TankerkoenigAdapter(),
+        PegelonlineAdapter(),
+        DWDAdapter(),
+        NINAAdapter(),
+        BIPAdapter(),
+        ArbeitslosigkeitAdapter(),
+        EZBLeitzinsAdapter(),
+        StaatsschuldenAdapter(),
+        InsolvenzenAdapter(),
+    ]
+
 
 def resolve_item_type(item):
     if item.indicator_id:
@@ -67,7 +94,11 @@ def resolve_item_type(item):
     return item_type
 
 
-async def run_ingestion(dry_run: bool = False, allow_fetch=None):
+async def run_ingestion(
+    dry_run: bool = False,
+    allow_fetch=None,
+    adapter_names: set[str] | None = None,
+):
     """Hauptlauf der Ingestion.
 
     dry_run=True  → keine DB-Writes (set_dry_run aktiv); externe API-Calls
@@ -89,25 +120,7 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
 
     print(f"=== WachSam Ingestion gestartet um {datetime.utcnow()} ===\n")
 
-    adapters = [
-        DestatisAdapter(),
-        BNetzAAdapter(),
-        EIAAdapter(),
-        FREDAdapter(),
-        FAOAdapter(),
-        TankerkoenigAdapter(),
-        PegelonlineAdapter(),
-        DWDAdapter(),
-        NINAAdapter(),
-        BIPAdapter(),
-        ArbeitslosigkeitAdapter(),
-        EZBLeitzinsAdapter(),
-        StaatsschuldenAdapter(),
-        InsolvenzenAdapter(),
-        # Deaktiviert
-        #   EurostatAdapter()          — Stub, parst Response nicht
-        #   WarningIndicatorsAdapter() — redundant zu EIAAdapter (Brent)
-    ]
+    adapters = build_adapters(adapter_names)
 
     if dry_run:
         print("Adapter-Plan:")
@@ -180,32 +193,33 @@ async def run_ingestion(dry_run: bool = False, allow_fetch=None):
         if written_health_records:
             print(f"  [SOURCE_HEALTH] {written_health_records} Records in DB upserted")
 
-        crawler = RSSCrawler()
-        article_fetcher = ArticleFetcher()
-        try:
-            raw_items = crawler.fetch_all()
-            for raw in raw_items[:5]:
-                evidence = article_fetcher.fetch_article_evidence(
-                    source_id=raw.source_url,
-                    source_name=raw.source_class,
-                    source_url=raw.source_url,
-                    published_at=raw.published_at.isoformat() if raw.published_at else None,
-                )
-                if evidence.evidence_status != "evidence_ready":
-                    print(f"  [RSS] Evidence fehlt: {raw.source_url}")
-                    continue
+        if adapter_names is None:
+            crawler = RSSCrawler()
+            article_fetcher = ArticleFetcher()
+            try:
+                raw_items = crawler.fetch_all()
+                for raw in raw_items[:5]:
+                    evidence = article_fetcher.fetch_article_evidence(
+                        source_id=raw.source_url,
+                        source_name=raw.source_class,
+                        source_url=raw.source_url,
+                        published_at=raw.published_at.isoformat() if raw.published_at else None,
+                    )
+                    if evidence.evidence_status != "evidence_ready":
+                        print(f"  [RSS] Evidence fehlt: {raw.source_url}")
+                        continue
 
-                evidence_text = evidence.raw_text or evidence.excerpt
-                extracted = await extract_with_llm(
-                    evidence_text,
-                    raw.source_url,
-                    raw.source_class,
-                )
-                if extracted:
-                    items.append(extracted)
-                    print(f"  [LLM] Extrahiert: {extracted.title}")
-        except Exception as e:
-            print(f"  [RSS/LLM] FEHLER: {e}")
+                    evidence_text = evidence.raw_text or evidence.excerpt
+                    extracted = await extract_with_llm(
+                        evidence_text,
+                        raw.source_url,
+                        raw.source_class,
+                    )
+                    if extracted:
+                        items.append(extracted)
+                        print(f"  [LLM] Extrahiert: {extracted.title}")
+            except Exception as e:
+                print(f"  [RSS/LLM] FEHLER: {e}")
     else:
         print("  (externe Calls übersprungen — --allow-fetch für read-only Live-Plan)")
 
@@ -318,11 +332,27 @@ def parse_args(argv=None):
         action="store_true",
         help="Im Dry-Run echte, read-only API-Calls erlauben (weiterhin kein DB-Write).",
     )
+    parser.add_argument(
+        "--only",
+        choices=sorted(TARGETABLE_ADAPTERS),
+        help="Nur den benannten Adapter einmal ausführen; startet keinen Scheduler oder RSS/LLM-Lauf.",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv=None):
     args = parse_args(argv)
+
+    if args.only:
+        allow_fetch = args.allow_fetch if args.dry_run else None
+        asyncio.run(
+            run_ingestion(
+                dry_run=args.dry_run,
+                allow_fetch=allow_fetch,
+                adapter_names={args.only},
+            )
+        )
+        return
 
     if args.dry_run:
         asyncio.run(run_ingestion(dry_run=True, allow_fetch=args.allow_fetch))

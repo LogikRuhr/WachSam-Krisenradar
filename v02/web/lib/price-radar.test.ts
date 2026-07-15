@@ -74,4 +74,53 @@ assert.ok(strom, "Strom household card must exist");
 assert.equal(strom.value, 37, "Strom card must use the BDEW editorial value");
 assert.equal(strom.sourceStatusLabel, "Redaktioneller Stand", "BDEW card must not pretend to be live");
 
+const retrievalTime = new Date("2026-07-15T06:00:00.000Z");
+const liveHealth = [
+  {
+    sourceName: "Tankerkoenig",
+    target: "indicators",
+    status: "fresh",
+    lastSuccessAt: retrievalTime,
+    lastCheckedAt: retrievalTime,
+    itemCount: 3,
+    errorCount: 0,
+  },
+];
+
+const currentSample = buildPriceRadar(
+  [
+    {
+      ...baseIndicator,
+      id: "wi-kraftstoffpreis-super-e5",
+      label: "Kraftstoffpreis Super E5 Deutschland",
+      unit: "Euro/Liter",
+      currentValue: "2.303",
+    },
+  ],
+  liveHealth,
+  new Date("2026-07-15T07:30:00.000Z"),
+).find((card) => card.id === "wi-kraftstoffpreis-super-e5");
+
+assert.ok(currentSample, "current Super E5 sample must exist");
+assert.deepEqual(currentSample.retrievedAt, retrievalTime, "fuel card must expose the exact retrieval timestamp");
+assert.equal(currentSample.sourceStatusLabel, "Quelle aktuell", "a sample exactly 90 minutes old remains current");
+
+const agedSample = buildPriceRadar(
+  [
+    {
+      ...baseIndicator,
+      id: "wi-kraftstoffpreis-super-e5",
+      label: "Kraftstoffpreis Super E5 Deutschland",
+      unit: "Euro/Liter",
+      currentValue: "2.303",
+    },
+  ],
+  liveHealth,
+  new Date("2026-07-15T07:30:00.001Z"),
+).find((card) => card.id === "wi-kraftstoffpreis-super-e5");
+
+assert.ok(agedSample, "aged Super E5 sample must exist");
+assert.equal(agedSample.sourceStatusLabel, "Abruf älter als 90 Min.");
+assert.equal(agedSample.sourceStatusTone, "elevated");
+
 console.log("price-radar.test.ts: PASS");

@@ -55,6 +55,54 @@ def test_run_scheduled_is_coroutine_function():
     assert inspect.iscoroutinefunction(main.run_scheduled)
 
 
+def test_targeted_ingestion_only_constructs_selected_adapter_and_skips_rss(monkeypatch):
+    class UnexpectedAdapter:
+        def __init__(self):
+            raise AssertionError("unselected adapter must not be constructed")
+
+    class FakeTankerkoenigAdapter(EmptyAdapter):
+        name = "Tankerkoenig"
+
+    class UnexpectedCrawler:
+        def __init__(self):
+            raise AssertionError("targeted ingestion must not start RSS work")
+
+    for attr in _ALL_ADAPTER_ATTRS:
+        monkeypatch.setattr(
+            main,
+            attr,
+            FakeTankerkoenigAdapter if attr == "TankerkoenigAdapter" else UnexpectedAdapter,
+        )
+    monkeypatch.setattr(main, "RSSCrawler", UnexpectedCrawler)
+
+    asyncio.run(
+        main.run_ingestion(
+            dry_run=True,
+            allow_fetch=True,
+            adapter_names={"Tankerkoenig"},
+        )
+    )
+
+
+def test_main_only_adapter_runs_once_even_when_scheduler_mode_is_configured(monkeypatch):
+    calls = []
+
+    async def fake_run_ingestion(*, adapter_names=None, **kwargs):
+        calls.append(adapter_names)
+
+    class UnexpectedScheduler:
+        def __init__(self, *args, **kwargs):
+            raise AssertionError("targeted CLI run must not start the scheduler")
+
+    monkeypatch.setenv("INGESTION_MODE", "scheduled")
+    monkeypatch.setattr(main, "run_ingestion", fake_run_ingestion)
+    monkeypatch.setattr(main, "AsyncIOScheduler", UnexpectedScheduler)
+
+    main.main(["--only", "Tankerkoenig"])
+
+    assert calls == [{"Tankerkoenig"}]
+
+
 def test_main_scheduled_starts_scheduler_with_created_event_loop(monkeypatch):
     events = []
 
