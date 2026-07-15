@@ -18,6 +18,22 @@ test.describe("review auth gate", () => {
   });
 });
 
+test.describe("magic-link confirm page", () => {
+  test("renders the confirm button when token and email are present", async ({ page }) => {
+    await page.goto("/login/confirm?token=x&email=test%40example.com");
+
+    await expect(page.getByRole("heading", { name: /Anmeldung bestätigen/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Anmeldung bestätigen/i })).toBeVisible();
+  });
+
+  test("renders the invalid-link notice and no confirm button without params", async ({ page }) => {
+    await page.goto("/login/confirm");
+
+    await expect(page.getByRole("heading", { name: /Link ungültig/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Anmeldung bestätigen/i })).toHaveCount(0);
+  });
+});
+
 async function expectNoHorizontalOverflow(page: Page) {
   const overflow = await page.evaluate(() => ({
     body: document.body.scrollWidth - window.innerWidth,
