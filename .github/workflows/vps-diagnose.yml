@@ -1,0 +1,107 @@
+name: vps-diagnose
+
+# Read-only Ops-Diagnose über den bestehenden Deploy-SSH-Kanal.
+# PUBLIC REPO: Ausgaben sind strikt log-safe — keine E-Mail-Adressen,
+# keine Env-Werte, nur SET/UNSET, Längen, Zähler und Rollen-Aggregate.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vps-diagnose
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Validate deploy secrets
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_APP_DIR: ${{ secrets.VPS_APP_DIR }}
+        run: |
+          test -n "$VPS_HOST"
+          test -n "$VPS_USER"
+          test -n "$VPS_SSH_KEY"
+          test -n "$VPS_APP_DIR"
+
+      - name: Configure SSH
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
+
+      - name: Run read-only diagnosis
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_APP_DIR: ${{ secrets.VPS_APP_DIR }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "$VPS_USER@$VPS_HOST" \
+            "TARGET_DIR='$VPS_APP_DIR' bash -s" <<'REMOTE'
+          set -uo pipefail
+
+          app_root="$(dirname "$TARGET_DIR")"
+          compose_file="$app_root/docker-compose.v02.yml"
+          test -f "$compose_file" || { echo "FAIL: compose file missing"; exit 1; }
+          dc() { docker compose -f "$compose_file" "$@"; }
+
+          echo "== services =="
+          dc config --services || true
+
+          echo "== compose/env-file wiring (counts only) =="
+          echo "compose ADMIN_EMAILS lines: $(grep -c 'ADMIN_EMAILS' "$compose_file" || true)"
+          echo "compose env_file lines:     $(grep -c 'env_file' "$compose_file" || true)"
+          for f in "$app_root/.env" "$app_root/web.env" "$app_root/v02/.env" "$app_root/v02/web/.env"; do
+            if [ -f "$f" ]; then
+              echo "envfile $(basename "$f"): ADMIN_EMAILS lines: $(grep -c '^ADMIN_EMAILS=' "$f" || true)"
+            fi
+          done
+
+          echo "== web container runtime env (log-safe) =="
+          dc exec -T web sh -c '
+            if [ -n "${ADMIN_EMAILS:-}" ]; then echo "ADMIN_EMAILS: SET (${#ADMIN_EMAILS} chars)"; else echo "ADMIN_EMAILS: UNSET"; fi
+            if [ -n "${RESEND_API_KEY:-}" ]; then echo "RESEND_API_KEY: SET"; else echo "RESEND_API_KEY: UNSET"; fi
+            echo "AUTH_* vars: $(env | grep -c "^AUTH_")"
+          ' || echo "FAIL: web exec"
+
+          echo "== users table (aggregates only, no addresses) =="
+          pg_svc="$(dc config --services | grep -iE 'postgres|db' | head -1 || true)"
+          if [ -z "$pg_svc" ]; then
+            echo "FAIL: no postgres-like service found"
+            exit 0
+          fi
+          echo "roles overall (role|count):"
+          dc exec -T "$pg_svc" sh -c 'psql -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-postgres}" -tA -c "SELECT role, count(*) FROM users GROUP BY role ORDER BY role;"' \
+            || echo "FAIL: role aggregate query"
+
+          AE="$(dc exec -T web sh -c 'printf %s "${ADMIN_EMAILS:-}"' || true)"
+          if [ -z "$AE" ]; then
+            echo "allowlist-match check skipped: ADMIN_EMAILS unset in web container"
+            exit 0
+          fi
+          sql_file="$(mktemp)"
+          cat > "$sql_file" <<'SQL'
+          SELECT 'ci_matches=' || count(*)
+              || ' exact_lower=' || count(*) FILTER (WHERE email = lower(btrim(email)))
+              || ' roles=' || coalesce(string_agg(DISTINCT role, ','), '-')
+          FROM users
+          WHERE lower(btrim(email)) IN (
+            SELECT lower(btrim(x)) FROM unnest(string_to_array(:'ae', ',')) AS x
+          );
+          SQL
+          echo "allowlist match (counts only):"
+          dc exec -T -e AE="$AE" "$pg_svc" sh -c 'psql -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-postgres}" -tA -v ae="$AE" -f -' < "$sql_file" \
+            || echo "FAIL: allowlist-match query"
+          rm -f "$sql_file"
+          REMOTE
