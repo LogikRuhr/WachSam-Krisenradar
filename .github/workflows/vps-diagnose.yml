@@ -88,6 +88,10 @@ jobs:
           dc exec -T "$pg_svc" sh -c 'psql -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-postgres}" -tA -c "SELECT role, count(*) FROM users GROUP BY role ORDER BY role;"' < /dev/null \
             || echo "FAIL: role aggregate query"
 
+          echo "sessions (total|active|newest_expiry_days|oldest_expiry_days):"
+          dc exec -T "$pg_svc" sh -c 'psql -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-postgres}" -tA -c "SELECT count(*) || chr(124) || count(*) FILTER (WHERE expires > now()) || chr(124) || coalesce(extract(day from max(expires) - now())::int::text, chr(45)) || chr(124) || coalesce(extract(day from min(expires) - now())::int::text, chr(45)) FROM sessions;"' < /dev/null \
+            || echo "FAIL: sessions aggregate query"
+
           AE="$(dc exec -T web sh -c 'printf %s "${ADMIN_EMAILS:-}"' < /dev/null || true)"
           if [ -z "$AE" ]; then
             echo "allowlist-match check skipped: ADMIN_EMAILS unset in web container"
@@ -97,7 +101,7 @@ jobs:
           cat > "$sql_file" <<'SQL'
           SELECT 'ci_matches=' || count(*)
               || ' exact_lower=' || count(*) FILTER (WHERE email = lower(btrim(email)))
-              || ' roles=' || coalesce(string_agg(DISTINCT role, ','), '-')
+              || ' roles=' || coalesce(string_agg(DISTINCT role::text, ','), '-')
           FROM users
           WHERE lower(btrim(email)) IN (
             SELECT lower(btrim(x)) FROM unnest(string_to_array(:'ae', ',')) AS x
