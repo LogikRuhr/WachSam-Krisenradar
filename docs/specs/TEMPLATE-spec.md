@@ -6,6 +6,10 @@
 ## Clarifications (vom Agenten gestellte Rückfragen + meine Antworten)
 - F: ... → A: ...
 
+## Relevante Lessons (Pflicht: LESSONS.md konsultieren)
+- <Datum · Kurzform der einschlägigen Lesson und was sie für diese Spec bedeutet>
+- oder: keine einschlägig, weil <kurze Begründung>
+
 ## Umfang / Nicht-Umfang
 - In Scope: ...
 - Out of Scope: ...

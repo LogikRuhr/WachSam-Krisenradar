@@ -15,7 +15,7 @@
 - 2026-06-18 · Datengetriebene Viz (Sparklines) ist lokal nicht visuell prüfbar: `indicator_observations` schreibt nur der Prod-Scheduler, der Seed nicht — lokal bleibt die Sparkline im (korrekten) Leerzustand. · Handlung: Build+Unit+Leerzustand lokal verifizieren, visuelle/Lighthouse-Prüfung solcher Features an einen Prod-/Preview-Deploy koppeln. · Confidence: high
 
 ## Was fehlgeschlagen ist (und warum)
-- <noch leer>
+- 2026-07-16 · Unter `set -e` beendet `find | grep -q . && VAR=1` das ganze Script, sobald grep nichts findet (`a && b` endet non-zero) — der Bug blieb im ersten Hook-Test latent, weil der umgebende if-Block dort nie aktiv war. · Handlung: In `set -e`-Hooks solche Ausdrücke mit `|| true` abschließen und jeden Zweig isoliert testen, indem die Bedingung künstlich erzwungen wird (z.B. Variable simulieren). · Confidence: high
 
 ## Muster & Präferenzen des Nutzers
 - Antworten auf Deutsch.

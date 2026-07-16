@@ -29,6 +29,17 @@ Hauptprojekt: WachSam Krisenradar. Workspace: wachsam-app.
 - Reviewer bleiben read-only: Diff pruefen, DoD abhaken, Sicherheits-/DSGVO-Risiken melden, keine Files aendern.
 - Echte Lessons kommen aus Tests, Linter, Builds, Reviews oder User-Feedback. In `LESSONS.md` nur konkrete Handlung, Datum und Confidence eintragen.
 
+## Memory-Vertrag (Run → Log → Distill → Repeat)
+Gilt für Claude Code UND Codex. Konzept & Entscheidungen: `outputs/2026-07-16-run-log-distill-repeat-konzept.md`.
+- Rollen: `.remember/` = Roh-Buffer (ungetrackt) · `LESSONS.md` = kuratierte destillierte Regeln (getrackt, beide Agenten lesen UND schreiben) · natives Claude-Memory = kuratierte Fakten. Kein System ersetzt ein anderes.
+- Jeder substanzielle Run (Commits/PRs/Deploys) endet mit einem Run-Memory `.remember/runs/YYYY-MM-DD-<slug>.md` nach `TEMPLATE-run-memory.md` (Goal / Prompt / Output / What worked / What failed / Distilled rule / Next action).
+- Übertragbare Regeln aus dem Run-Memory nach `LESSONS.md` destillieren. Keine Alibi-Lessons: wenn nichts gelernt, unter "Distilled rule" kurz begründen.
+- Specs nach `docs/specs/TEMPLATE-spec.md` füllen das Feld "Relevante Lessons" (oder begründen "keine einschlägig").
+- `next-session-brief.md` bleibt der einzige Handoff; "Next action" aus dem Run-Memory speist ihn. Kein zweites Handoff-Dokument.
+- Kein "fertig"-/PASS-Claim ohne zitiertes Reviewer-Urteil; das Urteil zusätzlich als Review-Evidenz nach `.remember/tmp/review-YYYY-MM-DD-<slug>.md` legen. Ein Hook prüft nur die Existenz — die Qualität sichert der Review selbst.
+- Claude-seitig erzwingen Hooks den Vertrag (SessionStart-Injection, Stop-Lesson-Gate, SessionEnd-Checkliste); für Codex gilt derselbe Vertrag konventionsgetrieben über diese Datei.
+- Keine Secrets/PII in Run-Memories oder Lessons.
+
 ## Aktuelle Verify-Gates
 - Root/Security: `bash scripts/verify.sh`
 - v02 TypeScript/Next.js: `cd v02 && pnpm run verify`
