@@ -69,11 +69,14 @@ jobs:
           done
 
           echo "== web container runtime env (log-safe) =="
+          # WICHTIG: Dieses Script kommt via `bash -s` über stdin — jedes stdin-lesende
+          # Kommando (docker compose exec -T) würde sonst den restlichen Script-Text
+          # verschlucken. Daher überall `< /dev/null`, außer beim psql -f - (bewusst).
           dc exec -T web sh -c '
             if [ -n "${ADMIN_EMAILS:-}" ]; then echo "ADMIN_EMAILS: SET (${#ADMIN_EMAILS} chars)"; else echo "ADMIN_EMAILS: UNSET"; fi
             if [ -n "${RESEND_API_KEY:-}" ]; then echo "RESEND_API_KEY: SET"; else echo "RESEND_API_KEY: UNSET"; fi
             echo "AUTH_* vars: $(env | grep -c "^AUTH_")"
-          ' || echo "FAIL: web exec"
+          ' < /dev/null || echo "FAIL: web exec"
 
           echo "== users table (aggregates only, no addresses) =="
           pg_svc="$(dc config --services | grep -iE 'postgres|db' | head -1 || true)"
@@ -82,10 +85,10 @@ jobs:
             exit 0
           fi
           echo "roles overall (role|count):"
-          dc exec -T "$pg_svc" sh -c 'psql -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-postgres}" -tA -c "SELECT role, count(*) FROM users GROUP BY role ORDER BY role;"' \
+          dc exec -T "$pg_svc" sh -c 'psql -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-postgres}" -tA -c "SELECT role, count(*) FROM users GROUP BY role ORDER BY role;"' < /dev/null \
             || echo "FAIL: role aggregate query"
 
-          AE="$(dc exec -T web sh -c 'printf %s "${ADMIN_EMAILS:-}"' || true)"
+          AE="$(dc exec -T web sh -c 'printf %s "${ADMIN_EMAILS:-}"' < /dev/null || true)"
           if [ -z "$AE" ]; then
             echo "allowlist-match check skipped: ADMIN_EMAILS unset in web container"
             exit 0
