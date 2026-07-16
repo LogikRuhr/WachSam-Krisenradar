@@ -69,6 +69,8 @@ Basis: Explore-Inventur dieser Session — alle Pfade real verifiziert. Jeans Se
 - [ ] **K6:** Das System funktioniert identisch in `wachsam-produkt-v1`, ohne dass dort etwas dupliziert werden muss (nur `LESSONS.md` anlegen).
 - [ ] **K7:** Stichprobe nach 4 Wochen: mindestens eine Lesson hat nachweislich einen Fehler beim zweiten Auftreten verhindert oder eine Spec-Entscheidung geprägt (der eigentliche ROI-Beweis).
 
+**Messung:** `bash scripts/measure-lessons.sh > outputs/$(date +%F)-lessons-messung.md` — misst K1–K6 automatisch aus den System-Artefakten (Hook-Selbsttests mit simuliertem stdin, Git-Commit-Tage vs. Run-Memory-/LESSONS-Distillate, Spec-Feld-Quote, Review-Marker `.remember/reviews/`, Session-Marker) und bereitet K7 als manuelle Bewertung auf. Muss lokal laufen (`.remember/` und `~/.claude/tmp` sind für Cloud-Agents unsichtbar). Baseline: `outputs/2026-07-16-lessons-baseline.md` (3 PASS · 1 FAIL [K4: docs-only-Commit `07195bd` ohne Review] · 2 n/a · 1 manuell); Vollmessung ~13.08.2026.
+
 ---
 
 ## 6. Gap-Analyse → Maßnahmen

@@ -36,7 +36,7 @@ Gilt für Claude Code UND Codex. Konzept & Entscheidungen: `outputs/2026-07-16-r
 - Übertragbare Regeln aus dem Run-Memory nach `LESSONS.md` destillieren. Keine Alibi-Lessons: wenn nichts gelernt, unter "Distilled rule" kurz begründen.
 - Specs nach `docs/specs/TEMPLATE-spec.md` füllen das Feld "Relevante Lessons" (oder begründen "keine einschlägig").
 - `next-session-brief.md` bleibt der einzige Handoff; "Next action" aus dem Run-Memory speist ihn. Kein zweites Handoff-Dokument.
-- Kein "fertig"-/PASS-Claim ohne zitiertes Reviewer-Urteil; das Urteil zusätzlich als Review-Evidenz nach `.remember/tmp/review-YYYY-MM-DD-<slug>.md` legen. Ein Hook prüft nur die Existenz — die Qualität sichert der Review selbst.
+- Kein "fertig"-/PASS-Claim ohne zitiertes Reviewer-Urteil; das Urteil zusätzlich als Review-Evidenz nach `.remember/reviews/review-YYYY-MM-DD-<slug>.md` legen. Ein Hook prüft nur die Existenz — die Qualität sichert der Review selbst.
 - Claude-seitig erzwingen Hooks den Vertrag (SessionStart-Injection, Stop-Lesson-Gate, SessionEnd-Checkliste); für Codex gilt derselbe Vertrag konventionsgetrieben über diese Datei.
 - Keine Secrets/PII in Run-Memories oder Lessons.
 
