@@ -17,6 +17,9 @@
 ## Was fehlgeschlagen ist (und warum)
 - 2026-07-16 · Unter `set -e` beendet `find | grep -q . && VAR=1` das ganze Script, sobald grep nichts findet (`a && b` endet non-zero) — der Bug blieb im ersten Hook-Test latent, weil der umgebende if-Block dort nie aktiv war. · Handlung: In `set -e`-Hooks solche Ausdrücke mit `|| true` abschließen und jeden Zweig isoliert testen, indem die Bedingung künstlich erzwungen wird (z.B. Variable simulieren). · Confidence: high
 
+- 2026-07-17 · Ein Next.js Server-Action-`redirect()` auf einen Auth-Callback (`/api/auth/callback/...`) verschluckt dessen `Set-Cookie`: Next folgt dem 302 als internem RSC-Fetch, die Session-Cookies erreichen den Browser-Store nie → DB bekommt Session-Rows, Browser bleibt ausgeloggt, `/api/auth/session` → null. Lokal unsichtbar, nur live reproduzierbar. · Handlung: Endpunkte, die Cookies über einen 302 setzen (Auth-Callbacks), immer per **echter Dokument-Navigation** aufrufen — natives `<form method="GET" action="…">` oder `<a>`, nie Server-Action-`redirect()`. Live mit Netzwerk-/Cookie-Inspektion verifizieren, nicht nur DB. · Confidence: high
+- 2026-07-17 · Die Gmail-MCP-`get_message`-API dekodiert den Magic-Link-Token falsch: das erste Byte nach `token=` wird als quoted-printable-Escape (`=e3`) gelesen und zu `�` → Token unbrauchbar, 2 Hex-Zeichen verloren. Outlook/SafeLinks-Mails (info@) kommen dagegen sauber durch, weil MS die URL re-encodiert. · Handlung: Für automatisiertes Magic-Link-Testing die SafeLinks-/Outlook-Adresse nutzen oder den Token nicht aus der Gmail-API beziehen; Gmail-`htmlBody` nicht als Token-Quelle vertrauen. · Confidence: high
+
 ## Muster & Präferenzen des Nutzers
 - Antworten auf Deutsch.
 - „Simply First": einfache, robuste Lösung vor komplexem Framework.
