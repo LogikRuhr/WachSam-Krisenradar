@@ -1,23 +1,8 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 type SearchParams = Promise<{ token?: string; email?: string; callbackUrl?: string }>;
 
 export const metadata = { title: "Anmeldung bestätigen · WachSam" };
-
-async function confirmSignIn(formData: FormData) {
-  "use server";
-
-  const token = String(formData.get("token") ?? "");
-  const email = String(formData.get("email") ?? "");
-  const callbackUrl = formData.get("callbackUrl");
-  const params = new URLSearchParams({
-    token,
-    email,
-    ...(callbackUrl ? { callbackUrl: String(callbackUrl) } : {}),
-  });
-  redirect(`/api/auth/callback/resend?${params.toString()}`);
-}
 
 export default async function LoginConfirmPage({ searchParams }: { searchParams: SearchParams }) {
   const { token, email, callbackUrl } = await searchParams;
@@ -52,7 +37,12 @@ export default async function LoginConfirmPage({ searchParams }: { searchParams:
         </h1>
         <p className="lead">Fast geschafft. Bestätige die Anmeldung für {email}.</p>
 
-        <form action={confirmSignIn} className="auth-form">
+        {/* Natives GET-Form = echte Browser-Navigation zum Auth-Callback.
+            Eine Server Action mit redirect() würde den Callback als internen
+            RSC-Fetch ausführen — dessen 302-Set-Cookie (Session) erreicht den
+            Browser nie. Der Scanner-Schutz bleibt: Token wird erst durch den
+            bewussten Klick konsumiert, nie beim Laden dieser Seite. */}
+        <form action="/api/auth/callback/resend" method="GET" className="auth-form">
           <input type="hidden" name="token" value={token} />
           <input type="hidden" name="email" value={email} />
           {callbackUrl ? <input type="hidden" name="callbackUrl" value={callbackUrl} /> : null}
