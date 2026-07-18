@@ -1,6 +1,6 @@
 # WachSam Haushalts-Tool - Entscheidungsstand
 
-Stand: 2026-06-20, repo-geprueft am 2026-06-22. Status: Konzept zur Entscheidung, kein Bauauftrag fuer den grossen Umbau.
+Stand: 2026-06-20, repo-geprueft am 2026-06-22. Status: ENTSCHIEDEN (2026-07-18): **Weg A — App-first Fundament-Reset**. Erst W0 (Tailwind+shadcn, App-Shell/PWA), dann W1-W3 (Haushalts-Tool). Weg B entfaellt als Zusatz — das Tool ist in Weg A als W1 enthalten; "B parallel" waere faktisch Weg C (verworfen). W0-Planung folgt als separater Plan. Hinweis: Teile der App-Wirkung sind seit PR #44 (Welle 1: BottomNav, Skeletons, Anon-Haushalts-Cookie) bereits live.
 
 ## Anlass
 
