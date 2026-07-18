@@ -199,6 +199,10 @@ export async function publishItem(itemType: EditorialItemType, id: string) {
   return transition(itemType, id, "published", ["approved"], "publish");
 }
 
+export async function approveAndPublishItem(itemType: EditorialItemType, id: string) {
+  return transition(itemType, id, "published", ["draft", "approved"], "publish");
+}
+
 export async function unpublishItem(itemType: EditorialItemType, id: string) {
   return transition(itemType, id, "draft", ["published"], "unpublish");
 }

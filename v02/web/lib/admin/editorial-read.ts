@@ -2,6 +2,7 @@ import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { db, schema } from "../db";
 import { requireEditorRole } from "./permissions";
+import { buildReviewQueue, sortForReview } from "./review-queue";
 import { editorialItemTypes, type EditorialItemType } from "./schemas";
 import type { EditorialAction, EditorialStatus } from "./audit-log";
 
@@ -105,12 +106,6 @@ export type EditorialAuditEventRow = {
 
 const statuses: EditorialStatus[] = ["draft", "approved", "rejected", "published"];
 const reviewStatuses = new Set<EditorialStatus>(["draft", "approved"]);
-const statusPriority: Record<EditorialStatus, number> = {
-  draft: 0,
-  approved: 1,
-  rejected: 2,
-  published: 3,
-};
 const confidenceOptions = ["niedrig", "mittel", "hoch"];
 const severityOptions = ["stabil", "beobachten", "erhoeht", "kritisch", "eskalierend"];
 const zeithorizontOptions = ["kurzfristig", "wochen", "monate", "langfristig"];
@@ -352,29 +347,6 @@ function normalizeCounts(rows: Array<{ status: EditorialStatus; count: number }>
   return result;
 }
 
-function latestReviewTime(row: { editorialReviewedAt: Date | null; publishedAt: Date | null; createdAt?: Date | null }) {
-  return (row.editorialReviewedAt ?? row.publishedAt ?? row.createdAt)?.getTime() ?? 0;
-}
-
-function sortForReview<
-  T extends {
-    status: EditorialStatus;
-    editorialReviewedAt: Date | null;
-    publishedAt: Date | null;
-    createdAt?: Date | null;
-    id: string;
-  },
->(
-  rows: T[],
-): T[] {
-  return [...rows].sort(
-    (a, b) =>
-      statusPriority[a.status] - statusPriority[b.status] ||
-      latestReviewTime(b) - latestReviewTime(a) ||
-      a.id.localeCompare(b.id),
-  );
-}
-
 function textValue(value: unknown): string | null {
   if (value === null || value === undefined) return null;
   if (value instanceof Date) return value.toISOString();
@@ -538,34 +510,6 @@ export async function listEditorialItems(itemType: EditorialItemType): Promise<E
   })));
 }
 
-export async function getEditorialReviewQueue(limit = 12): Promise<EditorialReviewQueueItem[]> {
-  await requireEditorRole();
-  const activeDb = ensureDb();
-  const queue: EditorialReviewQueueItem[] = [];
-
-  for (const itemType of editorialItemTypes) {
-    const t = table(itemType);
-    const meta = getTypeMeta(itemType);
-    const rows = (await activeDb.select().from(t as never).orderBy(desc(t.editorialReviewedAt as never))) as EditorialItem[];
-    for (const row of rows) {
-      if (!reviewStatuses.has(row.editorialStatus)) continue;
-      queue.push({
-        id: row.id,
-        title: String(row[meta.titleField] ?? row.id),
-        status: row.editorialStatus,
-        editorialReviewedAt: row.editorialReviewedAt,
-        publishedAt: row.publishedAt,
-        createdAt: row.createdAt,
-        type: itemType,
-        label: meta.label,
-        queuedAt: row.editorialReviewedAt ?? row.createdAt,
-      });
-    }
-  }
-
-  return sortForReview(queue).slice(0, limit);
-}
-
 export async function getMobileEditorialReviewQueue(limit = 20): Promise<MobileEditorialReviewItem[]> {
   await requireEditorRole();
   const activeDb = ensureDb();
@@ -580,14 +524,15 @@ export async function getMobileEditorialReviewQueue(limit = 20): Promise<MobileE
     }
   }
 
-  const sorted = sortForReview(rows.map(({ itemType, row }) => ({
+  const items = rows.map(({ itemType, row }) => ({
     ...row,
     type: itemType,
     label: getTypeMeta(itemType).label,
     title: String(row[getTypeMeta(itemType).titleField] ?? row.id),
     status: row.editorialStatus,
     queuedAt: row.editorialReviewedAt ?? row.createdAt,
-  }))).slice(0, limit);
+  }));
+  const sorted = buildReviewQueue(items, limit);
 
   return Promise.all(sorted.map((item) => buildMobileReviewItem(activeDb, item.type, item)));
 }
