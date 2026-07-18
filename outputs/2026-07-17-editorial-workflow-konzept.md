@@ -1,6 +1,12 @@
 # Konzept: Editorial-Workflow neu gedacht — vom Draft-Abarbeiten zum Freshness-Cockpit
 
-**Datum:** 2026-07-17 · **Status:** Entwurf zum Iterieren (keine Umsetzung ohne Weg-Wahl) · **Auslöser:** Jean, nach Live-Nutzung: „der gesamte Workflow ist total unpraktisch, aufwendig und unübersichtlich."
+**Datum:** 2026-07-17 · **Status:** ENTSCHIEDEN (2026-07-18): B als Zielbild in Wellen — Welle 1 (A-Bausteine) in Umsetzung (Branch `feat/editorial-welle1`) · **Auslöser:** Jean, nach Live-Nutzung: „der gesamte Workflow ist total unpraktisch, aufwendig und unübersichtlich."
+
+**Jeans Entscheidungen (2026-07-18):**
+- **E1:** Doc-Empfehlung angenommen — B als Zielbild, in Wellen; C später als Firehose-Entlastung.
+- **E2/E3:** noch offen — wird vor Welle 3 (Vertrauensstufen) entschieden.
+- **E4:** Ja — Welle 1 (Pinning + Deckel-Ausnahme, ein Queue-Einstieg, Freigeben+Publizieren als ein Schritt) sofort umgesetzt.
+- **E5:** Erst inhaltlich aktualisieren — neuer Draft `ns-2026-07` (Entwurf: `outputs/2026-07-18-ns-2026-07-entwurf.md`), `ns-2026-06` danach rejecten.
 
 ---
 

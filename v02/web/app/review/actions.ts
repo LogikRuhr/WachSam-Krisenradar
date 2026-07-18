@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { approveItem, publishItem, rejectItem } from "@/lib/admin/editorial";
+import { approveAndPublishItem, rejectItem } from "@/lib/admin/editorial";
 import { parseEditorialType } from "@/lib/admin/editorial-read";
 
 function parseReviewTarget(itemTypeValue: string, formData: FormData) {
@@ -20,18 +20,10 @@ function revalidateReview(itemType: string, id: string) {
   revalidatePath(`/admin/${itemType}/${id}`);
 }
 
-export async function approveReviewItem(itemTypeValue: string, formData: FormData) {
+export async function approveAndPublishReviewItem(itemTypeValue: string, formData: FormData) {
   const target = parseReviewTarget(itemTypeValue, formData);
   if (!target) return;
-  await approveItem(target.itemType, target.id);
-  revalidateReview(target.itemType, target.id);
-  redirect(`/review/${target.itemType}/${target.id}`);
-}
-
-export async function publishReviewItem(itemTypeValue: string, formData: FormData) {
-  const target = parseReviewTarget(itemTypeValue, formData);
-  if (!target) return;
-  await publishItem(target.itemType, target.id);
+  await approveAndPublishItem(target.itemType, target.id);
   revalidateReview(target.itemType, target.id);
   redirect("/review");
 }

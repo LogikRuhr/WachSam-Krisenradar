@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { approveReviewItem, publishReviewItem, rejectReviewItem } from "@/app/review/actions";
+import { approveAndPublishReviewItem, rejectReviewItem } from "@/app/review/actions";
 import type { MobileEditorialReviewItem } from "@/lib/admin/editorial-read";
 import { editorialActionLabel, editorialStatusExplain, editorialStatusLabel } from "@/lib/editorial";
 
@@ -22,22 +22,17 @@ function auditReasonText(reason: string | null) {
 }
 
 function ReviewActions({ item, compact = false }: { item: MobileEditorialReviewItem; compact?: boolean }) {
-  const approve = approveReviewItem.bind(null, item.type);
-  const publish = publishReviewItem.bind(null, item.type);
+  const approveAndPublish = approveAndPublishReviewItem.bind(null, item.type);
   const reject = rejectReviewItem.bind(null, item.type);
 
   return (
     <div className={compact ? "review-actions review-actions-compact" : "review-actions"}>
-      {item.status === "draft" ? (
-        <form action={approve}>
+      {item.status === "draft" || item.status === "approved" ? (
+        <form action={approveAndPublish}>
           <input type="hidden" name="id" value={item.id} />
-          <button className="review-button review-button-primary" type="submit">Freigeben</button>
-        </form>
-      ) : null}
-      {item.status === "approved" ? (
-        <form action={publish}>
-          <input type="hidden" name="id" value={item.id} />
-          <button className="review-button review-button-primary" type="submit">Publizieren</button>
+          <button className="review-button review-button-primary" type="submit">
+            {item.status === "draft" ? "Freigeben & publizieren" : "Publizieren"}
+          </button>
         </form>
       ) : null}
       {item.status === "draft" || item.status === "approved" ? (

@@ -48,9 +48,12 @@ assertIncludes("web/lib/auth.ts", "sessionUser.role", "node auth runtime must ex
 assertIncludes("web/lib/auth.ts", "sessionUser.id", "node auth runtime must expose user id to the session");
 assertIncludes("web/lib/admin/permissions.ts", 'row.role !== "editor" && row.role !== "admin"', "admin server actions must require editor/admin role");
 
-for (const actionName of ["createDraft", "updateDraft", "approveItem", "rejectItem", "publishItem", "unpublishItem"]) {
+for (const actionName of ["createDraft", "updateDraft", "approveItem", "rejectItem", "publishItem", "unpublishItem", "approveAndPublishItem"]) {
   assertIncludes("web/lib/admin/editorial.ts", `export async function ${actionName}`, `admin action ${actionName} must exist`);
 }
+assertIncludes("web/lib/admin/editorial.ts", '["draft", "approved"]', "approveAndPublishItem must allow transition from draft or approved");
+assertDoesNotInclude("web/app/admin/page.tsx", "getEditorialReviewQueue", "admin overview must not duplicate the review queue entry point");
+assertIncludes("web/components/review/EditorialReviewCard.tsx", "approveAndPublishReviewItem", "review card must use the combined approve+publish action");
 assert.equal((adminEditorial.match(/requireEditorRole\(\)/g) ?? []).length >= 3, true, "admin mutations must call requireEditorRole before DB writes");
 assertIncludes("web/lib/admin/editorial.ts", "logAuditEvent", "admin mutations must write audit log events");
 assertIncludes("web/lib/admin/permissions.ts", "auth()", "admin role checks must bind to the current session");
