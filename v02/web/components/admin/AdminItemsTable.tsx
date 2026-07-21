@@ -72,7 +72,11 @@ function RowActions({ meta, item }: { meta: EditorialTypeMeta; item: EditorialLi
       ) : null}
       {item.status === "approved" ? (
         <>
-          <TransitionForm id={item.id} label="Publizieren" action={publish} itemType={meta.label} />
+          {meta.type === "nationalState" ? (
+            <Link className="admin-small-link" href={`/review/${meta.type}/${item.id}`}>In Review veröffentlichen</Link>
+          ) : (
+            <TransitionForm id={item.id} label="Publizieren" action={publish} itemType={meta.label} />
+          )}
           <TransitionForm id={item.id} label="Ablehnen" action={reject} itemType={meta.label} needsReason />
         </>
       ) : null}

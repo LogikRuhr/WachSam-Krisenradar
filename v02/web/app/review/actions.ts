@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { approveAndPublishItem, rejectItem } from "@/lib/admin/editorial";
 import { parseEditorialType } from "@/lib/admin/editorial-read";
+import { hasRequiredReviewConfirmation } from "@/lib/admin/review-confirmation";
 
 function parseReviewTarget(itemTypeValue: string, formData: FormData) {
   const itemType = parseEditorialType(itemTypeValue);
@@ -23,6 +24,9 @@ function revalidateReview(itemType: string, id: string) {
 export async function approveAndPublishReviewItem(itemTypeValue: string, formData: FormData) {
   const target = parseReviewTarget(itemTypeValue, formData);
   if (!target) return;
+  if (!hasRequiredReviewConfirmation(target.itemType, formData.get("confirm-publish"))) {
+    throw new Error("Der Gesamtstand muss vor der Veröffentlichung ausdrücklich bestätigt werden.");
+  }
   await approveAndPublishItem(target.itemType, target.id);
   revalidateReview(target.itemType, target.id);
   redirect("/review");
