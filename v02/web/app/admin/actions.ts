@@ -134,6 +134,9 @@ export async function publishEditorialItem(itemTypeValue: string, formData: Form
   const itemType = parseEditorialType(itemTypeValue);
   const id = String(formData.get("id") ?? "");
   if (!itemType || !id) return;
+  if (itemType === "nationalState") {
+    throw new Error("Der Gesamtstand wird ausschließlich über die Review mit ausdrücklicher Bestätigung veröffentlicht.");
+  }
   await publishItem(itemType, id);
   revalidatePath("/admin");
   revalidatePath(`/admin/${itemType}`);

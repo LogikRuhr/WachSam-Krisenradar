@@ -3,6 +3,7 @@ import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { db, schema } from "../db";
 import { requireEditorRole } from "./permissions";
 import { buildReviewQueue, sortForReview } from "./review-queue";
+import { parseNationalStateReviewSources } from "./review-sources";
 import { editorialItemTypes, type EditorialItemType } from "./schemas";
 import type { EditorialAction, EditorialStatus } from "./audit-log";
 
@@ -79,6 +80,7 @@ export type MobileEditorialReviewItem = EditorialReviewQueueItem & {
   description: string;
   confidence: string | null;
   source: EditorialReviewSource | null;
+  sources: EditorialReviewSource[];
   latestAudit: EditorialReviewAudit | null;
   publicPath?: string;
   fields: EditorialReviewField[];
@@ -405,6 +407,10 @@ function sourceFromItem(itemType: EditorialItemType, row: EditorialItem): Editor
   return { sourceName, sourceUrl, sourceStand };
 }
 
+function nationalStateSources(row: EditorialItem): EditorialReviewSource[] {
+  return parseNationalStateReviewSources(row.sources);
+}
+
 async function getItemSource(
   activeDb: NonNullable<typeof db>,
   itemType: EditorialItemType,
@@ -428,6 +434,16 @@ async function getItemSource(
     .limit(1);
 
   return rows[0] ?? null;
+}
+
+async function getItemSources(
+  activeDb: NonNullable<typeof db>,
+  itemType: EditorialItemType,
+  row: EditorialItem,
+): Promise<EditorialReviewSource[]> {
+  if (itemType === "nationalState") return nationalStateSources(row);
+  const source = await getItemSource(activeDb, itemType, row);
+  return source ? [source] : [];
 }
 
 async function getLatestAudit(
@@ -455,8 +471,8 @@ async function buildMobileReviewItem(
   row: EditorialItem,
 ): Promise<MobileEditorialReviewItem> {
   const meta = getTypeMeta(itemType);
-  const [source, latestAudit] = await Promise.all([
-    getItemSource(activeDb, itemType, row),
+  const [sources, latestAudit] = await Promise.all([
+    getItemSources(activeDb, itemType, row),
     getLatestAudit(activeDb, itemType, row.id),
   ]);
 
@@ -472,7 +488,8 @@ async function buildMobileReviewItem(
     queuedAt: row.editorialReviewedAt ?? row.createdAt,
     description: descriptionFor(itemType, row),
     confidence: confidenceFor(row),
-    source,
+    source: sources[0] ?? null,
+    sources,
     latestAudit,
     publicPath: meta.publicPath,
     fields: fieldsFor(itemType, row),

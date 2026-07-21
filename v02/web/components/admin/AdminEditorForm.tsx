@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import type { AdminFormState } from "@/app/admin/actions";
 import type { EditorialItem, EditorialTypeMeta } from "@/lib/admin/editorial-read";
+import { NationalStateSourcesField } from "./NationalStateSourcesField";
 
 const initialState: AdminFormState = { ok: true };
 
@@ -41,6 +42,9 @@ export function AdminEditorForm({
 
       {meta.fields.map((field) => {
         const error = state.fieldErrors?.[field.name];
+        if (meta.type === "nationalState" && field.name === "sources") {
+          return <NationalStateSourcesField key={field.name} item={item} disabled={!editable} error={error} />;
+        }
         const commonProps = {
           id: field.name,
           name: field.name,

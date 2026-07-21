@@ -402,6 +402,23 @@ export const editorialAuditLog = pgTable("editorial_audit_log", {
   createdAt,
 });
 
+/**
+ * Versandspur für operative Redaktionsalarme. Sie enthält bewusst keine
+ * Empfängeradresse oder Inhaltsdaten, sondern nur den deduplizierenden Schlüssel.
+ */
+export const editorialAlerts = pgTable(
+  "editorial_alerts",
+  {
+    id: text("id").primaryKey(),
+    alertKey: text("alert_key").notNull(),
+    alertKind: text("alert_kind").notNull(),
+    deliveryStatus: text("delivery_status").notNull().default("pending"),
+    attemptedAt: timestamp("attempted_at", { withTimezone: true }).defaultNow().notNull(),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+  },
+  (table) => [uniqueIndex("editorial_alerts_alert_key_unique").on(table.alertKey)],
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   households: many(households),
   watchlistItems: many(userWatchlistItems),

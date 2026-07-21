@@ -37,6 +37,7 @@ from .gate import evaluate_plausibility, source_error_verdict, build_shadow_log
 from .plausibility_rules import get_rules
 from .source_health import build_source_health, persist_source_health
 from .freshness import classify_freshness, load_registry_index, source_stand_from_items
+from .editorial_alerts import notify_national_state_if_due
 
 
 ADAPTER_TYPE_MAP = {
@@ -192,6 +193,12 @@ async def run_ingestion(
         written_health_records = upsert_source_health(source_health_records)
         if written_health_records:
             print(f"  [SOURCE_HEALTH] {written_health_records} Records in DB upserted")
+        if not dry_run:
+            alert_result = notify_national_state_if_due()
+            if alert_result == "sent":
+                print("  [EDITORIAL_ALERT] Gesamtstand-Erinnerung versendet")
+            elif alert_result not in {"not-due", "suppressed", "disabled"}:
+                print(f"  [EDITORIAL_ALERT] keine Erinnerung ({alert_result})")
 
         if adapter_names is None:
             crawler = RSSCrawler()

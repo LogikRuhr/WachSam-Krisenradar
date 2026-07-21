@@ -30,6 +30,12 @@ function ReviewActions({ item, compact = false }: { item: MobileEditorialReviewI
       {item.status === "draft" || item.status === "approved" ? (
         <form action={approveAndPublish}>
           <input type="hidden" name="id" value={item.id} />
+          {item.type === "nationalState" ? (
+            <label className="review-confirm">
+              <input name="confirm-publish" type="checkbox" required />
+              Quellen und Kurzlage geprüft. Jetzt veröffentlichen.
+            </label>
+          ) : null}
           <button className="review-button review-button-primary" type="submit">
             {item.status === "draft" ? "Freigeben & publizieren" : "Publizieren"}
           </button>
@@ -54,19 +60,26 @@ function ReviewActions({ item, compact = false }: { item: MobileEditorialReviewI
 }
 
 function SourceBlock({ item }: { item: MobileEditorialReviewItem }) {
-  if (!item.source) {
+  const sources = item.sources.length ? item.sources : item.source ? [item.source] : [];
+  if (!sources.length) {
     return <p className="review-muted">Keine separate Quelle am Item hinterlegt.</p>;
   }
-  const isExternal = item.source.sourceUrl.startsWith("http://") || item.source.sourceUrl.startsWith("https://");
   return (
-    <div className="review-source">
-      <span>{item.source.sourceName}</span>
-      <strong>Stand: {item.source.sourceStand}</strong>
-      {isExternal ? (
-        <a href={item.source.sourceUrl} target="_blank" rel="noreferrer">Quelle öffnen</a>
-      ) : (
-        <code>{item.source.sourceUrl}</code>
-      )}
+    <div className="review-sources">
+      {sources.map((source) => {
+        const isExternal = source.sourceUrl.startsWith("http://") || source.sourceUrl.startsWith("https://");
+        return (
+          <div className="review-source" key={`${source.sourceName}:${source.sourceUrl}`}>
+            <span>{source.sourceName}</span>
+            <strong>Stand: {source.sourceStand}</strong>
+            {isExternal ? (
+              <a href={source.sourceUrl} target="_blank" rel="noreferrer">Quelle öffnen</a>
+            ) : (
+              <code>{source.sourceUrl}</code>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
