@@ -27,21 +27,28 @@ def test_daily_source_from_old_day_is_stale():
     assert "daily" in result.reason
 
 
-def test_business_day_source_accepts_weekend_lag_but_not_two_workdays():
+def test_business_day_source_accepts_weekend_publication_lag_but_not_three_workdays():
     weekend = classify_freshness(
         freshness_expectation="daily-business-days",
         source_stand="2026-07-18",
         checked_on=date(2026, 7, 20),
         has_source_error=False,
     )
+    publication_lag = classify_freshness(
+        freshness_expectation="daily-business-days",
+        source_stand="2026-07-19",
+        checked_on=date(2026, 7, 21),
+        has_source_error=False,
+    )
     stale = classify_freshness(
         freshness_expectation="daily-business-days",
         source_stand="2026-07-17",
-        checked_on=date(2026, 7, 21),
+        checked_on=date(2026, 7, 22),
         has_source_error=False,
     )
 
     assert weekend.status == "fresh"
+    assert publication_lag.status == "fresh"
     assert stale.status == "stale"
 
 
