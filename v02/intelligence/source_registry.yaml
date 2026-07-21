@@ -57,7 +57,7 @@ sources:
     status: active
     format: json
     auth_required: optional-api-key
-    freshness_expectation: daily
+    freshness_expectation: daily-business-days
     household_relevance: hoch
     current_quality: live-dry-run-degraded-timeout-2026-06-24-stale-on-error
     risk_notes: Live-Dry-Run am 2026-06-24 meldete Timeout; Adapter hält letzten guten Wert via Stale-on-error und darf kein frisches Leer-Item veröffentlichen.
@@ -211,7 +211,7 @@ sources:
     status: active
     format: jsonstat
     auth_required: none
-    freshness_expectation: quarterly
+    freshness_expectation: quarterly-release-window
     household_relevance: mittel
     current_quality: live-dry-run-ok-quarterly
     risk_notes: Quartalsdaten sind offiziell verzögert; nicht als Tagesindikator interpretieren.
@@ -241,7 +241,7 @@ sources:
     status: active
     format: sdmx-json
     auth_required: none
-    freshness_expectation: daily-market-days
+    freshness_expectation: event-driven-policy
     household_relevance: mittel
     current_quality: live-dry-run-ok-policy-rate
     risk_notes: Zinsschritte sind ereignisgetrieben; nicht täglich neue Werte erwarten.

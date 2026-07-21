@@ -49,6 +49,12 @@ const editorialStatus = editorialStatusEnum("editorial_status").notNull().defaul
 const editorialReviewedBy = text("editorial_reviewed_by");
 
 export type RevisionCriterion = { indicatorId?: string; label: string; operator: ">" | "<" | ">=" | "<="; threshold: number; unit?: string };
+export type NationalStateSource = {
+  sourceName: string;
+  sourceUrl: string;
+  sourceStand: string;
+  isPrimarySource: boolean;
+};
 
 export const users = pgTable(
   "users",
@@ -462,6 +468,7 @@ export const nationalState = pgTable("national_state", {
   overallTone: severityEnum("overall_tone").notNull(),
   executiveSummary: text("executive_summary").notNull(),
   revisionCriteria: jsonb("revision_criteria").$type<RevisionCriterion[]>().notNull().default(sql`'[]'::jsonb`),
+  sources: jsonb("sources").$type<NationalStateSource[]>().notNull().default(sql`'[]'::jsonb`),
   gegentrends: jsonb("gegentrends").$type<string[]>(),
   retrievedAt,
   editorialStatus,

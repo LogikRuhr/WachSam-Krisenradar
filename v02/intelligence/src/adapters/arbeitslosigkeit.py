@@ -21,6 +21,7 @@ _SOURCE_URL = (
     "https://www.destatis.de/DE/Themen/Arbeit/Arbeitsmarkt/Arbeitslosigkeit/"
     "_inhalt.html"
 )
+_MAX_REQUEST_ATTEMPTS = 2
 
 # Monatsname → Zahl (für _date_label_from_row-Logik)
 _MONTHS_DE = {
@@ -128,6 +129,38 @@ class ArbeitslosigkeitAdapter(BaseAdapter):
         super().__init__("Arbeitslosigkeit")
         self._settings = settings
 
+    def _fetch_table(self, headers: dict[str, str], data: dict[str, str]):
+        """Einmalig gegen flüchtige Transport- und 5xx-Fehler nachfassen.
+
+        Der Retry schreibt und meldet noch keinen Quellenfehler. Erst wenn beide
+        Versuche scheitern, erzeugt ``fetch_arbeitslosigkeit`` genau einen
+        Fehler- und Fallback-Pfad für Source Health.
+        """
+        last_transport_error: requests.RequestException | None = None
+        for attempt in range(_MAX_REQUEST_ATTEMPTS):
+            try:
+                response = requests.post(
+                    f"{_BASE_URL}/data/tablefile",
+                    headers=headers,
+                    data=data,
+                    timeout=40,
+                )
+            except (requests.Timeout, requests.ConnectionError) as exc:
+                last_transport_error = exc
+                if attempt + 1 < _MAX_REQUEST_ATTEMPTS:
+                    self.log_error("Arbeitslosigkeit fetch transient fehlgeschlagen; Wiederholung")
+                    continue
+                raise
+
+            if response.status_code >= 500 and attempt + 1 < _MAX_REQUEST_ATTEMPTS:
+                self.log_error(f"Arbeitslosigkeit fetch: HTTP {response.status_code}; Wiederholung")
+                continue
+            return response
+
+        if last_transport_error:
+            raise last_transport_error
+        raise RuntimeError("Arbeitslosigkeit-Abruf endete ohne Antwort")
+
     def fetch_arbeitslosigkeit(self) -> List[IngestionItem]:
         try:
             headers = {
@@ -146,12 +179,7 @@ class ArbeitslosigkeitAdapter(BaseAdapter):
                 "job": "false",
                 "quality": "off",
             }
-            response = requests.post(
-                f"{_BASE_URL}/data/tablefile",
-                headers=headers,
-                data=data,
-                timeout=40,
-            )
+            response = self._fetch_table(headers, data)
 
             if response.status_code == 200 and len(response.content) > 50:
                 table_text = decode_genesis_table_response(response.content, response.text)

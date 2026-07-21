@@ -3,6 +3,7 @@ from io import BytesIO
 from zipfile import ZipFile
 
 import pytest
+import requests
 from unittest.mock import MagicMock
 
 from src.adapters.destatis import DestatisAdapter
@@ -1019,6 +1020,42 @@ def test_arbeitslosigkeit_adapter_maps_to_indicator_live_value(monkeypatch):
     # BA-Wert im Bereich 2,8–3,2 Mio (nicht ILO ~1,7 Mio)
     assert item.current_value > 2.5
     _validate_items([item])
+
+
+def test_arbeitslosigkeit_adapter_retries_transient_5xx_once(monkeypatch):
+    failed = MagicMock()
+    failed.status_code = 503
+    succeeded = MagicMock()
+    succeeded.status_code = 200
+    succeeded.content = _ARBEITSLOSIGKEIT_GENESIS_CSV.encode("utf-8")
+    succeeded.text = _ARBEITSLOSIGKEIT_GENESIS_CSV
+    responses = iter([failed, succeeded])
+
+    monkeypatch.setattr("src.adapters.arbeitslosigkeit.requests.post", lambda *args, **kwargs: next(responses))
+
+    adapter = ArbeitslosigkeitAdapter()
+    item = adapter.fetch_latest()[0]
+
+    assert item.indicator_id == "wi-arbeitslosigkeit-de"
+    assert adapter.source_errors == []
+
+
+def test_arbeitslosigkeit_adapter_records_one_error_after_final_transport_failure(monkeypatch):
+    calls = 0
+
+    def fail(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        raise requests.Timeout("too slow")
+
+    monkeypatch.setattr("src.adapters.arbeitslosigkeit.requests.post", fail)
+
+    adapter = ArbeitslosigkeitAdapter()
+    item = adapter.fetch_latest()[0]
+
+    assert calls == 2
+    assert item.indicator_id is None
+    assert len(adapter.source_errors) == 1
 
 
 def test_arbeitslosigkeit_adapter_returns_fallback_on_http_error(monkeypatch):

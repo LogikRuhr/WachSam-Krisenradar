@@ -120,6 +120,13 @@
       "when": 1783573467162,
       "tag": "0016_same_namorita",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1784558517520,
+      "tag": "0017_blushing_xavin",
+      "breakpoints": true
     }
   ]
 }

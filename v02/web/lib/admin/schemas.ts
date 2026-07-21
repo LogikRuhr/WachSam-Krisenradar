@@ -111,12 +111,32 @@ const revisionCriterionSchema = z.object({
   unit: z.string().optional(),
 });
 
+const nationalStateSourceSchema = z.object({
+  sourceName: z.string().min(1).max(240),
+  sourceUrl: z
+    .string()
+    .url()
+    .refine((value) => {
+      try {
+        return new URL(value).protocol === "https:";
+      } catch {
+        return false;
+      }
+    }, "Quellen-URLs müssen HTTPS verwenden."),
+  sourceStand: z.string().min(1).max(120),
+  isPrimarySource: z.boolean(),
+});
+
 export const nationalStateSchema = z.object({
   id: idField,
   standDate: z.string().min(1).max(120),
   overallTone: severity,
   executiveSummary: longText,
   revisionCriteria: z.array(revisionCriterionSchema),
+  sources: z
+    .array(nationalStateSourceSchema)
+    .min(1, "Mindestens eine Primärquelle ist erforderlich.")
+    .refine((sources) => sources.some((source) => source.isPrimarySource), "Mindestens eine Primärquelle muss ausdrücklich markiert sein."),
   gegentrends: z.array(z.string()).optional().nullable(),
 });
 

@@ -27,6 +27,24 @@ def test_daily_source_from_old_day_is_stale():
     assert "daily" in result.reason
 
 
+def test_business_day_source_accepts_weekend_lag_but_not_two_workdays():
+    weekend = classify_freshness(
+        freshness_expectation="daily-business-days",
+        source_stand="2026-07-18",
+        checked_on=date(2026, 7, 20),
+        has_source_error=False,
+    )
+    stale = classify_freshness(
+        freshness_expectation="daily-business-days",
+        source_stand="2026-07-17",
+        checked_on=date(2026, 7, 21),
+        has_source_error=False,
+    )
+
+    assert weekend.status == "fresh"
+    assert stale.status == "stale"
+
+
 def test_monthly_previous_month_is_acceptable_lag():
     result = classify_freshness(
         freshness_expectation="monthly",
@@ -59,6 +77,42 @@ def test_quarterly_previous_quarter_is_acceptable_lag():
     )
 
     assert result.status == "acceptable-lag"
+
+
+def test_quarterly_release_window_allows_previous_available_quarter_until_t65():
+    accepted = classify_freshness(
+        freshness_expectation="quarterly-release-window",
+        source_stand="2026-Q1",
+        checked_on=date(2026, 7, 20),
+        has_source_error=False,
+    )
+    stale = classify_freshness(
+        freshness_expectation="quarterly-release-window",
+        source_stand="2026-Q1",
+        checked_on=date(2026, 9, 5),
+        has_source_error=False,
+    )
+
+    assert accepted.status == "acceptable-lag"
+    assert stale.status == "stale"
+
+
+def test_event_driven_policy_rate_stays_current_after_successful_fetch():
+    result = classify_freshness(
+        freshness_expectation="event-driven-policy",
+        source_stand="2026-06-17",
+        checked_on=date(2026, 7, 20),
+        has_source_error=False,
+    )
+    failed = classify_freshness(
+        freshness_expectation="event-driven-policy",
+        source_stand="2026-06-17",
+        checked_on=date(2026, 7, 20),
+        has_source_error=True,
+    )
+
+    assert result.status == "acceptable-lag"
+    assert failed.status == "source-error"
 
 
 def test_yearly_previous_year_is_archival_not_stale():
@@ -98,4 +152,5 @@ def test_registry_index_exposes_expectation_by_adapter_name():
 
     assert index.by_adapter_name["DWD"].freshness_expectation == "near-real-time"
     assert index.by_adapter_name["BNetzA"].source_id == "gie-agsi-gas-storage"
-    assert index.by_adapter_name["BIP"].freshness_expectation == "quarterly"
+    assert index.by_adapter_name["BIP"].freshness_expectation == "quarterly-release-window"
+    assert index.by_adapter_name["EZBLeitzins"].freshness_expectation == "event-driven-policy"

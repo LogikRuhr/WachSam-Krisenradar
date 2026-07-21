@@ -11,15 +11,30 @@ function sourcePillKey(source: SourceLike) {
 }
 
 export function SourcePill({ source }: { source: SourceLike }) {
+  const href = safeExternalUrl(source.sourceUrl);
+  const label = (
+    <>
+      Quelle: {source.sourceName} · Stand: {source.sourceStand}
+    </>
+  );
+
+  if (!href) {
+    return (
+      <span className="source-pill source-pill-muted" title={`Quelle: ${source.sourceName} — ungültige URL`}>
+        {label}
+      </span>
+    );
+  }
+
   return (
     <a
       className="source-pill hover-rost"
-      href={source.sourceUrl}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       title={`Quelle: ${source.sourceName} — Stand: ${source.sourceStand} (öffnet in neuem Tab)`}
     >
-      Quelle: {source.sourceName} · Stand: {source.sourceStand}
+      {label}
       <span aria-hidden="true"> ↗</span>
     </a>
   );
@@ -35,3 +50,5 @@ export function SourcePills({ sources, compact = false }: { sources?: SourceLike
     </div>
   );
 }
+import React from "react";
+import { safeExternalUrl } from "../lib/safe-external-url";

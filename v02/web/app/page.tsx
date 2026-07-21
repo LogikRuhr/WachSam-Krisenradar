@@ -231,9 +231,9 @@ export default async function HomePage() {
             <p>Jede öffentliche Lagekarte zeigt benannte Quellen mit Stand-Datum statt anonymer Rohmeldungen.</p>
           </div>
           <div className="app-state-item">
-            <span className="mono-label">Datenstand</span>
+            <span className="mono-label">Lagebild-Stand</span>
             <strong>{formatStand(latestStand) ?? "noch kein Stand"}</strong>
-            <p>WachSam markiert Aktualität sichtbar und vermeidet Fake-Live-Optik.</p>
+            <p>Stand der zuletzt veröffentlichten Lagebild-Signale; der Gesamtstand wird getrennt ausgewiesen.</p>
           </div>
           <div className="app-state-item">
             <span className="mono-label">Qualität</span>

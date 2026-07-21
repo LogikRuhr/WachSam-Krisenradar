@@ -3,6 +3,7 @@ import Link from "next/link";
 import { DbNotice } from "@/components/DbNotice";
 import { LageViewsNav } from "@/components/LageViewsNav";
 import { SectionHeader } from "@/components/SectionHeader";
+import { SourcePills } from "@/components/SourcePill";
 import { Verdict } from "@/components/Verdict";
 import { VitalsBoard } from "@/components/VitalsBoard";
 import { computeVerdict, type Verdict as VerdictData, type VerdictTone } from "@/lib/personalization";
@@ -90,6 +91,13 @@ export default async function LagePage() {
       <LageViewsNav current="gesamtstand" />
 
       <Verdict verdict={verdict} stand={verdictStand} />
+
+      {hasState && state.sources.length > 0 ? (
+        <section className="hero-card" aria-label="Quellen des Gesamtstands">
+          <p className="mono-label">Quellen des Gesamtstands</p>
+          <SourcePills sources={state.sources} />
+        </section>
+      ) : null}
 
       {!hasState ? (
         <section className="hero-card" aria-label="Hinweis zur Gesamteinschätzung">

@@ -1,3 +1,7 @@
+# Überholt — nur historischer Planungsstand
+
+> Der aktive Einstieg ist das Haushalts-Cockpit. Maßgeblich sind `docs/product-current.md` und `docs/ui-standard.md`; dieses Dokument darf keine neue UI-Entscheidung begründen.
+
 # WachSam Next Steps — App Roadmap und UI/UX Integration
 
 Stand: 2026-05-30. Repo: `LogikRuhr/WachSam-Krisenradar`. HEAD: `a60660f`.
