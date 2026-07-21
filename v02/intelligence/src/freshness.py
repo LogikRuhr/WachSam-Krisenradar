@@ -98,6 +98,28 @@ def _quarter_index(day: date) -> int:
     return day.year * 4 + ((day.month - 1) // 3) + 1
 
 
+def _business_days_between(start: date, end: date) -> int:
+    """Arbeitstage nach ``start`` bis einschließlich ``end`` zählen.
+
+    Der Registry-Typ ist bewusst ohne Feiertagskalender definiert: Wochenenden
+    dürfen einen täglichen Datenstand nicht künstlich rot machen, mehrere
+    reguläre Arbeitstage ohne neuen Stand aber schon.
+    """
+    if end <= start:
+        return 0
+    count = 0
+    current = start
+    while current < end:
+        current = date.fromordinal(current.toordinal() + 1)
+        if current.weekday() < 5:
+            count += 1
+    return count
+
+
+def _quarter_start(day: date) -> date:
+    return date(day.year, ((day.month - 1) // 3) * 3 + 1, 1)
+
+
 def classify_freshness(
     *,
     freshness_expectation: str,
@@ -122,6 +144,24 @@ def classify_freshness(
             return FreshnessResult("fresh", "aktuell", f"{expectation}: Stand höchstens 1 Tag alt", expectation, source_stand)
         return FreshnessResult("stale", "veraltet", f"{expectation}: Stand {age_days} Tage alt", expectation, source_stand)
 
+    if expectation == "daily-business-days":
+        business_days = _business_days_between(stand_date, checked_on)
+        if business_days <= 1:
+            return FreshnessResult(
+                "fresh",
+                "aktuell",
+                "arbeitstagsaktuelle Quelle; Stand innerhalb eines Arbeitstags",
+                expectation,
+                source_stand,
+            )
+        return FreshnessResult(
+            "stale",
+            "veraltet",
+            f"arbeitstagsaktuelle Quelle: Stand {business_days} Arbeitstage alt",
+            expectation,
+            source_stand,
+        )
+
     if expectation == "daily-market-days":
         age_days = (checked_on - stand_date).days
         if age_days <= 10:
@@ -145,6 +185,51 @@ def classify_freshness(
         if delta <= 1:
             return FreshnessResult("acceptable-lag", "offiziell verzögert", "quartalsweise Quelle; letztes Quartal ist akzeptabel", expectation, source_stand)
         return FreshnessResult("stale", "veraltet", f"quartalsweise erwartete Quelle ist {delta} Quartale zurück", expectation, source_stand)
+
+    if expectation == "quarterly-release-window":
+        current_quarter_start = _quarter_start(checked_on)
+        delta = _quarter_index(current_quarter_start) - _quarter_index(stand_date)
+        days_since_quarter_start = (checked_on - current_quarter_start).days
+        if delta <= 1:
+            return FreshnessResult(
+                "fresh",
+                "aktuell",
+                "quartalsweise Quelle liefert den jüngsten abgeschlossenen Zeitraum",
+                expectation,
+                source_stand,
+            )
+        if delta == 2 and days_since_quarter_start <= 65:
+            return FreshnessResult(
+                "acceptable-lag",
+                "offiziell verzögert",
+                "quartalsweise Quelle innerhalb des T+65-Veröffentlichungsfensters",
+                expectation,
+                source_stand,
+            )
+        return FreshnessResult(
+            "stale",
+            "veraltet",
+            "quartalsweise Quelle außerhalb des T+65-Veröffentlichungsfensters",
+            expectation,
+            source_stand,
+        )
+
+    if expectation == "event-driven-policy":
+        if stand_date > checked_on:
+            return FreshnessResult(
+                "stale",
+                "Stand unklar",
+                "ereignisgetriebene Policy-Quelle meldet einen zukünftigen Stand",
+                expectation,
+                source_stand,
+            )
+        return FreshnessResult(
+            "acceptable-lag",
+            "aktuell",
+            "ereignisgetriebene Policy-Quelle; Abruf erfolgreich, Wert seit letzter Entscheidung unverändert",
+            expectation,
+            source_stand,
+        )
 
     if expectation in {"yearly", "annual", "product-dependent"} or period_type == "year":
         if checked_on.year - stand_date.year <= 1:

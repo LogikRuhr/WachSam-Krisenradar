@@ -14,7 +14,7 @@ export default async function QuellenPage() {
         <p>WachSam stützt sich auf öffentliche Quellen — Behörden, Institute, Fachmedien. Jede Einschätzung zeigt, woher sie stammt und wie sicher sie ist.</p>
       </SectionHeader>
       <section className="legend-box">
-        <p><strong>Legende:</strong> Die Einschätzungssicherheit zeigt, wie gut eine Einordnung belegt ist. Die Lage-Stufe zeigt die mögliche Belastung für Haushalte. Der Stand gibt an, wann die Quelle zuletzt geprüft wurde.</p>
+        <p><strong>Legende:</strong> Die Einschätzungssicherheit zeigt, wie gut eine Einordnung belegt ist. Die Lage-Stufe zeigt die mögliche Belastung für Haushalte. Der Stand nennt den von der Quelle ausgewiesenen Datenstand; die letzte redaktionelle Prüfung wird getrennt an der jeweiligen Einordnung gezeigt.</p>
       </section>
       {!state.connected ? <DbNotice error={state.error} /> : null}
       <section className="card-grid">

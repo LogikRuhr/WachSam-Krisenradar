@@ -307,6 +307,7 @@ export const editorialTypeMeta = {
       { name: "overallTone", label: "Gesamttonalität", kind: "select", required: true, options: severityOptions },
       { name: "executiveSummary", label: "Kurzlage", kind: "textarea", required: true },
       { name: "revisionCriteria", label: "Revisionskriterien (JSON)", kind: "json", required: true, help: "Array von Objekten {label, operator, threshold, ...}." },
+      { name: "sources", label: "Primärquellen (JSON)", kind: "json", required: true, help: "Array von Objekten {sourceName, sourceUrl, sourceStand, isPrimarySource: true}." },
       { name: "gegentrends", label: "Gegentrends (JSON)", kind: "json", help: "Array von Strings." },
     ],
   },

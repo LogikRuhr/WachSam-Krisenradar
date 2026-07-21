@@ -225,6 +225,8 @@ Regeln:
 
 ## Provenance-Footer-Pattern
 
+Dieser Abschnitt dokumentiert das historische v0.1-Pattern. Für aktive v02-Flächen gilt der Haushalts-Cockpit-Standard am Anfang dieses Dokuments; historische Frames dürfen keine neue Navigation oder Startseitenlogik begründen.
+
 Sobald ein Item-Schema das Pflichtfeld `retrieved_at` (ISO-Datum) führt, rendert die Karte am unteren Rand eine kleine Mono-Meta-Zeile mit dem Stand der redaktionellen Prüfung. Single source für die Daten: das jeweilige JSON in `v01/data/`.
 
 ```tsx

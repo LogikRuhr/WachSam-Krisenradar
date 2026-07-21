@@ -537,7 +537,7 @@ def test_run_ingestion_persists_source_health_when_path_is_explicit(monkeypatch,
     assert bnetza_records[0]["item_count"] == 1
     assert bnetza_records[0]["error_count"] == 0
     assert bnetza_records[0]["error_messages"] == []
-    assert bnetza_records[0]["freshness_expectation"] == "daily"
+    assert bnetza_records[0]["freshness_expectation"] == "daily-business-days"
     assert bnetza_records[0]["freshness_status"] == "stale"
     assert bnetza_records[0]["source_stand"] == "2026-05-27"
 
@@ -580,7 +580,7 @@ def test_run_ingestion_upserts_source_health_in_normal_mode(monkeypatch):
     # 14 Adapter gesamt in run_ingestion-Liste (13 bestehende + NINA), ohne deaktivierte.
     bnetza_record = next(r for r in captured if r.source_id == "bnetza")
     assert bnetza_record.status == "ok"
-    assert bnetza_record.freshness_expectation == "daily"
+    assert bnetza_record.freshness_expectation == "daily-business-days"
     assert bnetza_record.freshness_status == "stale"
     assert len(captured) == 14  # 13 bestehende + NINA
 

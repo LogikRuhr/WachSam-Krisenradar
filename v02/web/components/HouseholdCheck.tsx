@@ -164,7 +164,7 @@ export function HouseholdCheck({
           </span>
           <span className="household-status-card">
             <strong>{standText}</strong>
-            <small>Datenstand</small>
+            <small>Lagebild-Stand</small>
           </span>
         </div>
       </div>
