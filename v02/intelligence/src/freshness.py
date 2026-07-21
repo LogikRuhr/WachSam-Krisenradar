@@ -146,11 +146,14 @@ def classify_freshness(
 
     if expectation == "daily-business-days":
         business_days = _business_days_between(stand_date, checked_on)
-        if business_days <= 1:
+        # GIE veröffentlicht den Gas-Stand mit einem Verarbeitungstag Abstand.
+        # Zwei Arbeitstage decken diesen regulären Veröffentlichungsverzug plus
+        # Wochenenden ab, ohne ältere Werte dauerhaft als aktuell auszugeben.
+        if business_days <= 2:
             return FreshnessResult(
                 "fresh",
                 "aktuell",
-                "arbeitstagsaktuelle Quelle; Stand innerhalb eines Arbeitstags",
+                "arbeitstagsaktuelle Quelle; Stand innerhalb des Veröffentlichungsfensters",
                 expectation,
                 source_stand,
             )
