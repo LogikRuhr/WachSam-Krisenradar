@@ -7,6 +7,8 @@ import { ProfileStatus } from "@/components/ProfileStatus";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SignalChain } from "@/components/SignalChain";
 import { WatchlistPanel } from "@/components/WatchlistPanel";
+import { PasskeyAccess } from "@/components/auth/PasskeyAccess";
+import { PasskeyRemoval } from "@/components/auth/PasskeyRemoval";
 import { auth, isAuthRuntimeConfigured } from "@/lib/auth";
 import {
   aufwandLabel,
@@ -25,6 +27,7 @@ import { getCurrentUserProfile } from "@/lib/use-user-modus";
 import { getUserWatchlistState } from "@/lib/watchlist";
 import { buildWatchlistDigestPreview } from "@/lib/watchlist-digest";
 import { getWeeklyOverview } from "@/lib/weekly";
+import { getPasskeyCountForUser, removeOwnPasskeysAction } from "@/lib/passkeys";
 import { ProfileForm } from "./profile-form";
 
 export const dynamic = "force-dynamic";
@@ -48,12 +51,13 @@ export default async function ProfilPage() {
     redirect("/login");
   }
 
-  const [household, profile, signalsState, actionsState, weeklyState] = await Promise.all([
+  const [household, profile, signalsState, actionsState, weeklyState, passkeyCount] = await Promise.all([
     getHouseholdByUserId(userId),
     getCurrentUserProfile(),
     getSignalChains(8),
     getCitizenActions(),
     getWeeklyOverview(),
+    getPasskeyCountForUser(userId),
   ]);
 
   const completeness = profileCompleteness(profile);
@@ -102,6 +106,27 @@ export default async function ProfilPage() {
       </SectionHeader>
 
       <ProfileStatus completeness={completeness} />
+
+      <section className="home-section" aria-labelledby="passkey-title">
+        <div className="home-section-head">
+          <p className="mono-label">Schneller Betreiberzugang</p>
+          <h2 id="passkey-title" className="focus-title">Mit Passkey anmelden</h2>
+          <p>
+            Auf deinem Android-Geraet bestaetigst du kuenftig mit Fingerabdruck, Gesicht oder Geraetecode. Der Magic Link
+            bleibt nur als Rueckweg, falls dein Passkey nicht verfuegbar ist.
+          </p>
+        </div>
+        {passkeyCount ? (
+          <div className="detail-aside-box">
+            <p>{passkeyCount === 1 ? "Ein Passkey ist eingerichtet." : `${passkeyCount} Passkeys sind eingerichtet.`}</p>
+            <PasskeyRemoval removeAction={removeOwnPasskeysAction} />
+          </div>
+        ) : (
+          <div className="detail-aside-box">
+            <PasskeyAccess intent="register" callbackUrl="/profil" />
+          </div>
+        )}
+      </section>
 
       <OnboardingChecklist
         title="Deine ersten WachSam-Schritte"

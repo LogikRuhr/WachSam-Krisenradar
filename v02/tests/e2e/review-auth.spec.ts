@@ -1,6 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
 
 test.describe("review auth gate", () => {
+  test("offers passkey before the magic-link recovery path", async ({ page }) => {
+    await page.goto("/login?callbackUrl=%2Freview");
+
+    await expect(page.getByRole("button", { name: /Fingerabdruck oder Geraetecode anmelden/i })).toBeVisible();
+    await expect(page.getByText(/Falls dein Passkey nicht verfuegbar ist/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /Magic-Link als Rueckweg senden/i })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
+
   test("redirects unauthenticated profile users to login without mobile overflow", async ({ page }) => {
     await page.goto("/profil");
 

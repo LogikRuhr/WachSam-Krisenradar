@@ -1,15 +1,23 @@
 import Link from "next/link";
 import { assertAuthRuntimeReady, signIn } from "@/lib/auth";
+import { PasskeyAccess } from "@/components/auth/PasskeyAccess";
 
 async function sendMagicLink(formData: FormData) {
   "use server";
 
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const requestedCallback = String(formData.get("callbackUrl") ?? "/");
+  const callbackUrl = requestedCallback.startsWith("/") && !requestedCallback.startsWith("//") ? requestedCallback : "/";
   assertAuthRuntimeReady();
-  await signIn("resend", { email, redirectTo: "/" });
+  await signIn("resend", { email, redirectTo: callbackUrl });
 }
 
-export default function LoginPage() {
+type SearchParams = Promise<{ callbackUrl?: string }>;
+
+export default async function LoginPage({ searchParams }: { searchParams: SearchParams }) {
+  const { callbackUrl: requestedCallback } = await searchParams;
+  const callbackUrl = requestedCallback?.startsWith("/") && !requestedCallback.startsWith("//") ? requestedCallback : "/";
+
   return (
     <main className="page-shell auth-shell auth-shell-compact">
       <section className="auth-card" aria-labelledby="login-title">
@@ -19,9 +27,14 @@ export default function LoginPage() {
         <h1 id="login-title" className="bebas-title auth-title">
           Anmelden
         </h1>
-        <p className="lead">Bestehendes Konto? Magic-Link senden.</p>
+        <p className="lead">Auf Android direkt mit Fingerabdruck, Gesicht oder Geraetecode anmelden.</p>
+
+        <PasskeyAccess intent="authenticate" callbackUrl={callbackUrl} />
+
+        <p className="mono-label">Falls dein Passkey nicht verfuegbar ist</p>
 
         <form action={sendMagicLink} className="auth-form">
+          <input type="hidden" name="callbackUrl" value={callbackUrl} />
           <label className="auth-label" htmlFor="email">
             E-Mail Adresse
           </label>
@@ -35,7 +48,7 @@ export default function LoginPage() {
             required
           />
           <button className="btn-primary" type="submit">
-            Magic-Link senden
+            Magic-Link als Rueckweg senden
           </button>
         </form>
 

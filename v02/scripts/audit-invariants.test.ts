@@ -46,6 +46,13 @@ assert.equal(authConfig.includes("@wachsam/db"), false, "edge auth config must n
 assert.equal(authConfig.includes("./lib/db"), false, "edge auth config must not import database client");
 assertIncludes("web/lib/auth.ts", "sessionUser.role", "node auth runtime must expose user role to the session");
 assertIncludes("web/lib/auth.ts", "sessionUser.id", "node auth runtime must expose user id to the session");
+assertIncludes("web/lib/auth.ts", "Passkey", "auth runtime must support passkey recovery-free sign-in");
+assertIncludes("web/lib/auth.ts", "authenticatorsTable", "passkey adapter must use the tracked authenticators table");
+assertIncludes("web/lib/auth.ts", "enableWebAuthn: true", "passkey support must be explicitly enabled");
+assertIncludes("web/lib/auth.ts", "getPasskeyRelyingParty", "passkey RP origin must not derive from the internal container host");
+assertIncludes("web/lib/auth.ts", "getUserInfo: async () => null", "anonymous passkey registration must not create accounts");
+assertIncludes("web/components/auth/PasskeyAccess.tsx", 'form.action = "/api/auth/callback/passkey"', "passkey callback must use a native document navigation");
+assertIncludes("web/lib/passkeys.ts", "eq(schema.authenticators.userId, userId)", "passkey removal must stay scoped to the signed-in user");
 assertIncludes("web/lib/admin/permissions.ts", 'row.role !== "editor" && row.role !== "admin"', "admin server actions must require editor/admin role");
 
 for (const actionName of ["createDraft", "updateDraft", "approveItem", "rejectItem", "publishItem", "unpublishItem", "approveAndPublishItem"]) {
