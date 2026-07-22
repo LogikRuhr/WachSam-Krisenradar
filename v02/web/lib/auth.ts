@@ -1,12 +1,14 @@
 import NextAuth from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Resend from "next-auth/providers/resend";
+import Passkey from "next-auth/providers/passkey";
 import { and, eq, ne } from "drizzle-orm";
 import authConfig from "../auth.config";
 import { db } from "./db";
-import { accounts, sessions, users, verificationTokens } from "@wachsam/db/schema";
+import { accounts, authenticators, sessions, users, verificationTokens } from "@wachsam/db/schema";
 import { isAllowlistedAdmin } from "./admin/admin-allowlist";
 import { buildConfirmUrl } from "./auth-confirm";
+import { getPasskeyRelyingParty } from "./passkey-rp";
 
 const adapter = db
   ? DrizzleAdapter(db, {
@@ -14,6 +16,7 @@ const adapter = db
       accountsTable: accounts,
       sessionsTable: sessions,
       verificationTokensTable: verificationTokens,
+      authenticatorsTable: authenticators,
     })
   : undefined;
 
@@ -61,6 +64,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   adapter,
   providers: [
+    Passkey({
+      // Die eigene Login-Oberflaeche startet die Passkey-Abfrage explizit.
+      // Die versteckte Conditional-UI des Default-Signin-Screens wird daher
+      // nicht geladen und kann keine fremde CDN-Abhaengigkeit einfuehren.
+      enableConditionalUI: false,
+      simpleWebAuthnBrowserVersion: false,
+      getRelayingParty: () => getPasskeyRelyingParty(),
+      // Anonym ist nur eine usernameless Authentifizierung erlaubt. Neue
+      // Passkeys werden ausschliesslich aus dem bereits geschuetzten Profil
+      // registriert; dadurch kann niemand per API ein Konto ohne Mail-Link
+      // oder bestehende Session anlegen.
+      getUserInfo: async () => null,
+    }),
     Resend({
       from: process.env.AUTH_EMAIL_FROM ?? "wachsam@ruhrlogik.de",
       apiKey: process.env.RESEND_API_KEY,
@@ -120,6 +136,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         .where(and(eq(users.email, email), ne(users.role, "admin")));
     },
   },
+  experimental: { enableWebAuthn: true },
   session: { strategy: "database" },
 });
 
